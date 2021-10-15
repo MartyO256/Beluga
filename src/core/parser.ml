@@ -131,12 +131,12 @@ module F = Fun
 (***** Parser state definition *****)
 
 (** Type of located values, i.e. values paired with their location. *)
-type 'a locd = Location.t * 'a
+type 'a located = Location.t * 'a
 
 (** The input to the parser is a backtrackable stream of tokens paired
     with their locations.
  *)
-type input = T.t locd LinkStream.t
+type input = T.t located LinkStream.t
 
 (** The parser state contains the input stream as well as control
     information to handle backtracking.
@@ -415,7 +415,7 @@ let initial_state input =
   }
 
 (** A parsing result is either an error or a successfully computed value. *)
-type 'a result = (error, 'a) Either .t
+type 'a result = (error, 'a) Either.t
 
 (** A parsing function transforms a state and produces a parsing result. *)
 type 'a parser' = state -> state * 'a result
@@ -2172,7 +2172,7 @@ let rec cmp_kind =
     This is used to parse nested & tuple patterns and expressions
     generically.
  *)
-let nested (type a) (p : a parser) (g : a locd -> a) (f : a locd -> a locd -> a) : a parser =
+let nested (type a) (p : a parser) (g : a located -> a) (f : a located -> a located -> a) : a parser =
   sep_by1 (span p) (token T.COMMA)
   |> span
   |> parens
