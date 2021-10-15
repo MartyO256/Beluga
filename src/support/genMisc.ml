@@ -8,7 +8,7 @@ let of_string (s : string) : char Gen.gen =
   if !n < n_max
   then
     let c = String.get s !n in
-    let _ = incr n in
+    incr n;
     Some c
   else
     None
