@@ -291,7 +291,7 @@ and error =
      and so on
      ```
    *)
-  ; loc : Location.t (* the location the error occurred at *)
+  ; location : Location.t (* the location the error occurred at *)
   }
 
   (*
@@ -331,7 +331,7 @@ let print_path ppf (path : path) : unit =
   in
   fprintf ppf "%a" go_box path
 
-let print_error ppf ({path; loc; _} as e : error) =
+let print_error ppf ({ path; location; _ } as e : error) =
   let open Format in
   fprintf ppf "@[<v>Parse error.@,";
   let (* rec *) g ppf {error = e; _} =
@@ -380,7 +380,7 @@ let _ =
       function
       | Error (s, e) ->
          Some
-           (Error.print_with_location e.loc
+           (Error.print_with_location e.location
               (fun ppf -> print_error ppf e))
       | _ -> None
     end
@@ -442,7 +442,7 @@ let extract =
   let open Either in
   function
   | (s, Left e) -> raise (Error (s, e))
-  | (_, Either.Right x) -> x
+  | (_, Right x) -> x
 
 type 'a t = 'a parser
 
@@ -469,9 +469,9 @@ let repathing (l : path -> path) (p : 'a parser) : 'a parser =
    *)
 
 (** Constructs a failure result for a given state. *)
-let fail_at' s loc path error =
+let fail_at' s location path error =
   ( s
-  , Either.Left {error ; path; loc}
+  , Either.Left { error; path; location }
   )
 
 (** Fail with no error path. *)
@@ -512,7 +512,7 @@ let trying p =
       fun s ->
       let open Either in
       match p.run s with
-      | (s, Left e) -> ({ s with backtrack = true}, Left e)
+      | (s, Left e) -> ({ s with backtrack=true }, Left e)
       | x -> x
   }
 
@@ -524,9 +524,10 @@ let seq : type a b. a parser -> (a -> b parser) -> b parser =
   fun p k ->
   { run =
       fun s ->
-      match p.run s with
-      | (s, Either.Right x) -> (k x).run s
-      | (s, Either.Left e) -> (s, Either.Left e)
+        let open Either in
+        match p.run s with
+        | (s, Right x) -> (k x).run s
+        | (s, Left e) -> (s, Left e)
   }
 
 (** Infix operator form of `seq`. *)
@@ -600,7 +601,7 @@ let relabelling (type a) (p : a parser) (f : Location.t -> path -> path) : a par
     let open Either in
     catch p
       (function
-       | s, Left e -> s, Left {e with path = f loc e.path }
+       | s, Left e -> s, Left { e with path = f loc e.path }
        | x -> x)
 
     (*
@@ -653,7 +654,7 @@ let renamed label p =
  *)
 let not_followed_by (p : 'a parser) : unit parser =
   span get_state
-  $ fun (loc, s) ->
+  $ fun (location, s) ->
     catch p
       (function
        | s', Either.Left _ ->
@@ -661,7 +662,7 @@ let not_followed_by (p : 'a parser) : unit parser =
           (put_state s).run s'
        | _, Either.Right _ ->
           (* if `p` succeeds, then we need to fail *)
-          s, Either.Left { error = NotFollowedBy; path = []; loc = loc }
+          s, Either.Left { error=NotFollowedBy; path=[]; location }
       )
 
 (***** Parsing lists. *****)
