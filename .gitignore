@@ -18,7 +18,7 @@ _coverage/
 # Merlin configuring files
 .merlin
 
-# VSCode configuration files
+# VS Code configuration files
 .vscode/
 
 # Dune generated files
