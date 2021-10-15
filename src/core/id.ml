@@ -7,7 +7,6 @@ type name =
   { modules : string list
   ; hint_name : string
   ; hint_cnt : int option
-  ; was_generated : bool
   ; counter : int
   ; loc : Location.t
   }
@@ -168,7 +167,6 @@ let mk_name ?(loc = Location.ghost) ?(modules=[]) : name_guide -> name =
     let nm', cnt = split_name nm in
     { modules = modules;
       hint_name = nm';
-      was_generated = true;
       counter = 0;
       hint_cnt = cnt;
       loc
