@@ -32,45 +32,36 @@ module OpPragmas = struct
 
   let clear () = pragmas := []
 
-  let default_precedence = -1
-
-  let addPragma n f p_option a =
-    let p =
-      match p_option with
-      | Some x -> x
-      | None -> default_precedence
-    in
-    if List.exists (fun x -> Id.equals x.name n) !pragmas
-    then
-      pragmas :=
-        List.map
-          begin fun x ->
-          if Id.equals x.name n
-          then
-            { name = n
-            ; fix = f
-            ; precedence = p
-            ; assoc = a
-            }
-          else
-            x
-          end
-          !pragmas
-    else
-      let new_entry =
-        { name = n
-        ; fix = f
-        ; precedence = p
-        ; assoc = a
-        }
-      in
-      pragmas := new_entry :: !pragmas
-
   let getPragma name =
     List.find_opt (fun p -> Id.equals name p.name) !pragmas
 
-  let pragmaExists name =
-    List.exists (fun x -> Id.equals x.name name) !pragmas
+  let pragmaExists = Fun.(Option.is_some ++ getPragma)
+
+  let default_precedence = -1
+
+  (** [replaceAll replacement] replaces all fixity pragmas in {!pragmas} whose
+      names match that of [replacement] with [replacement]. *)
+  let replaceAll replacement =
+    pragmas :=
+      List.map
+        begin fun x ->
+          if Id.equals x.name replacement.name
+          then replacement
+          else x
+        end
+        !pragmas
+
+  let addPragma n f precedence a =
+    let entry =
+      { name = n
+      ; fix = f
+      ; precedence = Option.value precedence ~default:default_precedence
+      ; assoc = a
+      }
+    in
+    if pragmaExists n
+    then replaceAll entry
+    else pragmas := entry :: !pragmas
 end
 
 module Modules = struct
