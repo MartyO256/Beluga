@@ -28,7 +28,10 @@ module LF = struct
     | Empty                              (* C ::= Empty                    *)
     | Dec of 'a ctx * 'a                 (* | C, x:'a                      *)
 
-  type svar_class = Ren | Subst
+  (** Substitution variable class *)
+  type svar_class =
+    | Ren (** Renaming *)
+    | Subst (** Substitution *)
 
   type depend =
     | Maybe     (* implicit *)
