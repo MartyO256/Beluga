@@ -586,7 +586,7 @@ let solve_with_new_comp_decl action_name decl f t g =
        g
 
 let solve_by_unbox' f (cT : Comp.meta_typ) (name : B.Id.name) : t =
-  solve_with_new_meta_decl "unbox" LF.(Decl (name, cT, No)) f
+  solve_with_new_meta_decl "unbox" LF.(Decl (name, cT, Depend.No)) f
 
 let solve_by_unbox (m : Comp.exp_syn) (mk_cmd : Comp.meta_typ -> Comp.command) (tau : Comp.typ) (name : B.Id.name) modifier : t =
   let open Comp in

@@ -33,13 +33,11 @@ module LF = struct
     | Ren (** Renaming *)
     | Subst (** Substitution *)
 
-  type depend =
-    | Maybe     (* implicit *)
-    | No        (* explicit *)
-    | Inductive (* used for induction *)
-
   module Depend = struct
-    type t = depend
+    type t =
+      | Maybe     (* implicit *)
+      | No        (* explicit *)
+      | Inductive (* used for induction *)
 
     let equals d1 d2 =
       match d1, d2 with
@@ -74,6 +72,8 @@ module LF = struct
       | No, No -> No
       | _ -> Maybe
   end
+
+  type depend = Depend.t
 end
 
 module Comp = struct

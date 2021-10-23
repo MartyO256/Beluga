@@ -342,7 +342,7 @@ let rec index_kind (k : Ext.LF.kind) : Apx.LF.kind index =
   let open Bind in
   let pi x a k =
     seq2 (index_typ a) (locally (extending_bvars x) (index_kind k))
-    $> fun (a', k') -> Apx.LF.PiKind ((Apx.LF.TypDecl (x, a'), Apx.LF.No), k')
+    $> fun (a', k') -> Apx.LF.PiKind ((Apx.LF.TypDecl (x, a'), Apx.LF.Depend.No), k')
   in
   match k with
   | Ext.LF.Typ _ ->
@@ -371,12 +371,12 @@ and index_typ (a : Ext.LF.typ) : Apx.LF.typ index =
      let x = Id.mk_name Id.NoName in
      seq2 (index_typ a) (locally (extending_bvars x) (index_typ b))
      $> fun (a', b') ->
-        Apx.LF.PiTyp ((Apx.LF.TypDecl (x, a'), Apx.LF.No), b')
+        Apx.LF.PiTyp ((Apx.LF.TypDecl (x, a'), Apx.LF.Depend.No), b')
 
   | Ext.LF.PiTyp (_, Ext.LF.TypDecl (x, a), b) ->
      seq2 (index_typ a) (locally (extending_bvars x) (index_typ b))
      $> fun (a', b') ->
-        Apx.LF.PiTyp ((Apx.LF.TypDecl (x, a'), Apx.LF.Maybe), b')
+        Apx.LF.PiTyp ((Apx.LF.TypDecl (x, a'), Apx.LF.Depend.Maybe), b')
 
   | Ext.LF.Sigma (_, typRec) ->
      index_typ_rec typRec $> fun typRec' -> Apx.LF.Sigma typRec'
@@ -1120,9 +1120,9 @@ let index_cltyp loc cvars fvars =
 
 let index_dep =
   function
-  | Ext.LF.Maybe -> Apx.LF.Maybe
-  | Ext.LF.No -> Apx.LF.No
-  | Ext.LF.Inductive ->
+  | Ext.LF.Depend.Maybe -> Apx.LF.Depend.Maybe
+  | Ext.LF.Depend.No -> Apx.LF.Depend.No
+  | Ext.LF.Depend.Inductive ->
      Error.violation
        "[index_dep] Inductive not allowed in external syntax"
 

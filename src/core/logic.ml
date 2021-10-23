@@ -235,11 +235,11 @@ module Convert = struct
        If BV(i) is free in tA, then BV(i) is bound in (eV |- tA).
        If tA = PiTyp (x:A, No), then tA ~ cG (i.e. conjunction representing the subgoals).
   *)
-  let rec typToClause' eV cG tA (cS, dS, dR) =
-    match tA with
-    | LF.PiTyp ((tD, LF.Maybe), tA') ->
-       typToClause' (LF.DDec (eV, tD)) cG tA' (cS, dS, dR)
-    | LF.PiTyp ((LF.TypDecl (_, tA), LF.No), tB) ->
+  let rec typToClause' eV cG tM (cS, dS, dR) =
+    match tM with
+    | LF.PiTyp ((tD, LF.Depend.Maybe), tM') ->
+       typToClause' (LF.DDec (eV, tD)) cG tM' (cS, dS, dR)
+    | LF.PiTyp ((LF.TypDecl (_, tA), LF.Depend.No), tB) ->
        typToClause' eV (Conjunct (cG, typToGoal tA (cS, dS, dR)))
          tB (cS + 1, dS, dR)
     | LF.Atom _ ->
@@ -248,63 +248,20 @@ module Convert = struct
        ; subGoals = cG
        }
 
-
-  (* comptypToCClause' cD tau subgoals  = cclause
-     Invariants:
-
-       cD |- tau
-       cD |- subgoals
-
-       If tau = TypPiBox (u:U, tau) then cD := cD, u:U
-       If tau = TypArr tau1 tau2 then subgoals := Solve (subgoals, tau1)
-
-
-   To do:
-   - add other types (such as codata, etc. ) abort gracefull
-  *)
-
-  and comptypToCClause' cD tau subgoals  =
-    match tau with
-    | Comp.TypBox (_, _U) ->
-       { cHead = tau
-       ; cMVars = cD
-       ; cSubGoals = subgoals
-       }
-    | Comp.TypPiBox (l, tdecl, tau') ->
-       let cD' = Whnf.extend_mctx cD (tdecl, LF.MShift 0) in
-       comptypToCClause' cD' tau' subgoals
-    | Comp.TypArr (_, t1, t2) ->
-       let cg = comptypToCompGoal t1 in
-       comptypToCClause' cD t2 (Solve (subgoals, cg))
-    | Comp.TypBase (_) ->
-       { cHead = tau
-       ; cMVars = cD
-       ; cSubGoals = subgoals
-       }
-    | _  ->
-       { cHead = tau
-       ; cMVars = cD
-       ; cSubGoals = subgoals
-       }
-
-
-  (* Write out invariant / comment
-     in particular: what is cS, dS, dR
-   *)
-  and typToGoal tA (cS, dS, dR) =
-    match tA with
-    | LF.PiTyp ((tdec, LF.Maybe), tA') ->
-       All (tdec, typToGoal tA' (cS, dS, dR + 1))
-    | LF.PiTyp ((LF.TypDecl (x, tA) as tdec, LF.No), tB) ->
-       Impl ((typToRes tA (cS, dS, dR), tdec), typToGoal tB (cS, dS, dR + 1))
+  and typToGoal tM (cS, dS, dR) =
+    match tM with
+    | LF.PiTyp ((tD, LF.Depend.Maybe), tM') ->
+       All (tD, typToGoal tM' (cS, dS, dR + 1))
+    | LF.PiTyp ((LF.TypDecl (x, tA) as tD, LF.Depend.No), tB) ->
+       Impl ((typToRes tA (cS, dS, dR), tD), typToGoal tB (cS, dS, dR + 1))
     | LF.Atom _ ->
        Atom (Shift.shiftAtom tA (-cS, -dS, dR))
 
   and typToRes tM (cS, dS, dR) =
     match tM with
-    | LF.PiTyp ((tD, LF.Maybe), tM') ->
+    | LF.PiTyp ((tD, LF.Depend.Maybe), tM') ->
        Exists (tD, typToRes tM' (cS, dS, dR + 1))
-    | LF.PiTyp ((LF.TypDecl (_, tA), LF.No), tB) ->
+    | LF.PiTyp ((LF.TypDecl (_, tA), LF.Depend.No), tB) ->
        And (typToGoal tA (cS, dS, dR), typToRes tB (cS + 1, dS + 1, dR + 1))
     | LF.Atom _ ->
        Head (Shift.shiftAtom tM (-cS, -dS, dR))
@@ -427,7 +384,7 @@ module Convert = struct
     let (tA, s) = Whnf.whnfTyp sA in
     match tA with
     | LF.Atom _ ->
-       let u = LF.Inst (Whnf.newMMVar None (cD, cPsi, LF.TClo (tA, s)) LF.Maybe) in
+       let u = LF.Inst (Whnf.newMMVar None (cD, cPsi, LF.TClo (tA, s)) LF.Depend.Maybe) in
        LF.Root (Syntax.Loc.ghost, LF.MVar (u, S.id), LF.Nil, `explicit)
     | LF.PiTyp ((LF.TypDecl (x, tA) as tD, _), tB) ->
        LF.Lam
@@ -521,7 +478,7 @@ module Convert = struct
   let typToQuery cD cPsi (tA, i) =
     let rec typToQuery' (tA, i) s xs =
       match tA with
-      | LF.PiTyp ((LF.TypDecl (x, tA), LF.Maybe), tB) when i > 0 ->
+      | LF.PiTyp ((LF.TypDecl (x, tA), LF.Depend.Maybe), tB) when i > 0 ->
          let tN' = etaExpand cD cPsi (tA, s) in
          typToQuery' (tB, i - 1) (LF.Dot (LF.Obj tN', s)) ((x, tN') :: xs)
       | _ -> ((typToGoal tA (0, 0, 0), s), tA, s, xs)

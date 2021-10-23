@@ -8,9 +8,9 @@ module LF = struct
 
   let show_dep ppf =
     function
-    | Maybe -> fprintf ppf "Maybe"
-    | No -> fprintf ppf "No"
-    | Inductive -> fprintf ppf "Inductive"
+    | Depend.Maybe -> fprintf ppf "Maybe"
+    | Depend.No -> fprintf ppf "No"
+    | Depend.Inductive -> fprintf ppf "Inductive"
 
   let rec show_kind ppf =
     function

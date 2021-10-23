@@ -49,7 +49,7 @@ let unbox cD cG i x cU modifier =
     p.fmt "[unbox] cU = @[%a@]"
       P.(fmt_ppr_cmp_meta_typ cD) cU
     end;
-  let cD' = LF.(Dec (cD, Decl (x, cU', No))) in
+  let cD' = LF.(Dec (cD, Decl (x, cU', Depend.No))) in
   let t = LF.MShift 1 in
   let pat =
     Comp.PatMetaObj

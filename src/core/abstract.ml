@@ -155,19 +155,19 @@ let rec raiseType cPsi tA =
   | I.Null -> (None, tA)
   | I.CtxVar psi -> (Some psi, tA)
   | I.DDec (cPsi', decl) ->
-     raiseType cPsi' (I.PiTyp ((decl, I.Maybe), tA))
+     raiseType cPsi' (I.PiTyp ((decl, I.Depend.Maybe), tA))
 
 let rec raiseType' cPsi tA =
   match cPsi with
   | I.Empty -> (None, tA)
   | I.Dec (cPsi', decl) ->
-     raiseType' cPsi' (I.PiTyp ((decl, I.Maybe), tA))
+     raiseType' cPsi' (I.PiTyp ((decl, I.Depend.Maybe), tA))
 
 let rec raiseKind cPsi tK =
   match cPsi with
   | I.Empty -> tK
   | I.Dec (cPsi', decl) ->
-     raiseKind cPsi' (I.PiKind ((decl, I.Maybe), tK))
+     raiseKind cPsi' (I.PiKind ((decl, I.Depend.Maybe), tK))
 
 let rec fmt_ppr_collection ppf : free_var I.ctx -> unit =
   let open Format in
@@ -360,7 +360,7 @@ let rec ctxToMCtx_pattern names =
   function
   | I.Empty -> I.Empty
   | I.Dec (cQ', FDecl (FV n, Pure (MetaTyp (ityp, _)))) ->
-     I.Dec (ctxToMCtx_pattern (n :: names) cQ', I.Decl (n, ityp, I.No))
+     I.Dec (ctxToMCtx_pattern (n :: names) cQ', I.Decl (n, ityp, I.Depend.No))
 
   | I.Dec (cQ', FDecl (MMV (n, _), Pure (MetaTyp (ityp, dep)))) ->
      let n = NameGen.renumber names n in
@@ -470,7 +470,7 @@ and getType loc p name f =
        let (cD_d, I.Decl (_, mtyp, dep)) = FCVar.get name in
        let mtyp' = Whnf.cnormMTyp (mtyp, Int.LF.MShift (p - Context.length cD_d)) in
        if !pat_flag
-       then MetaTyp (mtyp', I.No)
+       then MetaTyp (mtyp', I.Depend.No)
        else MetaTyp (mtyp', dep)
   with
   | Not_found -> raise (Error (loc, UnknownMTyp name))
@@ -1543,14 +1543,14 @@ let abstrCompKind cK =
   let l = (k - l') in
   let cQ' = abstractMVarCtx cQ (l - 1 - p) in
   let cK' = abstractMVarCompKind cQ' (l, 0) cK1 in
-  let cD' = ctxToMCtx (fun _ -> I.Maybe) cQ' in
+  let cD' = ctxToMCtx (fun _ -> I.Depend.Maybe) cQ' in
   let cK2 = raiseCompKind cD' cK' in
   (cK2, Context.length cD')
 
 let rec dropExplicitCTyp =
   function
   | I.Empty -> I.Empty
-  | I.Dec (cD', I.Decl (_, I.CTyp _, I.No)) -> dropExplicitCTyp cD'
+  | I.Dec (cD', I.Decl (_, I.CTyp _, I.Depend.No)) -> dropExplicitCTyp cD'
   | I.Dec (cD', d) -> I.Dec (dropExplicitCTyp cD', d)
 
 let abstrCompTyp tau =
@@ -1573,7 +1573,7 @@ let abstrCompTyp tau =
   let cQ' = abstractMVarCtx cQ (l - 1 - p) in
   (* let cQ' = abstractMVarCtx cQ (l-1) in *)
   let tau' = abstractMVarCompTyp cQ' (l, 0) tau1 in
-  let cD' = ctxToMCtx (fun _ -> I.Maybe) cQ' in
+  let cD' = ctxToMCtx (fun _ -> I.Depend.Maybe) cQ' in
 
   let tau'' = raiseCompTyp cD' tau' in
   (* We can't just subtract l' because l' counts also implicit context quantifications.
@@ -1644,7 +1644,7 @@ let abstrCodataTyp cD tau tau' =
   let l = k - l' in
   let cQ' = abstractMVarCtx cQ3 (l - 1 - p) in
   let tau_obs = abstractMVarCompTyp cQ' (l, 0) tau0' in
-  let cD' = ctxToMCtx (fun _ -> I.Maybe) cQ' in
+  let cD' = ctxToMCtx (fun _ -> I.Depend.Maybe) cQ' in
   dprintf
     begin fun p ->
     p.fmt "@[<v>tau0' = %a@,tau_obs = %a@]"
@@ -1660,7 +1660,7 @@ let abstrCodataTyp cD tau tau' =
   let l = k - l' in
   let cQ'' = abstractMVarCtx cQ4 0 in
   let tau_res = abstractMVarCompTyp cQ'' (l, 0) tau1' in
-  let cD'' = ctxToMCtx (fun _ -> I.Maybe) cQ'' in
+  let cD'' = ctxToMCtx (fun _ -> I.Depend.Maybe) cQ'' in
   dprintf
     begin fun p ->
     p.fmt "cD'' = %a"

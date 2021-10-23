@@ -331,9 +331,9 @@ module LF = struct
     | Decl(_, _, dep) ->
        begin
          match dep with
-         | No -> true
-         | Maybe -> false
-         | Inductive -> true
+         | Depend.No -> true
+         | Depend.Maybe -> false
+         | Depend.Inductive -> true
        end
     | _ -> true
 

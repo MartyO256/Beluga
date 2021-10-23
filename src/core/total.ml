@@ -99,7 +99,7 @@ let shift = shiftIH 1
 
 let is_inductive =
   function
-  | LF.Inductive -> true
+  | LF.Depend.Inductive -> true
   | _ -> false
 
 let sub_smaller (_, n) =
@@ -300,20 +300,20 @@ let gen_var' loc cD (x, cU) =
   match cU with
   | LF.ClTyp (LF.MTyp tA, cPsi) ->
      let psihat = Context.dctxToHat cPsi in
-     let tM = Whnf.etaExpandMMV loc cD cPsi (tA, Substitution.LF.id) x Substitution.LF.id LF.Maybe in
+     let tM = Whnf.etaExpandMMV loc cD cPsi (tA, Substitution.LF.id) x Substitution.LF.id LF.Depend.Maybe in
      ( (loc, LF.ClObj (psihat, LF.MObj tM))
      , LF.ClObj (psihat, LF.MObj tM)
      )
   | LF.ClTyp (LF.PTyp tA, cPsi) ->
      let psihat = Context.dctxToHat cPsi in
-     let p = Whnf.newMPVar (Some x) (cD, cPsi, tA) LF.Maybe in
+     let p = Whnf.newMPVar (Some x) (cD, cPsi, tA) LF.Depend.Maybe in
      let h = LF.MPVar ((p, Whnf.m_id), Substitution.LF.id) in
      ( (loc, LF.ClObj (psihat, LF.PObj h))
      , LF.ClObj (psihat, LF.PObj h)
      )
   | LF.ClTyp (LF.STyp (cl, cPhi), cPsi) ->
      let psihat = Context.dctxToHat cPsi in
-     let s = Whnf.newMSVar (Some x) (cD, cl, cPsi, cPhi) LF.Maybe in
+     let s = Whnf.newMSVar (Some x) (cD, cl, cPsi, cPhi) LF.Depend.Maybe in
      let sigma = LF.MSVar (0, ((s, Whnf.m_id), Substitution.LF.id)) in
      ( (loc, LF.ClObj (psihat, LF.SObj sigma))
      , LF.ClObj (psihat, LF.SObj sigma)
@@ -322,7 +322,7 @@ let gen_var' loc cD (x, cU) =
   | LF.CTyp (schema_cid) ->
      let mmvar =
        let open! LF in
-       Whnf.newMMVar' (Some x) (cD, CTyp schema_cid) Maybe
+       Whnf.newMMVar' (Some x) (cD, CTyp schema_cid) Depend.Maybe
      in
      let cPsi = LF.CtxVar (LF.CInst (mmvar, Whnf.m_id)) in
      ( (loc, LF.CObj cPsi)
@@ -979,7 +979,7 @@ let annotate'
   let rec ann tau pos =
     match (tau, pos) with
     | (Comp.TypPiBox (loc, LF.Decl (x, cU, _), tau), 1) ->
-       Comp.TypPiBox (loc, LF.Decl (x, cU, LF.Inductive), tau)
+       Comp.TypPiBox (loc, LF.Decl (x, cU, LF.Depend.Inductive), tau)
        |> some
     | (Comp.TypArr (loc, tau1, tau2), 1) ->
        Comp.TypArr (loc, Comp.TypInd tau1, tau2)
@@ -1367,7 +1367,7 @@ let is_meta_inductive (cD : LF.mctx) (mf : LF.mfront) : bool =
     Context.lookup_dep cD k
     |> Option.get' (Failure "Metavariable out of bounds or missing type")
     |> function
-       | (_, LF.Inductive) -> true
+       | (_, LF.Depend.Inductive) -> true
        | _ -> false
   in
   let open Option in

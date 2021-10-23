@@ -37,7 +37,7 @@ let rec raiseType cPsi tA =
   match cPsi with
   | Null -> tA
   | DDec (cPsi', decl) ->
-     raiseType cPsi' (PiTyp ((decl, Maybe), tA))
+     raiseType cPsi' (PiTyp ((decl, Depend.Maybe), tA))
 
 (* Eta-contract elements in substitutions *)
 let etaContract =

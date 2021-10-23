@@ -8,14 +8,14 @@ let rec numeric_order_arg tau n =
   | (TypPiBox (_, LF.Decl (_, _, d), tau), n) ->
      let c =
        match d with
-       | LF.Maybe -> 0
-       | LF.Inductive -> 1
+       | LF.Depend.Maybe -> 0
+       | LF.Depend.Inductive -> 1
        (* We count Inductive as 1 instead of throwing an error because
           we would elaboration only works when we don't have
           Inductive. Inductive can however show up later, but we know
           that it couldn't have been on an implicit argument (this is
           forbidden). *)
-       | LF.No -> 1
+       | LF.Depend.No -> 1
      in
      c + numeric_order_arg tau (n-1)
 

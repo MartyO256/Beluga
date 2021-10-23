@@ -229,7 +229,7 @@ let rec ctxToSub' cPhi =
   | Null -> Ctxsub.ctxShift cPhi (* S.LF.id *)
   | DDec (cPsi', TypDecl (n, tA)) ->
      let s = (ctxToSub' cPhi cPsi' : sub) in
-     let u = Whnf.etaExpandMV cPhi (tA, s) n S.LF.id Maybe in
+     let u = Whnf.etaExpandMV cPhi (tA, s) n S.LF.id Depend.Maybe in
      Dot (Obj u, s)
 
 (* check cD cPsi (tM, s1) (tA, s2) = ()

@@ -36,15 +36,15 @@ let fmt_ppr_lf_depend_clean ppf _ = ()
 
 let fmt_ppr_lf_depend_inductive ppf =
   function
-  | LF.No -> fprintf ppf ""
-  | LF.Maybe -> fprintf ppf ""
-  | LF.Inductive -> fprintf ppf "*"
+  | LF.Depend.No -> fprintf ppf ""
+  | LF.Depend.Maybe -> fprintf ppf ""
+  | LF.Depend.Inductive -> fprintf ppf "*"
 
 let fmt_ppr_lf_depend ppf =
   function
-  | LF.No -> fprintf ppf "^e"
-  | LF.Maybe -> fprintf ppf "^i"
-  | LF.Inductive -> fprintf ppf "*"
+  | LF.Depend.No -> fprintf ppf "^e"
+  | LF.Depend.Maybe -> fprintf ppf "^i"
+  | LF.Depend.Inductive -> fprintf ppf "*"
 
 let fmt_ppr_cmp_split_kind ppf =
   function

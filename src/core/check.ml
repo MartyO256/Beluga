@@ -434,7 +434,7 @@ module Comp = struct
     let rec lookup cD k' =
       match (cD, k') with
       | (I.Dec (cD, I.Decl (u, cdec,dep)), 1) ->
-         I.Dec (cD, I.Decl (u, cdec, I.Inductive))
+         I.Dec (cD, I.Decl (u, cdec, I.Depend.Inductive))
 
       | (I.Dec (_, I.DeclOpt (u, _)), 1) ->
          raise (Error.Violation "Expected declaration to have type")
@@ -1638,7 +1638,7 @@ module Comp = struct
          p.fmt "[check] [command] [Unbox] result ctyp = @[%a@]"
            P.(fmt_ppr_cmp_meta_typ cD) cU
          end;
-       extend_meta I.(Decl (name, cU, No))
+       extend_meta I.(Decl (name, cU, Depend.No))
 
   (** Check a hypothetical derivation.
       Ensures that the contexts in the hypothetical are convertible

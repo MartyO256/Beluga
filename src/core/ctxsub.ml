@@ -120,7 +120,7 @@ let rec ctxToSub_mclosed cD psi =
          , Decl
              ( u_name
              , ClTyp (MTyp tA', Whnf.cnormDCtx (CtxVar psi, MShift k))
-             , Maybe
+             , Depend.Maybe
              )
          )
      , result
@@ -146,7 +146,7 @@ let rec ctxToSub_mclosed cD psi =
          , Decl
              ( u_name
              , clT
-             , Maybe
+             , Depend.Maybe
              )
          )
      , result
@@ -204,7 +204,7 @@ let rec ctxToSub' cD cPhi =
       dprint (fun () -> "composition = " ^ subToString composition);
       let u = Whnf.etaExpandMMV None cD cPhi (tA, composition) Substitution.LF.id in
 *)
-     let u = Whnf.etaExpandMMV Syntax.Loc.ghost cD cPhi (tA, s) n Substitution.LF.id Maybe in
+     let u = Whnf.etaExpandMMV Syntax.Loc.ghost cD cPhi (tA, s) n Substitution.LF.id Depend.Maybe in
      let front = (Obj ((* Root (MVar (u, S.LF.id), Nil) *) u) : front) in
      (* cD ; cPhi |- s : cPsi' *)
      (* cD ; cPhi |- u[id] : [s]tA *)
