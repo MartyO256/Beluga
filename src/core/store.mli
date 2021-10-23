@@ -19,8 +19,6 @@ module OpPragmas : sig
   val getPragma : Id.name -> fixPragma option
 
   val pragmaExists : Id.name -> bool
-
-  val pragmaCount : int ref
 end
 
 module Modules : sig

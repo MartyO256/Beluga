@@ -28,8 +28,6 @@ module OpPragmas = struct
 
   let default = ref Syntax.Ext.Sgn.None
 
-  let pragmaCount = ref 0
-
   let pragmas = ref []
 
   let clear () = pragmas := []
@@ -66,8 +64,7 @@ module OpPragmas = struct
         ; assoc = a
         }
       in
-      pragmas := new_entry :: !pragmas;
-      incr pragmaCount
+      pragmas := new_entry :: !pragmas
 
   let getPragma name =
     List.find_opt (fun p -> Id.equals name p.name) !pragmas
