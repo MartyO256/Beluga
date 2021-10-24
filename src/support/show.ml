@@ -7,7 +7,7 @@ end
 module Make (T : sig
   type t
   val pp : Format.formatter -> t -> unit
-end) : SHOW with type t := T.t = struct
+end) : SHOW with type t = T.t = struct
   include T
   let show t = Format.asprintf "%a" pp t
 end

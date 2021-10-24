@@ -20,6 +20,6 @@ module Make (T : sig
   type t
 
   val compare : t -> t -> int
-end) : ORD with type t := T.t
+end) : ORD with type t = T.t
 
-module Reverse (Ord: ORD) : ORD with type t := Ord.t
+module Reverse (Ord: ORD) : ORD with type t = Ord.t

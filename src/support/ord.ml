@@ -20,7 +20,7 @@ module Make (T : sig
   type t
 
   val compare : t -> t -> int
-end) : ORD with type t := T.t = struct
+end) : ORD with type t = T.t = struct
   include T
 
   let (<) x y = compare x y < 0
@@ -38,7 +38,7 @@ end) : ORD with type t := T.t = struct
     if x >= y then x else y
 end
 
-module Reverse (Ord : ORD) : ORD with type t := Ord.t = Make (struct
+module Reverse (Ord : ORD) : ORD with type t = Ord.t = Make (struct
   type t = Ord.t
 
   let compare x y =

@@ -12,4 +12,4 @@ module Make (T : sig
   type t
 
   val equal : t -> t -> bool
-end) : EQ with type t := T.t
+end) : EQ with type t = T.t

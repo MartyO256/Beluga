@@ -12,7 +12,7 @@ let location { location; _ } = location
 
 let value { value; _ } = value
 
-include Show.Make (struct
+module Show = Show.Make (struct
   type tmp = t (* Workaround `type t = t` being recursive *)
 
   type t = tmp
@@ -20,7 +20,7 @@ include Show.Make (struct
   let pp ppf name = Format.fprintf ppf "%s" name.value
 end)
 
-include Eq.Make (struct
+module Eq = Eq.Make (struct
   type tmp = t (* Workaround `type t = t` being recursive *)
 
   type t = tmp
@@ -28,7 +28,7 @@ include Eq.Make (struct
   let equal x y = String.equal (value x) (value y)
 end)
 
-include Ord.Make (struct
+module Ord = Ord.Make (struct
   type tmp = t (* Workaround `type t = t` being recursive *)
 
   type t = tmp

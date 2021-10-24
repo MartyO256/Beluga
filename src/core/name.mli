@@ -22,8 +22,8 @@ val value : t -> string
 
 (** {1 Instances} *)
 
-include Show.SHOW with type t := t
+module Show : Show.SHOW with type t = t
 
-include Eq.EQ with type t := t
+module Eq : Eq.EQ with type t = t
 
-include Ord.ORD with type t := t
+module Ord : Ord.ORD with type t = t
