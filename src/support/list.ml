@@ -93,3 +93,21 @@ let combine l1 l2 =
     | _ -> raise (Invalid_argument "List.combine")
   in
   combine l1 l2 Fun.id
+
+module MakeOrd (O: Ord.ORD) : Ord.ORD with type t = O.t list = Ord.Make (struct
+  type t = O.t list
+
+  let compare x y =
+    let rec compare x y =
+      match x, y with
+      | [], [] -> 0
+      | [], _ :: _ -> 1
+      | _ :: _, [] -> -1
+      | x :: xs, y :: ys ->
+        let comparison = O.compare x y in
+        if comparison < 0 then -1
+        else if comparison > 0 then 1
+        else compare xs ys
+    in
+    compare x y
+end)

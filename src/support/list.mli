@@ -93,3 +93,14 @@ val split : ('a * 'b) list -> 'a list * 'b list
    @raise Invalid_argument if the two lists have different lengths.
 *)
 val combine : 'a list -> 'b list -> ('a * 'b) list
+
+(** Functor building an implementation of {!Ord} given a totally ordered type.
+    The ordering between two lists of totally ordered types is as follows with
+    respect to [compare l r]:
+    - [compare l r < 0] if the first non-equal comparison has the element in
+      [l] be less than the element in [r], or [r] starts with [l].
+    - [compare l r > 0] if the first non-equal comparison has the element in
+      [l] be greater than the element in [r], or [l] starts with [r].
+    - [compare l r = 0] if all elements in [l] and [r] are pairwise equal.
+*)
+module MakeOrd (O: Ord.ORD) : Ord.ORD with type t = O.t t
