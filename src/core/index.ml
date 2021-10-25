@@ -24,9 +24,9 @@ module P = Pretty.Ext.DefaultPrinter
 let (dprintf, dprint, _) = Debug.makeFunctions' (Debug.toFlags [11])
 open Debug.Fmt
 
-let print_subst_class ppf cl =
+let print_subst_class ppf =
   let open Format in
-  match cl with
+  function
   | Ext.LF.Subst -> fprintf ppf "substitution"
   | Ext.LF.Ren -> fprintf ppf "renaming"
 
