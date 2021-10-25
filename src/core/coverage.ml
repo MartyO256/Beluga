@@ -193,7 +193,7 @@ let gen_str cD cPsi (LF.Atom (_, a, _) as tP) =
 let eta_expand (tH, tA) =
   let rec eta (tA, s) tS =
     match tA with
-    | LF.Atom _ -> LF.Root (Loc.ghost, tH, tS, `explicit)
+    | LF.Atom _ -> LF.Root (Loc.ghost, tH, tS, Plicity.explicit)
     | LF.PiTyp ((LF.TypDecl (x, tB0), _), tB) ->
        let tM = eta (tB0, s) LF.Nil in
        LF.Lam (Loc.ghost, x, eta (tB, S.LF.dot1 s) (LF.App (tM, tS)))
@@ -955,15 +955,15 @@ let match_metaobj cD cD_p ((loc, mO), mt) ((loc', mO_p), mtp) mC sC =
      | LF.((PObj tH, PTyp tA), (PObj tH', PTyp tA')) ->
         let (mC0, sC0) = pre_match_dctx cD cD_p cPsi cPsi' mC sC in
         let (mC1, sC1) = pre_match_typ cD cD_p (cPsi, (tA, S.LF.id)) (cPsi', (tA', S.LF.id)) mC0 sC0 in
-        let covGoal = CovGoal (cPsi, LF.Root (Loc.ghost, tH, LF.Nil, `explicit), (tA, S.LF.id)) in
-        let pat = MetaPatt (cPsi', LF.Root (Loc.ghost, tH', LF.Nil, `explicit), (tA', S.LF.id)) in
+        let covGoal = CovGoal (cPsi, LF.Root (Loc.ghost, tH, LF.Nil, Plicity.explicit), (tA, S.LF.id)) in
+        let pat = MetaPatt (cPsi', LF.Root (Loc.ghost, tH', LF.Nil, Plicity.explicit), (tA', S.LF.id)) in
         pre_match cD cD_p covGoal pat mC1 sC1
 
      | LF.((MObj tR, PTyp tA), (PObj tH, PTyp tA')) ->
         let (mC0, sC0) = pre_match_dctx cD cD_p cPsi cPsi' mC sC in
         let (mC1, sC1) = pre_match_typ cD cD_p (cPsi, (tA, S.LF.id)) (cPsi', (tA', S.LF.id)) mC0 sC0 in
         let covGoal = CovGoal (cPsi, tR, (tA, S.LF.id)) in
-        let tR' = LF.(Root (Loc.ghost, tH, Nil, `explicit)) in
+        let tR' = LF.(Root (Loc.ghost, tH, Nil, Plicity.explicit)) in
         let pat = MetaPatt (cPsi', tR', (tA', S.LF.id)) in
         pre_match cD cD_p covGoal pat mC1 sC1
 
@@ -1251,7 +1251,7 @@ let genObj (cD, cPsi, tP) (tH, tA, k) =
   with
   | None -> None
   | Some spine ->
-     let tM = LF.Root (Loc.ghost, tH', spine, `explicit) in
+     let tM = LF.Root (Loc.ghost, tH', spine, Plicity.explicit) in
      let (cD', cPsi', tR, tP', ms') =
        try
          Abstract.covgoal cPsi' tM tP' (Whnf.cnormMSub ms) (* cD0; cPsi0 |- tM : tP0 *)
@@ -1983,7 +1983,7 @@ let rec decTomdec names cD' (LF.CtxOffset k as cpsi) (d, decls) =
          ( Loc.ghost
          , LF.MVar (LF.Offset 1, Whnf.cnormSub (ss', LF.MShift 1))
          , LF.Nil
-         , `explicit
+         , Plicity.explicit
          )
      in
      ( LF.Dec (cD'', mdec)
@@ -2118,7 +2118,7 @@ let genSVCovGoals (cD, (cPsi, (r0, cPhi))) (* cov_problem *) =
      let mT = LF.ClTyp (LF.STyp (r0, cPhi'), cPsi) in
      let cD' = LF.Dec (cD, LF.Decl (Id.mk_name (Whnf.newMTypName mT), mT, LF.Depend.No)) in
      (* if ren = renaming, generate parameter variable *)
-     let tM = LF.Root (Loc.ghost, LF.MVar (LF.Offset 1, S.LF.id), LF.Nil, `explicit) in
+     let tM = LF.Root (Loc.ghost, LF.MVar (LF.Offset 1, S.LF.id), LF.Nil, Plicity.explicit) in
      let tA0 = Whnf.cnormTyp (tA, LF.MShift 1) in
      let cPhi0 = Whnf.cnormDCtx (cPhi', LF.MShift 1) in
      let mT' = LF.ClTyp (LF.MTyp tA0, cPhi0) in
@@ -3207,7 +3207,7 @@ let initialize_coverage problem projOpt : cov_problems =
         in
         let cG' = Whnf.cnormGCtx (problem.cG, LF.MShift 1) in
         let mv = LF.MVar (LF.Offset 1, s) in
-        let tM = LF.Root (Loc.ghost, mv, LF.Nil, `explicit) in
+        let tM = LF.Root (Loc.ghost, mv, LF.Nil, Plicity.explicit) in
         let cPsi = Whnf.cnormDCtx (cPsi, LF.MShift 1) in
         let tA = Whnf.cnormTyp (tA, LF.MShift 1) in
         let mC = Comp.PatMetaObj (Loc.ghost, (loc, LF.ClObj (Context.dctxToHat cPsi, LF.MObj tM))) in
@@ -3249,7 +3249,7 @@ let initialize_coverage problem projOpt : cov_problems =
        | None -> LF.PVar (1, s)
        | Some k -> LF.Proj (LF.PVar (1, s), k)
      in
-     let tM = LF.Root (Loc.ghost, mv, LF.Nil, `explicit) in
+     let tM = LF.Root (Loc.ghost, mv, LF.Nil, Plicity.explicit) in
      let cPsi = Whnf.cnormDCtx (cPsi, LF.MShift 1) in
      let tA = Whnf.cnormTyp (tA, LF.MShift 1) in
      let mC = Comp.PatMetaObj (Loc.ghost, (Loc.ghost, LF.ClObj (Context.dctxToHat cPsi, LF.MObj tM))) in

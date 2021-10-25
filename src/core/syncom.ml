@@ -3,27 +3,8 @@
  *)
 open Support
 
-module Common = struct
-  type plicity =
-    [ `implicit
-    | `explicit
-    ]
-
-  let is_explicit : plicity -> bool =
-    function
-    | `explicit -> true
-    | _ -> false
-
-  let is_implicit : plicity -> bool =
-    function
-    | `implicit -> true
-    | _ -> false
-end
-
 (** General snoc-lists. *)
 module LF = struct
-  include Common
-
   type 'a ctx =                          (* Generic context declaration    *)
     | Empty                              (* C ::= Empty                    *)
     | Dec of 'a ctx * 'a                 (* | C, x:'a                      *)
@@ -46,15 +27,13 @@ module LF = struct
       | Inductive, Inductive -> true
       | _ -> false
 
-    let of_plicity : plicity -> t =
-      function
-      | `implicit -> Maybe
-      | `explicit -> No
+    let of_plicity =
+      Plicity.fold ~implicit:(fun () -> Maybe) ~explicit:(fun () -> No)
 
-    let to_plicity : t -> plicity =
+    let to_plicity : t -> Plicity.t =
       function
-      | Maybe -> `implicit
-      | No -> `explicit
+      | Maybe -> Plicity.implicit
+      | No -> Plicity.explicit
       | Inductive ->
          Error.violation
            "[Depend] [to_plicity] Inductive is impossible"
@@ -62,9 +41,9 @@ module LF = struct
     (** Variant of to_plicity that does not fail on Inductive, instead
         sending it to `explicit.
      *)
-    let to_plicity' : t -> plicity =
+    let to_plicity' : t -> Plicity.t =
       function
-      | Inductive -> `explicit
+      | Inductive -> Plicity.explicit
       | d -> to_plicity d
 
     let max d1 d2 =
@@ -77,8 +56,6 @@ module LF = struct
 end
 
 module Comp = struct
-  include Common
-
   type unbox_modifier =
     [ `strengthened
     ]

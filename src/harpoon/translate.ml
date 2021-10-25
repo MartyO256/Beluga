@@ -63,7 +63,7 @@ let unbox cD cG i x cU modifier =
                  ( Loc.ghost
                  , MVar (Offset 1, s)
                  , Nil
-                 , `explicit
+                 , Plicity.explicit
                  )
              in
              ClObj (Context.dctxToHat (Whnf.cnormDCtx (cPsi, t)), MObj tM)

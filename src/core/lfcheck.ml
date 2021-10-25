@@ -485,7 +485,7 @@ and inferHead loc cD cPsi head cl =
   | (Const _, Ren)
     | (MVar _, Ren)
     | (MMVar _, Ren) ->
-     raise (Error (loc, TermWhenVar (cD, cPsi, (Root (loc, head, Nil, `explicit)))))
+     raise (Error (loc, TermWhenVar (cD, cPsi, (Root (loc, head, Nil, Plicity.explicit)))))
 
   | (PVar (p, s), _) ->
      (* cD ; cPsi' |- tA <= type *)

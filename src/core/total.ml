@@ -446,7 +446,7 @@ let gen_meta_obj (cdecl, theta) k =
      let phat = Context.dctxToHat cPsi in
      let psihat' = Whnf.cnorm_psihat phat theta in
      let mv = LF.MVar (LF.Offset k, Substitution.LF.id) in
-     let tM = LF.Root (Syntax.Loc.ghost, mv, LF.Nil, `explicit) in
+     let tM = LF.Root (Syntax.Loc.ghost, mv, LF.Nil, Plicity.explicit) in
      (Syntax.Loc.ghost, LF.ClObj (psihat', LF.MObj tM))
 
   | LF.ClTyp (LF.PTyp tA, cPsi) ->
@@ -848,7 +848,7 @@ let shiftMetaObj cM (cPsi', s_proj, cPsi) =
   | (l, LF.ClObj (phat', LF.PObj tH))
        when Whnf.convDCtxHat phat phat' ->
      let LF.Root (_, tH', _, _) =
-       Whnf.norm (LF.Root (l, tH, LF.Nil, `explicit), s_proj)
+       Whnf.norm (LF.Root (l, tH, LF.Nil, Plicity.explicit), s_proj)
      in
      (l, LF.ClObj (phat0, LF.PObj tH'))
 

@@ -105,7 +105,7 @@ let auto_solve_trivial : t =
        let t = LF.MShift idx in
        let LF.ClTyp (_, cPsi) as cU = Whnf.cnormMTyp (cU, t) in
        let head = MVar (Offset idx, S.LF.id) in
-       let clobj = MObj (Root (ghost, head, Nil, `explicit)) in
+       let clobj = MObj (Root (ghost, head, Nil, B.Plicity.explicit)) in
        let psi_hat = Context.dctxToHat cPsi in
        Box
          ( ghost

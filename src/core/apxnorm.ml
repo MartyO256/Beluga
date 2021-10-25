@@ -295,7 +295,7 @@ let rec cnormApxExp cD delta e (cD'', t) =
      dprint (fun () -> "cnormApxExp -- MLam (or could be PLam)");
      let e' =
        cnormApxExp cD (Apx.LF.Dec(delta, Apx.LF.DeclOpt u)) e
-         (Int.LF.Dec (cD'', Int.LF.DeclOpt (u, `explicit)), Whnf.mvar_dot1 t)
+         (Int.LF.Dec (cD'', Int.LF.DeclOpt (u, Plicity.explicit)), Whnf.mvar_dot1 t)
      in
      Apx.Comp.MLam (loc, u, e')
 

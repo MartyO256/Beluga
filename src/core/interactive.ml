@@ -38,7 +38,7 @@ let elaborate_typ (cD : LF.mctx) (tau : ExtComp.typ) : Comp.typ * int =
       (P.fmt_ppr_lf_mctx P.l0) cD
     end;
   let cvars =
-    Store.CVar.of_mctx (fun _ -> `explicit) cD
+    Store.CVar.of_mctx (fun _ -> Plicity.explicit) cD
   in
   Index.hcomptyp cvars tau
   |> Reconstruct.comptyp_cD cD
@@ -231,7 +231,7 @@ let intro (h : Holes.comp_hole_info Holes.hole) =
          when not (is_inferred tdec) ->
        let nam = LF.name_of_ctyp_decl tdec in
        let exp = crawl (LF.Dec (cD, tdec)) cG t' in
-       Comp.MLam (Loc.ghost, nam, exp, `explicit)
+       Comp.MLam (Loc.ghost, nam, exp, Plicity.explicit)
     | _ ->
        let id = Holes.allocate () in
        Comp.Hole (Loc.ghost, id, HoleId.Anonymous)
@@ -349,7 +349,7 @@ let split (e : string) (hi : HoleId.t * Holes.comp_hole_info Holes.hole) : Comp.
                            ( Loc.ghost
                            , LF.MVar (LF.Offset i, LF.Shift 0)
                            , LF.Nil
-                           , `explicit
+                           , Plicity.explicit
                            )
                         )
                     )
@@ -365,7 +365,7 @@ let split (e : string) (hi : HoleId.t * Holes.comp_hole_info Holes.hole) : Comp.
                            ( Loc.ghost
                            , LF.PVar (i, LF.Shift 0)
                            , LF.Nil
-                           , `explicit
+                           , Plicity.explicit
                            )
                         )
                     )

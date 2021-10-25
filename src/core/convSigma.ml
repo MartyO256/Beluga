@@ -303,10 +303,10 @@ let gen_tup_sub conv_list =
     if k = index
     then
       (* only correct if pos stands for a variable of atomic type *)
-      LF.Last (LF.Root (Syntax.Loc.ghost, LF.BVar pos, LF.Nil, `explicit))
+      LF.Last (LF.Root (Syntax.Loc.ghost, LF.BVar pos, LF.Nil, Plicity.explicit))
     else
       begin
-        let tM = LF.Root (Syntax.Loc.ghost, LF.BVar pos, LF.Nil, `explicit) in
+        let tM = LF.Root (Syntax.Loc.ghost, LF.BVar pos, LF.Nil, Plicity.explicit) in
         let tTup = gen_tup (pos - 1) (k, index+1) in
         LF.Cons (tM, tTup)
       end
@@ -352,7 +352,7 @@ let rec etaExpandStrGeneric new_mxvar mk_head loc cD cPsi sA dep n names =
      in
      LF.Tuple (Loc.ghost, tTup)
       *)
-     LF.Root (Loc.ghost, tH, LF.Nil, `explicit)
+     LF.Root (Loc.ghost, tH, LF.Nil, Plicity.explicit)
 
   | (LF.Atom (_, a, _tS) as tP, s) ->
       let (cPhi, conv_list) = flattenDCtx cD cPsi in
@@ -378,7 +378,7 @@ let rec etaExpandStrGeneric new_mxvar mk_head loc cD cPsi sA dep n names =
         ( loc
         , mk_head ((u, Whnf.m_id), ss_proj)
         , LF.Nil
-        , `explicit
+        , Plicity.explicit
         )
 
   | (LF.PiTyp ((LF.TypDecl (x, tA), _), tB), s) ->

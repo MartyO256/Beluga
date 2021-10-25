@@ -27,7 +27,7 @@ module LF = struct
 
   and ctyp_decl =                               (* Contextual Declarations        *)
     | Decl of name * ctyp * depend
-    | DeclOpt of name * plicity
+    | DeclOpt of name * Plicity.t
 
   and typ =                                     (* LF level                       *)
     | Atom of Location.t * cid_typ * spine           (* A ::= a M1 ... Mn              *)
@@ -39,11 +39,11 @@ module LF = struct
   (* The plicity annotation is set to `implicit when reconstructing an
      a hole (_) so that when printing, it can be reproduced correctly.
    *)
-  and normal =                                  (* normal terms                   *)
-    | Lam of Location.t * name * normal              (* M ::= \x.M                *)
-    | Root of Location.t * head * spine * plicity    (*   | h . S                 *)
+  and normal =                                       (* normal terms                   *)
+    | Lam of Location.t * name * normal              (* M ::= \x.M                     *)
+    | Root of Location.t * head * spine * Plicity.t  (*   | h . S                      *)
     | LFHole of Location.t * HoleId.t * HoleId.name
-    | Clo of (normal * sub)                     (*   | Clo(N,s)                   *)
+    | Clo of (normal * sub)                          (*   | Clo(N,s)                   *)
     | Tuple of Location.t * tuple
 
   (* TODO: Heads ought to carry their location.
@@ -218,7 +218,7 @@ module LF = struct
       carry a location.
    *)
   let head (tH : head) : normal =
-    Root (Location.ghost, tH, Nil, `explicit)
+    Root (Location.ghost, tH, Nil, Plicity.explicit)
 
   let mvar cvar sub : head =
     MVar (cvar, sub)
@@ -391,7 +391,7 @@ module Comp = struct
   type meta_spine =
     | MetaNil
     | MetaApp of meta_obj * meta_typ (* annotation for pretty printing*)
-                 * meta_spine * plicity
+                 * meta_spine * Plicity.t
 
   type typ =
     | TypBase of Location.t * cid_comp_typ * meta_spine
@@ -447,12 +447,11 @@ module Comp = struct
 
   type ihctx = ih_decl LF.ctx
 
-  (* normal comp. terms  *)
-  and exp_chk =                                                              (* e :=                                              *)
+  and exp_chk =
     | Syn        of Location.t * exp_syn                                     (* | n                                               *)
     | Fn         of Location.t * name * exp_chk                              (* | \x. e'                                          *)
     | Fun        of Location.t * fun_branches                                (* | b_1...b_k                                       *)
-    | MLam       of Location.t * name * exp_chk * plicity                    (* | Pi X.e'                                         *)
+    | MLam       of Location.t * name * exp_chk * Plicity.t                  (* | Pi X.e'                                         *)
     | Pair       of Location.t * exp_chk * exp_chk                           (* | (e_1, e_2)                                      *)
     | LetPair    of Location.t * exp_syn * (name * name * exp_chk)           (* | letpair n (x, y, e) := let (x=n.1, y=n.2) in  e *)
     | Let        of Location.t * exp_syn * (name * exp_chk)                  (* | let x = n in e                                  *)
@@ -462,16 +461,15 @@ module Comp = struct
     | Impossible of Location.t * exp_syn
     | Hole       of Location.t * HoleId.t * HoleId.name
 
-  (* neutral com. terms *)
-and exp_syn =                                                                    (* n :=                                            *)
-    | Var       of Location.t * offset                                           (* | x:tau in cG                                   *)
-    | DataConst of Location.t * cid_comp_const                                   (* | c:tau in Comp. Sig.                           *)
-    | Obs       of Location.t * exp_chk * LF.msub * cid_comp_dest                (* | observation (e, ms, destructor={typ, ret_typ} *)
-    | Const     of Location.t * cid_prog                                         (* | theorem cp                                    *)
-    | Apply     of Location.t * exp_syn * exp_chk                                (* | (n:tau_1 -> tau_2) (e:tau_1)                  *)
-    | MApp      of Location.t * exp_syn * meta_obj * meta_typ (* annotation, *)  (* | (Pi X:U. n': tau) ([cPsihat |- tM] : [U'])    *)
-                    * plicity                            (* for printing *)
-    | AnnBox    of meta_obj * meta_typ                                           (* | [cPsihat |- tM] : [cPsi |- tA]                *)
+  and exp_syn =
+    | Var       of Location.t * offset
+    | DataConst of Location.t * cid_comp_const
+    | Obs       of Location.t * exp_chk * LF.msub * cid_comp_dest
+    | Const     of Location.t * cid_prog
+    | Apply     of Location.t * exp_syn * exp_chk
+    | MApp      of Location.t * exp_syn * meta_obj * meta_typ (* annotation for printing *)
+                   * Plicity.t
+    | AnnBox    of meta_obj * meta_typ
     | PairVal   of Location.t * exp_syn * exp_syn
 
   and pattern =
@@ -480,7 +478,7 @@ and exp_syn =                                                                   
     | PatFVar of Location.t * name (* used only _internally_ by coverage *)
     | PatVar of Location.t * offset
     | PatPair of Location.t * pattern * pattern
-    | PatAnn of Location.t * pattern * typ * plicity
+    | PatAnn of Location.t * pattern * typ * Plicity.t
 
   and pattern_spine =
     | PatNil

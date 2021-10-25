@@ -141,16 +141,22 @@ let index_cvar' cvars (u : Id.name) : (cvar_error_status, Id.offset) Either.t =
     trying_index (fun _ -> CVar.index_of_name cvars u)
   with
   | None -> Either.Left `unbound
-  | Some (`implicit, _) -> Either.Left `implicit
-  | Some (_, k) ->
-     dprintf
-       begin fun p ->
-       p.fmt "[index_cvar'] indexed %a to offset %d at %a"
-         Id.print u
-         k
-         Loc.print_short (Id.loc_of_name u)
-       end;
-     Either.Right k
+  | Some (plicity, k) ->
+    plicity
+    |> Plicity.fold
+        ~implicit:(fun () -> (Either.Left `implicit))
+        ~explicit:
+          (fun () ->
+            dprintf
+              begin fun p ->
+                p.fmt "[index_cvar'] indexed %a to offset %d at %a"
+                  Id.print u
+                  k
+                  Loc.print_short (Id.loc_of_name u)
+              end;
+            Either.Right k
+          )
+
 
 let index_cvar (name : Id.name) : (cvar_error_status, Id.offset) Either.t index =
   fun c fvars -> (fvars, index_cvar' c.cvars name)
@@ -1232,7 +1238,7 @@ let rec index_compkind cvars fcvars =
   | Ext.Comp.Ctype loc -> Apx.Comp.Ctype loc
   | Ext.Comp.PiKind (loc, cdecl, cK) ->
      let (cdecl', cvars', fcvars') =
-       index_cdecl (fun _ -> `explicit) cvars fcvars cdecl
+       index_cdecl (fun _ -> Plicity.explicit) cvars fcvars cdecl
      in
      let cK' = index_compkind cvars' fcvars' cK in
      Apx.Comp.PiKind (loc, cdecl', cK')
@@ -1282,7 +1288,7 @@ let rec index_comptyp (tau : Ext.Comp.typ) cvars : Apx.Comp.typ fvar_state =
 
   | Ext.Comp.TypPiBox (loc, cdecl, tau) ->
      let (cdecl', cvars, fvars) =
-       index_cdecl (fun _ -> `explicit) cvars fvars cdecl
+       index_cdecl (fun _ -> Plicity.explicit) cvars fvars cdecl
      in
      let (fvars, tau') = index_comptyp tau cvars fvars in
      (fvars, Apx.Comp.TypPiBox (loc, cdecl', tau'))
@@ -1330,7 +1336,7 @@ let rec index_exp cvars vars fcvars =
      Apx.Comp.Fun (loc, index_fbranches cvars vars fcvars fbr)
 
   | Ext.Comp.MLam (loc, u, e) ->
-     let cvars' = CVar.extend cvars (CVar.mk_entry u `explicit) in
+     let cvars' = CVar.extend cvars (CVar.mk_entry u Plicity.explicit) in
      Apx.Comp.MLam (loc, u, index_exp cvars' vars fcvars e)
 
   | Ext.Comp.Pair (loc, e1, e2) ->
@@ -1695,7 +1701,7 @@ and index_command cvars vars fvars =
      Apx.Comp.By (loc, i', x), vars, cvars
   | Ext.Comp.Unbox (loc, i, x, modifier) ->
      let i' = index_exp' cvars vars fvars i in
-     let cvars = CVar.extend cvars (CVar.mk_entry x `explicit) in
+     let cvars = CVar.extend cvars (CVar.mk_entry x Plicity.explicit) in
      Apx.Comp.Unbox (loc, i', x, modifier), vars, cvars
 
 and index_directive cvars vars fvars =
@@ -1758,7 +1764,7 @@ let comptypdef (cT, cK) =
     match cK with
     | Apx.Comp.Ctype _ -> cvars
     | Apx.Comp.PiKind (loc, Apx.LF.Decl (u, ctyp, dep), cK) ->
-       let cvars' = CVar.extend cvars (CVar.mk_entry u `explicit) in
+       let cvars' = CVar.extend cvars (CVar.mk_entry u Plicity.explicit) in
        unroll cK cvars'
   in
   let (_, tau) =

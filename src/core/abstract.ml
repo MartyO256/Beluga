@@ -252,7 +252,7 @@ let etaExpandHead loc h tA =
     function
     | I.Atom _ -> (k, tS)
     | I.PiTyp (_, tA') ->
-       let tN = I.Root (loc, I.BVar k, I.Nil, `explicit) in
+       let tN = I.Root (loc, I.BVar k, I.Nil, Plicity.explicit) in
        etaExpSpine (k + 1) (I.App (tN, tS)) tA'
   in
   let rec etaExpPrefix loc (tM, tA) =
@@ -267,7 +267,7 @@ let etaExpandHead loc h tA =
     | I.BVar x -> I.BVar (x + k - 1)
     | I.FVar _ -> h
   in
-  etaExpPrefix loc (I.Root (loc, h', tS', `explicit), tA)
+  etaExpPrefix loc (I.Root (loc, h', tS', Plicity.explicit), tA)
 
 let rec constraints_solved =
   function

@@ -208,7 +208,7 @@ module Make (R : Store.Cid.RENDERER) : Printer.Int.T = struct
     | LF.Clo(tM, s) ->
        fmt_ppr_lf_normal cD cPsi lvl ppf (Whnf.norm (tM, s))
 
-    | LF.Root (_, _, _, `implicit) when not !PC.printImplicit ->
+    | LF.Root (_, _, _, plicity) when Plicity.is_implicit plicity && not !PC.printImplicit ->
        fprintf ppf "_" (* XXX what to do about spines? -je *)
 
     | LF.Root (_, h, LF.Nil, _) ->
@@ -603,7 +603,9 @@ module Make (R : Store.Cid.RENDERER) : Printer.Int.T = struct
 
     | LF.CtxOffset psi ->
        begin match Context.lookup' cD psi with
-       | Some LF.(Decl (u, _, Depend.Maybe) | DeclOpt (u, `implicit)) when !PC.printCtxUnderscore ->
+       | Some LF.(DeclOpt (u, plicity)) when Plicity.is_implicit plicity && !PC.printCtxUnderscore ->
+          fprintf ppf "_"
+       | Some LF.(Decl (u, _, Depend.Maybe)) when !PC.printCtxUnderscore ->
           fprintf ppf "_"
        | Some LF.(Decl (u, _, _) | DeclOpt (u, _)) ->
           fprintf ppf "%a" Id.print u
@@ -934,12 +936,15 @@ module Make (R : Store.Cid.RENDERER) : Printer.Int.T = struct
     function
     | Comp.MetaNil ->
        fprintf ppf ""
-    | Comp.MetaApp (mO, _, mS, `implicit) ->
-       fmt_ppr_cmp_meta_spine cD lvl ppf mS
-    | Comp.MetaApp (mO, mT, mS, `explicit) ->
-       fprintf ppf "@ @[%a@]%a"
-         (fmt_ppr_cmp_meta_obj_typed cD (lvl + 1)) (mO, mT)
-         (fmt_ppr_cmp_meta_spine cD lvl) mS
+    | Comp.MetaApp (mO, mT, mS, plicity) ->
+      plicity
+      |> Plicity.fold
+          ~implicit:(fun () -> fmt_ppr_cmp_meta_spine cD lvl ppf mS)
+          ~explicit:(fun () ->
+              fprintf ppf "@ @[%a@]%a"
+                (fmt_ppr_cmp_meta_obj_typed cD (lvl + 1)) (mO, mT)
+                (fmt_ppr_cmp_meta_spine cD lvl) mS
+            )
 
   let rec fmt_ppr_cmp_typ cD lvl ppf =
     function
@@ -1060,13 +1065,16 @@ module Make (R : Store.Cid.RENDERER) : Printer.Int.T = struct
        fprintf ppf "(%a , %a)"
          (fmt_ppr_cmp_pattern cD cG 0) pat1
          (fmt_ppr_cmp_pattern cD cG 0) pat2
-    | Comp.PatAnn (_, pat, _, `implicit) ->
-       fmt_ppr_cmp_pattern cD cG 0 ppf pat
 
-    | Comp.PatAnn (_, pat, tau, `explicit) ->
-       fprintf ppf "(%a : %a)"
-         (fmt_ppr_cmp_pattern cD cG 0) pat
-         (fmt_ppr_cmp_typ cD 0) tau
+    | Comp.PatAnn (_, pat, tau, plicity) ->
+      plicity
+      |> Plicity.fold
+          ~implicit:(fun () -> fmt_ppr_cmp_pattern cD cG 0 ppf pat)
+          ~explicit:(fun () ->
+              fprintf ppf "(%a : %a)"
+                (fmt_ppr_cmp_pattern cD cG 0) pat
+                (fmt_ppr_cmp_typ cD 0) tau
+            )
 
     | Comp.PatVar (_, offset) ->
        fprintf ppf "%s"
@@ -1149,23 +1157,26 @@ module Make (R : Store.Cid.RENDERER) : Printer.Int.T = struct
     (*               (fmt_ppr_cmp_exp_chk cD' cG' 0) e *)
     (*               (r_paren_if cond); *)
 
-
-    | Comp.MLam (_, x, e, `explicit) ->
-       let x = fresh_name_mctx cD x in
-       let cond = lvl > 0 in
-       let cD' = LF.Dec(cD, LF.DeclOpt (x, `explicit)) in
-       let cG' = Whnf.cnormGCtx (cG, LF.MShift 1) in
-       fprintf ppf "%smlam %s =>@ %a%s"
-         (l_paren_if cond)
-         (Id.render_name x)
-         (fmt_ppr_cmp_exp_chk cD' cG' 0) e
-         (r_paren_if cond);
-
-    | Comp.MLam (_, x, e, `implicit) ->
-       let x = fresh_name_mctx cD x in
-       let cD' = LF.(Dec(cD, DeclOpt (x, `implicit))) in
-       let cG' = Whnf.cnormGCtx (cG, LF.MShift 1) in
-       fmt_ppr_cmp_exp_chk cD' cG' 0 ppf e
+    | Comp.MLam (_, x, e, plicity) ->
+      plicity
+      |> Plicity.fold
+          ~implicit:(fun () ->
+              let x = fresh_name_mctx cD x in
+              let cD' = LF.(Dec(cD, DeclOpt (x, Plicity.implicit))) in
+              let cG' = Whnf.cnormGCtx (cG, LF.MShift 1) in
+              fmt_ppr_cmp_exp_chk cD' cG' 0 ppf e
+            )
+          ~explicit:(fun ()  ->
+              let x = fresh_name_mctx cD x in
+              let cond = lvl > 0 in
+              let cD' = LF.Dec(cD, LF.DeclOpt (x, Plicity.explicit)) in
+              let cG' = Whnf.cnormGCtx (cG, LF.MShift 1) in
+              fprintf ppf "%smlam %s =>@ %a%s"
+                (l_paren_if cond)
+                (Id.render_name x)
+                (fmt_ppr_cmp_exp_chk cD' cG' 0) e
+                (r_paren_if cond)
+            )
 
     | Comp.Pair (_, e1, e2) ->
        fprintf ppf "(%a , %a)"
@@ -1281,7 +1292,7 @@ module Make (R : Store.Cid.RENDERER) : Printer.Int.T = struct
 
     | Comp.MApp (_, i, cM, cU, pl) ->
        let cond = lvl > 1 in
-       if !PC.printImplicit || Comp.is_explicit pl
+       if !PC.printImplicit || Plicity.is_explicit pl
        then
          fprintf ppf "%s@[<2>@[%a@]@ @[%a@]@]%s"
            (l_paren_if cond)
@@ -1467,7 +1478,7 @@ module Make (R : Store.Cid.RENDERER) : Printer.Int.T = struct
       let open Comp in
       match c with
       | Unbox (_, u, _, _) ->
-         (LF.(Dec (cD, DeclOpt (u, `explicit))), Whnf.cnormGCtx (cG, LF.MShift 1))
+         (LF.(Dec (cD, DeclOpt (u, Plicity.explicit))), Whnf.cnormGCtx (cG, LF.MShift 1))
       | By (_, x, _) ->
          (cD, LF.Dec (cG, Comp.CTypDeclOpt x))
     in

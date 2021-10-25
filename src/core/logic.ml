@@ -385,7 +385,7 @@ module Convert = struct
     match tA with
     | LF.Atom _ ->
        let u = LF.Inst (Whnf.newMMVar None (cD, cPsi, LF.TClo (tA, s)) LF.Depend.Maybe) in
-       LF.Root (Syntax.Loc.ghost, LF.MVar (u, S.id), LF.Nil, `explicit)
+       LF.Root (Syntax.Loc.ghost, LF.MVar (u, S.id), LF.Nil, Plicity.explicit)
     | LF.PiTyp ((LF.TypDecl (x, tA) as tD, _), tB) ->
        LF.Lam
          ( Syntax.Loc.ghost
@@ -1224,7 +1224,7 @@ module Solver = struct
   *)
   and matchAtom dPool cD (cPsi, k) (tA, s) sc =
     (* some shorthands for creating syntax *)
-    let root x = LF.Root (Syntax.Loc.ghost, x, LF.Nil, `explicit) in
+    let root x = LF.Root (Syntax.Loc.ghost, x, LF.Nil, Plicity.explicit) in
     let pvar k = LF.PVar (k, LF.Shift 0) in
     let mvar k = LF.MVar (LF.Offset k, LF.Shift 0) in
     let proj x k = LF.Proj (x, k) in
@@ -1254,7 +1254,7 @@ module Solver = struct
                          ( Syntax.Loc.ghost
                          , LF.BVar (k - k')
                          , fS (spineFromRevList tS)
-                         , `explicit
+                         , Plicity.explicit
                          )
                      in
                      sc (u, tM)
@@ -1406,23 +1406,23 @@ module Solver = struct
             (fun tS -> tS)
         in
       (* Trail to undo MVar instantiations. *)
-        try
-          trail
-            begin fun () ->
-            U.unifyTyp cD cPsi (tA, s) (sCl.tHead, s');
-            solveSubGoals dPool cD (cPsi, k) (sCl.subGoals, s')
-              begin fun (u, tS) ->
-              let tM =
-                LF.Root
-                  ( Syntax.Loc.ghost
-                  , LF.Const (cidTerm)
-                  , fS (spineFromRevList tS)
-                  , `explicit
-                  )
-              in
-              sc (u, tM)
-              end
+      try
+        trail
+          begin fun () ->
+          U.unifyTyp cD cPsi (tA, s) (sCl.tHead, s');
+          solveSubGoals dPool cD (cPsi, k) (sCl.subGoals, s')
+            begin fun (u, tS) ->
+            let tM =
+              LF.Root
+                ( Syntax.Loc.ghost
+                , LF.Const (cidTerm)
+                , fS (spineFromRevList tS)
+                , Plicity.explicit
+                )
+            in
+            sc (u, tM)
             end
+          end
         with
         | U.Failure _ -> ()
       end

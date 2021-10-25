@@ -1165,7 +1165,7 @@ module CVar = struct
 
   type entry =
     { name : cvar
-    ; plicity : Int.Comp.plicity
+    ; plicity : Plicity.t
     }
 
   let mk_entry name plicity =
@@ -1212,7 +1212,7 @@ module CVar = struct
     in
     List.fold_right f (Context.to_list_rev cD) (create ())
 
-  let of_list (l : (Id.name * Int.Comp.plicity) list) : t =
+  let of_list (l : (Id.name * Plicity.t) list) : t =
     List.map (fun (u, p) -> mk_entry u p) l
 end
 

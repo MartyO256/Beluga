@@ -28,9 +28,9 @@ type depend_print_style =
   ]
 
 let fmt_ppr_plicity ppf =
-  function
-  | `explicit -> fprintf ppf "explicit"
-  | `implicit -> fprintf ppf "implicit"
+  Plicity.fold
+    ~implicit:(fun () -> fprintf ppf "implicit")
+    ~explicit:(fun () -> fprintf ppf "explicit")
 
 let fmt_ppr_lf_depend_clean ppf _ = ()
 

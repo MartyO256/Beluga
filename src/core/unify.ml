@@ -194,7 +194,7 @@ module Make (T : TRAIL) : UNIFY = struct
          cPsi |- s_proj : cPhi
          cPsi |- comp  ss' s_proj   : cPhi' *)
     let ss_proj = Substitution.LF.comp ss' s_proj in
-    Root (loc, MMVar ((u, Whnf.m_id), ss_proj), Nil, `explicit)
+    Root (loc, MMVar ((u, Whnf.m_id), ss_proj), Nil, Plicity.explicit)
 
   (* isPatSub s = B
 
@@ -490,7 +490,7 @@ module Make (T : TRAIL) : UNIFY = struct
 
   let expandMVarAtType loc (v, (mt, s)) =
     function
-    | MTyp _ -> INorm (Root (loc, MMVar ((v, mt), s), Nil, `explicit))
+    | MTyp _ -> INorm (Root (loc, MMVar ((v, mt), s), Nil, Plicity.explicit))
     | PTyp _ -> IHead (MPVar ((v, mt), s))
     | STyp _ -> ISub (MSVar (0, ((v, mt), s)))
 
@@ -1195,7 +1195,7 @@ module Make (T : TRAIL) : UNIFY = struct
       let v = Whnf.newMVar (Some mmvar.name) (cPsi2, tP') mmvar.depend in
       instantiateMVar
         ( mmvar.instantiation
-        , Root (loc, MVar (v, idsub), Nil, `explicit)
+        , Root (loc, MVar (v, idsub), Nil, Plicity.explicit)
         , mmvar.constraints.contents
         );
       (v, comp (comp idsub t) ssubst)
@@ -1943,7 +1943,7 @@ module Make (T : TRAIL) : UNIFY = struct
             *)
            instantiateMVar
              ( mmvar1.instantiation
-             , Root (Syntax.Loc.ghost, MVar (w, s'), Nil, `explicit)
+             , Root (Syntax.Loc.ghost, MVar (w, s'), Nil, Plicity.explicit)
              , mmvar1.constraints.contents
              )
          end
@@ -2044,7 +2044,7 @@ module Make (T : TRAIL) : UNIFY = struct
              end;
            instantiateMMVar
              ( mmvar2.instantiation
-             , Root (loc', MMVar (mv, id), tS', `explicit)
+             , Root (loc', MMVar (mv, id), tS', Plicity.explicit)
              , mmvar2.constraints.contents
              );
            dprintf
@@ -2111,7 +2111,7 @@ module Make (T : TRAIL) : UNIFY = struct
        begin
          try
            unifySub mflag cD0 cPsi s1 EmptySub;
-           instantiateMMVar (instantiation, Root (loc', MVar (Offset u, id), tS', `explicit), !constraints)
+           instantiateMMVar (instantiation, Root (loc', MVar (Offset u, id), tS', Plicity.explicit), !constraints)
          with _ ->
            let id = next_constraint_id () in
            addConstraint (constraints, ref (Eqn (id, cD0, cPsi, INorm sM1, INorm sM2)))
@@ -2144,7 +2144,7 @@ module Make (T : TRAIL) : UNIFY = struct
          try
            unifyDCtx1 mflag cD0 cPsi1 cPsi;unifyTyp mflag cD0 cPsi (tP, id) (tQ, id);
            unifySub mflag cD0 cPsi s1 s2;
-           instantiateMMVar (instantiation, Root (loc', MVar (Offset u, id), tS', `explicit), !constraints)
+           instantiateMMVar (instantiation, Root (loc', MVar (Offset u, id), tS', Plicity.explicit), !constraints)
          with _ ->
            let id = next_constraint_id () in
            addConstraint (constraints, ref (Eqn (id, cD0, cPsi, INorm sM1, INorm sM2)))
@@ -2200,7 +2200,7 @@ module Make (T : TRAIL) : UNIFY = struct
              unifyTyp mflag cD0 cPsi0 (tP0, Substitution.LF.id) (tP1', Substitution.LF.id);
              instantiateMMVar
                ( instantiation
-               , Root (loc, MVar (Offset (u - k), Substitution.LF.id), tS, `explicit)
+               , Root (loc, MVar (Offset (u - k), Substitution.LF.id), tS, Plicity.explicit)
                , !constraints
                );
              unifySub mflag cD0 cPsi0 s s'
@@ -2218,7 +2218,7 @@ module Make (T : TRAIL) : UNIFY = struct
                unifyTyp mflag cD0 cPsi0 (tP0, Substitution.LF.id) (tP1', Substitution.LF.id);
                instantiateMMVar
                  ( instantiation
-                 , Root (loc, MVar (Offset (u - k), Substitution.LF.id), tS, `explicit)
+                 , Root (loc, MVar (Offset (u - k), Substitution.LF.id), tS, Plicity.explicit)
                  , !constraints
                  )
              else
@@ -2560,7 +2560,7 @@ module Make (T : TRAIL) : UNIFY = struct
          mflag
          cD0
          cPsi
-         (Root (Syntax.Loc.ghost, head, Nil, `explicit), id)
+         (Root (Syntax.Loc.ghost, head, Nil, Plicity.explicit), id)
          (tN, id)
 
     | (Undef, Undef) -> ()

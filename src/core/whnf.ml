@@ -2392,7 +2392,7 @@ let rec lowerTyp cPsi =
 
 let mmVarToClObj loc' (mV : mm_var) : cltyp -> clobj =
   function
-  | MTyp tA -> MObj (Root (loc', MMVar ((mV, m_id), LF.id), Nil, `explicit))
+  | MTyp tA -> MObj (Root (loc', MMVar ((mV, m_id), LF.id), Nil, Plicity.explicit))
   | PTyp tA -> PObj (MPVar ((mV, m_id), LF.id))
   | STyp (_, cPhi) -> SObj (MSVar (0, ((mV, m_id), LF.id)))
 

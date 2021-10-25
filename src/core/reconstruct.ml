@@ -718,11 +718,11 @@ and elMetaSpine loc cD s cKt =
 
   | (s, (Int.Comp.PiKind (loc', Int.LF.Decl (u, cU, Int.LF.Depend.Maybe), cK), t)) ->
      let (mO, t') = Whnf.dotMMVar loc cD t (u, cU, Int.LF.Depend.Maybe) in
-     Int.Comp.MetaApp(mO, Whnf.cnormMTyp (cU, t), elMetaSpine loc cD s (cK, t'), `implicit)
+     Int.Comp.MetaApp(mO, Whnf.cnormMTyp (cU, t), elMetaSpine loc cD s (cK, t'), Plicity.implicit)
 
   | (Apx.Comp.MetaApp (m, s), (Int.Comp.PiKind (_, Int.LF.Decl(_, ctyp, _), cK), theta)) ->
      let (mO, t') = elMetaObjCTyp loc cD m theta ctyp in
-     Int.Comp.MetaApp(mO, Whnf.cnormMTyp (ctyp, theta), elMetaSpine loc cD s (cK, t'), `explicit)
+     Int.Comp.MetaApp(mO, Whnf.cnormMTyp (ctyp, theta), elMetaSpine loc cD s (cK, t'), Plicity.explicit)
 
 let rec spineToMSub cS' ms =
   match cS' with
@@ -1005,7 +1005,7 @@ and elExpW cD cG e theta_tau =
      let cD' = extend_mctx cD (u, cdec, theta) in
      let cG' = Whnf.cnormGCtx (cG, Int.LF.MShift 1) in
      let e' = elExp cD' cG' e (tau, C.mvar_dot1 theta) in
-     Int.Comp.MLam (loc, u, e', `explicit)
+     Int.Comp.MLam (loc, u, e', Plicity.explicit)
 
   | ( e
     , (Int.Comp.TypPiBox(_, (Int.LF.Decl(_, _, Int.LF.Depend.Maybe) as cdec), tau), theta)
@@ -1015,7 +1015,7 @@ and elExpW cD cG e theta_tau =
      let cD' = extend_mctx cD (u, cdec, theta) in
      let e' = Apxnorm.cnormApxExp cD (Apx.LF.Empty) e (cD', Int.LF.MShift 1) in
      let e' = elExp cD' cG' e' (tau, C.mvar_dot1 theta) in
-     Int.Comp.MLam (Syntax.Loc.ghost, u, e', `implicit)
+     Int.Comp.MLam (Syntax.Loc.ghost, u, e', Plicity.implicit)
 
   | (Apx.Comp.Syn (loc, i), (tau, t)) ->
      dprintf
@@ -1311,7 +1311,7 @@ and elExp' cD cG i =
             P.(fmt_ppr_cmp_meta_typ cD) (Whnf.cnormMTyp (ctyp, theta))
           end;
         let cM = elMetaObj cD cM (ctyp, theta) in
-        ( Int.Comp.MApp (loc, i', cM, Whnf.cnormMTyp (ctyp, theta), `explicit)
+        ( Int.Comp.MApp (loc, i', cM, Whnf.cnormMTyp (ctyp, theta), Plicity.explicit)
         , (tau, Int.LF.MDot (metaObjToFt cM, theta))
         )
 
@@ -1323,7 +1323,7 @@ and elExp' cD cG i =
             P.(fmt_ppr_cmp_meta_typ cD) (Whnf.cnormMTyp (ctyp, theta))
           end;
         let cM = elMetaObj cD (box_hole_cM loc ctyp) (ctyp, theta) in
-        ( Int.Comp.MApp (loc, i', cM, Whnf.cnormMTyp (ctyp, theta), `explicit)
+        ( Int.Comp.MApp (loc, i', cM, Whnf.cnormMTyp (ctyp, theta), Plicity.explicit)
         , (tau, Int.LF.MDot (metaObjToFt cM, theta))
         )
 
@@ -1594,7 +1594,7 @@ and elPatSyn (cD : Int.LF.mctx) (cG : Int.Comp.gctx) =
   | Apx.Comp.PatAnn (loc, pat, tau) ->
      let tau' = elCompTyp cD tau in
      let (cG', pat') = elPatChk cD cG pat (tau', Whnf.m_id) in
-     (cG', Int.Comp.PatAnn (loc, pat', tau', `explicit), (tau', Whnf.m_id))
+     (cG', Int.Comp.PatAnn (loc, pat', tau', Plicity.explicit), (tau', Whnf.m_id))
 
   | Apx.Comp.PatConst (loc, c, pat_spine) ->
      let tau = (CompConst.get c).CompConst.Entry.typ in
@@ -1741,7 +1741,7 @@ and recPatObj' cD pat (cD_s, tau_s) =
      let ttau' = (tau', Whnf.m_id) in
      let (cG', pat') = elPatChk cD Int.LF.Empty pat' ttau' in
      (* Return annotated pattern? Int.Comp.PatAnn (l, pat', tau') *)
-     (cG', Int.Comp.PatAnn (l, pat', tau', `explicit), ttau')
+     (cG', Int.Comp.PatAnn (l, pat', tau', Plicity.explicit), ttau')
 
   | Apx.Comp.PatAnn (_, pat, tau) ->
      dprintf
@@ -1793,7 +1793,7 @@ and recPatObj' cD pat (cD_s, tau_s) =
      let (cG', pat') = elPatChk cD Int.LF.Empty pat ttau' in
      (* here the annotation is implicit because it did not appear in
         the user-supplied syntax; we just reconstructed it. *)
-     (cG', Int.Comp.PatAnn(loc, pat', tau_p, `implicit), ttau')
+     (cG', Int.Comp.PatAnn(loc, pat', tau_p, Plicity.implicit), ttau')
 
   | _ ->
      dprintf
@@ -2232,7 +2232,7 @@ and elSplit loc cD cG pb i tau_i bs ttau =
              , let open Int.LF in
                ClObj
                  ( Context.dctxToHat cPsi'
-                 , MObj (Root (Loc.ghost, (proj_maybe h k), Nil, `explicit))
+                 , MObj (Root (Loc.ghost, (proj_maybe h k), Nil, Plicity.explicit))
                  )
              )
            )

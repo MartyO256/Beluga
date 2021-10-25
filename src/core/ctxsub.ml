@@ -62,7 +62,7 @@ let rec lowerMVar cPsi sA' =
          ( Loc.ghost
          , MVar (Offset 1, Substitution.LF.id)
          , Nil
-         , `explicit
+         , Plicity.explicit
          ) ,
       ClTyp(MTyp (TClo sA') , cPsi))
 
@@ -101,7 +101,7 @@ let rec ctxToSub_mclosed cD psi =
          ( Loc.ghost
          , MVar (Offset 1, Substitution.LF.id)
          , Nil
-         , `explicit
+         , Plicity.explicit
          )
      in
 
@@ -227,7 +227,7 @@ let mdeclToMMVar cD0 n mtyp dep =
          ( Loc.ghost
          , MMVar ((u, Whnf.m_id), Substitution.LF.id)
          , Nil
-         , `explicit
+         , Plicity.explicit
          )
      in
      ClObj (phat, MObj tR)
