@@ -280,16 +280,12 @@ let recSgnDecls decls =
              else
                raise (Error (loc, IllegalOperatorPrag (name, fix, actual)))
        end;
-       let assoc' =
-         let assoc_map =
-           function
+       let assoc' = assoc |>
+         Option.map
+           (function
            | Ext.Sgn.Left -> Int.LF.Left
            | Ext.Sgn.Right -> Int.LF.Right
-           | Ext.Sgn.None -> Int.LF.NoAssoc
-         in
-         match assoc with
-         | None -> None
-         | Some x -> Some (assoc_map x)
+           | Ext.Sgn.None -> Int.LF.NoAssoc)
        in
        let fix' =
          match fix with
