@@ -1615,11 +1615,11 @@ and index_branch cvars vars fcvars =
      dprint (fun () -> "index_branch");
      (* computing fcvars' is unnecessary? -bp *)
      let fcvars' =
-       Option.eliminate
-         (Fun.const Fun.id)
-         extending_by
-         (get_ctxvar_mobj mO)
-         (empty_fvars `open_term)
+       get_ctxvar_mobj mO
+       |> Option.fold
+         ~none:Fun.id
+         ~some:extending_by
+       |> Fun.apply (empty_fvars `open_term)
      in
      dprintf
        begin fun p ->
