@@ -2,6 +2,8 @@ include Stdlib.Fun
 
 let (++) f g x = f (g x)
 
+let apply x f = f x
+
 let flip f y x = f x y
 
 let rec until f =

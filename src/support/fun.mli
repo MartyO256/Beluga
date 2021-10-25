@@ -5,6 +5,11 @@ include module type of Stdlib.Fun
 *)
 val (++) : ('b -> 'c) -> ('a -> 'b) -> ('a -> 'c)
 
+(** [apply x f] is [f x]. This is useful when a function pipeline ends in a call
+    to the generated function.
+*)
+val apply : 'a -> ('a -> 'b) -> 'b
+
 (** [flip f x y] is [f y x].
 *)
 val flip : ('a -> 'b -> 'c) -> ('b -> 'a -> 'c)
