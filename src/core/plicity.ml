@@ -8,9 +8,9 @@ let implicit = Implicit
 
 let explicit = Explicit
 
-let fold ~implicit:on_implicit ~explicit:on_explicit = function
-  | Explicit -> on_explicit ()
-  | Implicit -> on_implicit ()
+let fold ~implicit ~explicit = function
+  | Explicit -> explicit ()
+  | Implicit -> implicit ()
 
 module Eq = Eq.Make (struct
   type tmp = t (* Workaround `type t = t` being recursive *)
