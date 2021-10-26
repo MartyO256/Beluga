@@ -348,7 +348,7 @@ let rec index_kind (k : Ext.LF.kind) : Apx.LF.kind index =
   let open Bind in
   let pi x a k =
     seq2 (index_typ a) (locally (extending_bvars x) (index_kind k))
-    $> fun (a', k') -> Apx.LF.PiKind ((Apx.LF.TypDecl (x, a'), Apx.LF.Depend.No), k')
+    $> fun (a', k') -> Apx.LF.PiKind ((Apx.LF.TypDecl (x, a'), Depend.explicit), k')
   in
   match k with
   | Ext.LF.Typ _ ->
@@ -377,12 +377,12 @@ and index_typ (a : Ext.LF.typ) : Apx.LF.typ index =
      let x = Id.mk_name Id.NoName in
      seq2 (index_typ a) (locally (extending_bvars x) (index_typ b))
      $> fun (a', b') ->
-        Apx.LF.PiTyp ((Apx.LF.TypDecl (x, a'), Apx.LF.Depend.No), b')
+        Apx.LF.PiTyp ((Apx.LF.TypDecl (x, a'), Depend.explicit), b')
 
   | Ext.LF.PiTyp (_, Ext.LF.TypDecl (x, a), b) ->
      seq2 (index_typ a) (locally (extending_bvars x) (index_typ b))
      $> fun (a', b') ->
-        Apx.LF.PiTyp ((Apx.LF.TypDecl (x, a'), Apx.LF.Depend.Maybe), b')
+        Apx.LF.PiTyp ((Apx.LF.TypDecl (x, a'), Depend.implicit), b')
 
   | Ext.LF.Sigma (_, typRec) ->
      index_typ_rec typRec $> fun typRec' -> Apx.LF.Sigma typRec'
@@ -1125,12 +1125,12 @@ let index_cltyp loc cvars fvars =
      end
 
 let index_dep =
-  function
-  | Ext.LF.Depend.Maybe -> Apx.LF.Depend.Maybe
-  | Ext.LF.Depend.No -> Apx.LF.Depend.No
-  | Ext.LF.Depend.Inductive ->
-     Error.violation
-       "[index_dep] Inductive not allowed in external syntax"
+  Depend.fold
+    ~implicit:(Fun.const Depend.implicit)
+    ~explicit:(Fun.const Depend.explicit)
+    ~inductive:(fun () -> Error.violation
+      "[index_dep] Inductive not allowed in external syntax"
+    )
 
 let index_cdecl plicity_of_dep cvars fvars =
   function
@@ -1163,7 +1163,7 @@ let rec index_mctx cvars fvars =
   | Ext.LF.Dec (delta, cdec) ->
      let (delta', cvars', fvars') = index_mctx cvars fvars delta in
      let (cdec', cvars'', fvars'') =
-       index_cdecl Ext.LF.Depend.to_plicity cvars' fvars' cdec
+       index_cdecl Depend.to_plicity cvars' fvars' cdec
      in
      (Apx.LF.Dec (delta', cdec'), cvars'', fvars'')
 

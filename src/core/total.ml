@@ -97,11 +97,6 @@ let rec shiftIH k =
 
 let shift = shiftIH 1
 
-let is_inductive =
-  function
-  | LF.Depend.Inductive -> true
-  | _ -> false
-
 let sub_smaller (_, n) =
   function
   | LF.Shift n' ->
@@ -300,20 +295,20 @@ let gen_var' loc cD (x, cU) =
   match cU with
   | LF.ClTyp (LF.MTyp tA, cPsi) ->
      let psihat = Context.dctxToHat cPsi in
-     let tM = Whnf.etaExpandMMV loc cD cPsi (tA, Substitution.LF.id) x Substitution.LF.id LF.Depend.Maybe in
+     let tM = Whnf.etaExpandMMV loc cD cPsi (tA, Substitution.LF.id) x Substitution.LF.id Depend.implicit in
      ( (loc, LF.ClObj (psihat, LF.MObj tM))
      , LF.ClObj (psihat, LF.MObj tM)
      )
   | LF.ClTyp (LF.PTyp tA, cPsi) ->
      let psihat = Context.dctxToHat cPsi in
-     let p = Whnf.newMPVar (Some x) (cD, cPsi, tA) LF.Depend.Maybe in
+     let p = Whnf.newMPVar (Some x) (cD, cPsi, tA) Depend.implicit in
      let h = LF.MPVar ((p, Whnf.m_id), Substitution.LF.id) in
      ( (loc, LF.ClObj (psihat, LF.PObj h))
      , LF.ClObj (psihat, LF.PObj h)
      )
   | LF.ClTyp (LF.STyp (cl, cPhi), cPsi) ->
      let psihat = Context.dctxToHat cPsi in
-     let s = Whnf.newMSVar (Some x) (cD, cl, cPsi, cPhi) LF.Depend.Maybe in
+     let s = Whnf.newMSVar (Some x) (cD, cl, cPsi, cPhi) Depend.implicit in
      let sigma = LF.MSVar (0, ((s, Whnf.m_id), Substitution.LF.id)) in
      ( (loc, LF.ClObj (psihat, LF.SObj sigma))
      , LF.ClObj (psihat, LF.SObj sigma)
@@ -322,7 +317,7 @@ let gen_var' loc cD (x, cU) =
   | LF.CTyp (schema_cid) ->
      let mmvar =
        let open! LF in
-       Whnf.newMMVar' (Some x) (cD, CTyp schema_cid) Depend.Maybe
+       Whnf.newMMVar' (Some x) (cD, CTyp schema_cid) Depend.implicit
      in
      let cPsi = LF.CtxVar (LF.CInst (mmvar, Whnf.m_id)) in
      ( (loc, LF.CObj cPsi)
@@ -502,7 +497,7 @@ let rec gen_rec_calls cD cIH (cD', j) mfs =
   | LF.Empty -> cIH
 
   | LF.Dec (cD', LF.Decl (u, cU, dep))
-       when not (is_inductive dep) ->
+       when not (Depend.is_inductive dep) ->
      dprintf
        begin fun p ->
        p.fmt "[gen_rec_calls] @[<v>ignoring cD' entry %d, i.e.\
@@ -979,7 +974,7 @@ let annotate'
   let rec ann tau pos =
     match (tau, pos) with
     | (Comp.TypPiBox (loc, LF.Decl (x, cU, _), tau), 1) ->
-       Comp.TypPiBox (loc, LF.Decl (x, cU, LF.Depend.Inductive), tau)
+       Comp.TypPiBox (loc, LF.Decl (x, cU, Depend.inductive), tau)
        |> some
     | (Comp.TypArr (loc, tau1, tau2), 1) ->
        Comp.TypArr (loc, Comp.TypInd tau1, tau2)
@@ -1366,9 +1361,7 @@ let is_meta_inductive (cD : LF.mctx) (mf : LF.mfront) : bool =
   let is_inductive_meta_variable (k : offset) : bool =
     Context.lookup_dep cD k
     |> Option.get' (Failure "Metavariable out of bounds or missing type")
-    |> function
-       | (_, LF.Depend.Inductive) -> true
-       | _ -> false
+    |> fun (_, dep) -> Depend.is_inductive dep
   in
   let open Option in
   variable_of_mfront mf

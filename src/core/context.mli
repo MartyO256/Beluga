@@ -92,7 +92,7 @@ val lookup' : 'a LF.ctx -> int -> 'a option
       DeclOpt).  If you need to distinguish these cases, then you
       should use `lookup'` and match on the `ctyp_decl` yourself.
  *)
-val lookup_dep : LF.mctx -> int -> (LF.ctyp * LF.depend) option
+val lookup_dep : LF.mctx -> int -> (LF.ctyp * Depend.t) option
 val lookup : Comp.gctx -> int -> Comp.typ option
 
 val lookupSchema : mctx -> int -> Id.cid_schema

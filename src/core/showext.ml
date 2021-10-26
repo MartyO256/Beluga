@@ -7,10 +7,10 @@ module LF = struct
   open Syntax.Ext.LF
 
   let show_dep ppf =
-    function
-    | Depend.Maybe -> fprintf ppf "Maybe"
-    | Depend.No -> fprintf ppf "No"
-    | Depend.Inductive -> fprintf ppf "Inductive"
+    Depend.fold
+      ~implicit:(fun () -> fprintf ppf "Implicit")
+      ~explicit:(fun () -> fprintf ppf "Explicit")
+      ~inductive:(fun () -> fprintf ppf "Inductive")
 
   let rec show_kind ppf =
     function

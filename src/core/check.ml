@@ -434,7 +434,7 @@ module Comp = struct
     let rec lookup cD k' =
       match (cD, k') with
       | (I.Dec (cD, I.Decl (u, cdec,dep)), 1) ->
-         I.Dec (cD, I.Decl (u, cdec, I.Depend.Inductive))
+         I.Dec (cD, I.Decl (u, cdec, Depend.inductive))
 
       | (I.Dec (_, I.DeclOpt (u, _)), 1) ->
          raise (Error.Violation "Expected declaration to have type")
@@ -545,7 +545,7 @@ module Comp = struct
        id_map_ind cD1' (I.MDot (I.MV (k+1), I.MShift (k+1))) cD
 
     | (I.MDot (I.MV u, ms), I.Dec (cD, I.Decl (_, mtyp1, dep))) ->
-       if Total.is_inductive dep
+       if Depend.is_inductive dep
        then
          begin
            let cD1' = mark_ind cD1' u in
@@ -561,7 +561,7 @@ module Comp = struct
          | I.(ClObj (_, PObj (PVar (u, Shift 0))))
          | I.(CObj (CtxVar (CtxOffset u)))
          | I.(ClObj (_, SObj (SVar (u, 0, Shift 0)))) ->
-          if Total.is_inductive dep
+          if Depend.is_inductive dep
           then
             begin
               let cD1' = mark_ind cD1' u in
@@ -709,7 +709,7 @@ module Comp = struct
            , i
            , cM
            , Whnf.cnormMTyp (cU, theta)
-           , Int.LF.Depend.to_plicity dep
+           , Depend.to_plicity dep
            (* the MApp's plicity depends on the type of the PiBox that
               it eliminates. *)
            )
@@ -760,7 +760,7 @@ module Comp = struct
     match (mS, cKt) with
     | (MetaNil, (Ctype _, _)) -> ()
     | (MetaApp (mO, mT, mS, plicity), (PiKind (_, I.Decl (_, ctyp, dep), cK), t)) ->
-       if Stdlib.(<>) (Int.LF.Depend.to_plicity dep) plicity
+       if not (Plicity.Eq.equal (Depend.to_plicity dep) plicity)
        then Error.violation "[checkMetaSpine] plicity mismatch";
        let loc = getLoc mO in
        LF.checkMetaObj cD mO (ctyp, t);
@@ -1638,7 +1638,7 @@ module Comp = struct
          p.fmt "[check] [command] [Unbox] result ctyp = @[%a@]"
            P.(fmt_ppr_cmp_meta_typ cD) cU
          end;
-       extend_meta I.(Decl (name, cU, Depend.No))
+       extend_meta I.(Decl (name, cU, Depend.explicit))
 
   (** Check a hypothetical derivation.
       Ensures that the contexts in the hypothetical are convertible

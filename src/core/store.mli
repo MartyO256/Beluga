@@ -481,7 +481,7 @@ module CVar : sig
 
   (** Erases the context down to a list of names using the given
       function to interpret the plicity of declarations. *)
-  val of_mctx : (LF.depend -> Plicity.t) -> LF.mctx -> t
+  val of_mctx : (Depend.t -> Plicity.t) -> LF.mctx -> t
 
   val to_string : t -> string
   val of_list : (Id.name * Plicity.t) list -> t

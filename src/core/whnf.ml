@@ -37,7 +37,7 @@ let rec raiseType cPsi tA =
   match cPsi with
   | Null -> tA
   | DDec (cPsi', decl) ->
-     raiseType cPsi' (PiTyp ((decl, Depend.Maybe), tA))
+     raiseType cPsi' (PiTyp ((decl, Depend.implicit), tA))
 
 (* Eta-contract elements in substitutions *)
 let etaContract =
@@ -2025,7 +2025,7 @@ and convSchElem (SchElem (cPsi, trec)) (SchElem (cPsi', trec')) =
 let convCTypDecl d1 d2 =
   match (d1, d2) with
   | (Decl (x1, cT1, dep1), Decl (x2, cT2, dep2)) ->
-     Id.equals x1 x2 && Depend.equals dep1 dep2
+     Id.equals x1 x2 && Depend.Eq.equal dep1 dep2
      && convMTyp cT1 cT2
   | (DeclOpt (x1, _), DeclOpt (x2, _)) ->
      Id.equals x1 x2

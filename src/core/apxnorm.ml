@@ -399,7 +399,7 @@ and cnormApxBranch cD delta b (cD'', t) =
     | Apx.LF.Empty -> cD''
     | Apx.LF.Dec (delta2', Apx.LF.Decl(x, _, dep)) ->
        let cD1'' = append_mctx cD'' delta2' in
-       Int.LF.Dec (cD1'', Int.LF.DeclOpt (x, Int.LF.Depend.to_plicity dep))
+       Int.LF.Dec (cD1'', Int.LF.DeclOpt (x, Depend.to_plicity dep))
   in
 
   match b with

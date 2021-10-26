@@ -237,9 +237,9 @@ module Convert = struct
   *)
   let rec typToClause' eV cG tM (cS, dS, dR) =
     match tM with
-    | LF.PiTyp ((tD, LF.Depend.Maybe), tM') ->
+    | LF.PiTyp ((tD, depend), tM') when Depend.is_implicit depend ->
        typToClause' (LF.DDec (eV, tD)) cG tM' (cS, dS, dR)
-    | LF.PiTyp ((LF.TypDecl (_, tA), LF.Depend.No), tB) ->
+    | LF.PiTyp ((LF.TypDecl (_, tA), depend), tB) when Depend.is_explicit depend ->
        typToClause' eV (Conjunct (cG, typToGoal tA (cS, dS, dR)))
          tB (cS + 1, dS, dR)
     | LF.Atom _ ->
@@ -250,18 +250,18 @@ module Convert = struct
 
   and typToGoal tM (cS, dS, dR) =
     match tM with
-    | LF.PiTyp ((tD, LF.Depend.Maybe), tM') ->
+    | LF.PiTyp ((tD, depend), tM') when Depend.is_implicit depend ->
        All (tD, typToGoal tM' (cS, dS, dR + 1))
-    | LF.PiTyp ((LF.TypDecl (x, tA) as tD, LF.Depend.No), tB) ->
+    | LF.PiTyp ((LF.TypDecl (x, tA) as tD, depend), tB) when Depend.is_explicit depend ->
        Impl ((typToRes tA (cS, dS, dR), tD), typToGoal tB (cS, dS, dR + 1))
     | LF.Atom _ ->
        Atom (Shift.shiftAtom tA (-cS, -dS, dR))
 
   and typToRes tM (cS, dS, dR) =
     match tM with
-    | LF.PiTyp ((tD, LF.Depend.Maybe), tM') ->
+    | LF.PiTyp ((tD, depend), tM') when Depend.is_implicit depend ->
        Exists (tD, typToRes tM' (cS, dS, dR + 1))
-    | LF.PiTyp ((LF.TypDecl (_, tA), LF.Depend.No), tB) ->
+    | LF.PiTyp ((LF.TypDecl (_, tA), depend), tB) when Depend.is_explicit depend ->
        And (typToGoal tA (cS, dS, dR), typToRes tB (cS + 1, dS + 1, dR + 1))
     | LF.Atom _ ->
        Head (Shift.shiftAtom tM (-cS, -dS, dR))
@@ -384,7 +384,7 @@ module Convert = struct
     let (tA, s) = Whnf.whnfTyp sA in
     match tA with
     | LF.Atom _ ->
-       let u = LF.Inst (Whnf.newMMVar None (cD, cPsi, LF.TClo (tA, s)) LF.Depend.Maybe) in
+       let u = LF.Inst (Whnf.newMMVar None (cD, cPsi, LF.TClo (tA, s)) Depend.implicit) in
        LF.Root (Syntax.Loc.ghost, LF.MVar (u, S.id), LF.Nil, Plicity.explicit)
     | LF.PiTyp ((LF.TypDecl (x, tA) as tD, _), tB) ->
        LF.Lam
@@ -478,7 +478,7 @@ module Convert = struct
   let typToQuery cD cPsi (tA, i) =
     let rec typToQuery' (tA, i) s xs =
       match tA with
-      | LF.PiTyp ((LF.TypDecl (x, tA), LF.Depend.Maybe), tB) when i > 0 ->
+      | LF.PiTyp ((LF.TypDecl (x, tA), depend), tB) when Depend.is_implicit depend && i > 0 ->
          let tN' = etaExpand cD cPsi (tA, s) in
          typToQuery' (tB, i - 1) (LF.Dot (LF.Obj tN', s)) ((x, tN') :: xs)
       | _ -> ((typToGoal tA (0, 0, 0), s), tA, s, xs)

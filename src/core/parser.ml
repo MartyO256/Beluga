@@ -970,8 +970,8 @@ let name_or_blank : name_or_blank parser =
 (** Converts a name or blank into a depend and a name. *)
 let dep_name_of_nb =
   function
-  | `blank loc' -> (LF.Depend.Maybe, Id.mk_blank (Some loc'))
-  | `name x -> (LF.Depend.No, x)
+  | `blank loc' -> (Depend.implicit, Id.mk_blank (Some loc'))
+  | `name x -> (Depend.explicit, x)
 
 let dot_name : Id.name t =
   token T.DOT &> name
@@ -1823,7 +1823,7 @@ let cltyp : (LF.dctx * typ_or_ctx) parser =
         (label ctx "contextual context type")
     end
 
-let clf_ctyp_decl_bare : type a. a name_parser -> (a -> LF.depend * Id.name) -> LF.ctyp_decl t =
+let clf_ctyp_decl_bare : type a. a name_parser -> (a -> Depend.t * Id.name) -> LF.ctyp_decl t =
   fun nameclass dep_of_name ->
   { run =
       fun s ->
@@ -1904,7 +1904,7 @@ let ctx_variable =
         (trying (name <& token T.COLON))
         (name <& not_followed_by meta_obj)
       |> span
-      $> fun (loc, (p, w)) -> LF.Decl (p, (loc, LF.CTyp w), LF.Depend.Maybe)
+      $> fun (loc, (p, w)) -> LF.Decl (p, (loc, LF.CTyp w), Depend.implicit)
     end
 
 (** Contextual LF contextual type declaration *)
@@ -1922,7 +1922,7 @@ let clf_ctyp_decl =
         LF.Decl (p, (loc, f w), dep)
       in
       let mk_cltyp_decl f d =
-        mk_decl LF.Depend.No (fun (cPsi, x) -> LF.ClTyp (f x, cPsi)) d
+        mk_decl Depend.explicit (fun (cPsi, x) -> LF.ClTyp (f x, cPsi)) d
       in
 
       let param_variable =
@@ -1961,7 +1961,7 @@ let clf_ctyp_decl =
               alt
                 (span name
                  $> fun (loc2, ctx) ->
-                    mk_decl LF.Depend.No
+                    mk_decl Depend.explicit
                       (fun w -> LF.CTyp w)
                       (Location.join loc1 loc2, (x, ctx)))
                 (bracks_or_opt_parens (contextual clf_typ_atomic)
@@ -2010,7 +2010,7 @@ let rec cmp_typ =
       in
       let pibox =
         labelled "Pi-box type"
-          (pibox (clf_ctyp_decl_bare name' (fun x -> LF.Depend.No, x) |> braces) cmp_typ
+          (pibox (clf_ctyp_decl_bare name' (fun x -> Depend.explicit, x) |> braces) cmp_typ
              (fun loc ctyp_decl tau ->
                Comp.TypPiBox (loc, ctyp_decl, tau)))
       in
@@ -2152,7 +2152,7 @@ let rec cmp_kind =
                            , cPsi
                            )
                        )
-                     , LF.Depend.No
+                     , Depend.explicit
                      )
                  , k
                  )
@@ -2216,7 +2216,7 @@ and cmp_branch =
       fun s ->
       let p =
         seq3
-          (mctx ~sep: (pure ()) (clf_ctyp_decl_bare name' (fun x -> LF.Depend.No, x) |> braces))
+          (mctx ~sep: (pure ()) (clf_ctyp_decl_bare name' (fun x -> Depend.explicit, x) |> braces))
           cmp_pattern
           (token T.THICK_ARROW &> cmp_exp_chk)
         |> span
@@ -2358,7 +2358,7 @@ and cmp_exp_chk' =
       let lets =
         let let_pattern =
           seq4
-            (mctx ~sep: (pure ()) (clf_ctyp_decl_bare name' (fun x -> LF.Depend.No, x) |> braces))
+            (mctx ~sep: (pure ()) (clf_ctyp_decl_bare name' (fun x -> Depend.explicit, x) |> braces))
             (cmp_pattern <& token T.EQUALS)
             (cmp_exp_syn <& token T.KW_IN)
             cmp_exp_chk

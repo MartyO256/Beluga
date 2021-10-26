@@ -10,7 +10,7 @@ module LF = struct
 
   type kind =
     | Typ
-    | PiKind of (typ_decl * depend) * kind
+    | PiKind of (typ_decl * Depend.t) * kind
 
   and typ_decl =                                (* LF Declarations                *)
     | TypDecl of name * typ                     (* D := x:A                       *)
@@ -26,12 +26,12 @@ module LF = struct
     | CTyp of cid_schema option
 
   and ctyp_decl =                               (* Contextual Declarations        *)
-    | Decl of name * ctyp * depend
+    | Decl of name * ctyp * Depend.t
     | DeclOpt of name * Plicity.t
 
   and typ =                                     (* LF level                       *)
     | Atom of Location.t * cid_typ * spine           (* A ::= a M1 ... Mn              *)
-    | PiTyp of (typ_decl * depend) * typ        (*   | Pi x:A.B                   *)
+    | PiTyp of (typ_decl * Depend.t) * typ        (*   | Pi x:A.B                   *)
     | Sigma of typ_rec
     | TClo of (typ * sub)                       (*   | TClo(A,s)                  *)
 
@@ -120,7 +120,7 @@ module LF = struct
     ; mmvar_id : int (* unique to each MMVar *)
     ; typ : ctyp
     ; constraints : cnstr list ref (* not really used *)
-    ; depend : depend
+    ; depend : Depend.t
     }
 
   and mm_var_inst' = mm_var * msub
@@ -231,7 +231,7 @@ module LF = struct
       not a DeclOpt.
       Raises a violation if it is a DeclOpt.
    *)
-  let require_decl : ctyp_decl -> Id.name * ctyp * depend =
+  let require_decl : ctyp_decl -> Id.name * ctyp * Depend.t =
     function
     | Decl (u, cU, dep) -> (u, cU, dep)
     | DeclOpt _ ->
@@ -326,15 +326,8 @@ module LF = struct
 
   let getIndex trec target = getIndex' trec target 1
 
-  let is_explicit =
-    function
-    | Decl(_, _, dep) ->
-       begin
-         match dep with
-         | Depend.No -> true
-         | Depend.Maybe -> false
-         | Depend.Inductive -> true
-       end
+  let is_explicit = function
+    | Decl(_, _, dep) -> Depend.is_explicit' dep
     | _ -> true
 
   let name_of_ctyp_decl (d : ctyp_decl) =

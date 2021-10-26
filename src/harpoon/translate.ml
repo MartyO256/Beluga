@@ -31,7 +31,7 @@ let rec unroll cD cG = function
      let LF.Dec (cD', LF.Decl (x, _, dep)) = cD' in
      ( cD'
      , cG'
-     , let plicity = LF.Depend.to_plicity dep in
+     , let plicity = Depend.to_plicity dep in
        fun e -> Comp.MLam (Loc.ghost, x, f e, plicity)
      )
   | _ -> (cD, cG, fun e -> e)
@@ -49,7 +49,7 @@ let unbox cD cG i x cU modifier =
     p.fmt "[unbox] cU = @[%a@]"
       P.(fmt_ppr_cmp_meta_typ cD) cU
     end;
-  let cD' = LF.(Dec (cD, Decl (x, cU', Depend.No))) in
+  let cD' = LF.(Dec (cD, Decl (x, cU', Depend.explicit))) in
   let t = LF.MShift 1 in
   let pat =
     Comp.PatMetaObj

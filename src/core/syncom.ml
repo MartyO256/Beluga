@@ -13,46 +13,6 @@ module LF = struct
   type svar_class =
     | Ren (** Renaming *)
     | Subst (** Substitution *)
-
-  module Depend = struct
-    type t =
-      | Maybe     (* implicit *)
-      | No        (* explicit *)
-      | Inductive (* used for induction *)
-
-    let equals d1 d2 =
-      match d1, d2 with
-      | Maybe, Maybe -> true
-      | No, No -> true
-      | Inductive, Inductive -> true
-      | _ -> false
-
-    let of_plicity =
-      Plicity.fold ~implicit:(fun () -> Maybe) ~explicit:(fun () -> No)
-
-    let to_plicity : t -> Plicity.t =
-      function
-      | Maybe -> Plicity.implicit
-      | No -> Plicity.explicit
-      | Inductive ->
-         Error.violation
-           "[Depend] [to_plicity] Inductive is impossible"
-
-    (** Variant of to_plicity that does not fail on Inductive, instead
-        sending it to `explicit.
-     *)
-    let to_plicity' : t -> Plicity.t =
-      function
-      | Inductive -> Plicity.explicit
-      | d -> to_plicity d
-
-    let max d1 d2 =
-      match d1, d2 with
-      | No, No -> No
-      | _ -> Maybe
-  end
-
-  type depend = Depend.t
 end
 
 module Comp = struct

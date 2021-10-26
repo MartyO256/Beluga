@@ -189,7 +189,7 @@ module Make (T : TRAIL) : UNIFY = struct
     let ssi' = Substitution.LF.invert ss' in
     (* cPhi' |- ssi : cPhi *)
     (* cPhi' |- [ssi]tQ    *)
-    let u = Whnf.newMMVar None (cD, cPhi', TClo (tQ, ssi')) Depend.Maybe in
+    let u = Whnf.newMMVar None (cD, cPhi', TClo (tQ, ssi')) Depend.implicit in
     (* cPhi |- ss'    : cPhi'
          cPsi |- s_proj : cPhi
          cPsi |- comp  ss' s_proj   : cPhi' *)
@@ -1702,7 +1702,7 @@ module Make (T : TRAIL) : UNIFY = struct
                cPsi  |- tN <= [s]tA
                cPsi |- tN . s <= cPsi', x:A
              *)
-            let tN = Whnf.etaExpandMV cPsi1 (tA, s) n id LF.Depend.Maybe in
+            let tN = Whnf.etaExpandMV cPsi1 (tA, s) n id Depend.implicit in
             let tS = genSpine cD1 cPsi1 (tB, LF.Dot (LF.Obj tN, s)) in
             LF.App (tN, tS)
 
@@ -1725,7 +1725,7 @@ module Make (T : TRAIL) : UNIFY = struct
             cPsi |- tN . s <= cPsi', x:A
           *)
          let tN =
-           ConvSigma.etaExpandMMVstr Loc.ghost cD1 cPsi1 (tA, s) Depend.Maybe (Some n)
+           ConvSigma.etaExpandMMVstr Loc.ghost cD1 cPsi1 (tA, s) Depend.implicit (Some n)
              Context.(names_of_dctx cPsi @ names_of_mctx cD0)
          in
          let tS = genSpine cD1 cPsi1 (tB, LF.Dot (LF.Obj tN, s)) in
@@ -1750,7 +1750,7 @@ module Make (T : TRAIL) : UNIFY = struct
 
     | Root (loc, MPVar _, _, plicity) ->
        dprnt "[craftMMVTerm] MPVar ...";
-       let p = Whnf.newMPVar None (mmvar.cD, cPsi1, tB) Depend.Maybe in
+       let p = Whnf.newMPVar None (mmvar.cD, cPsi1, tB) Depend.implicit in
        let tM1 =
          Root
            ( loc
@@ -2660,7 +2660,7 @@ module Make (T : TRAIL) : UNIFY = struct
                        instantiation = ref None;
                        cD = cD';
                        constraints = ref [];
-                       depend = Depend.Maybe
+                       depend = Depend.implicit
                      }
                    in
                    let cPsi = CtxVar (CInst (mmvar, mt')) in
@@ -2708,7 +2708,7 @@ module Make (T : TRAIL) : UNIFY = struct
                   ignore (FCVar.get psi)
                 with
                 | Not_found ->
-                   FCVar.add psi (cD0, Decl (psi, CTyp s_cid, Depend.Maybe))
+                   FCVar.add psi (cD0, Decl (psi, CTyp s_cid, Depend.implicit))
               end
            | _ -> ()
          end
@@ -3088,7 +3088,7 @@ module Make (T : TRAIL) : UNIFY = struct
                   { mmvar1 with
                     instantiation = ref None;
                     cD = cD';
-                    depend = Depend.Maybe;
+                    depend = Depend.implicit;
                     constraints = ref []
                   }
                 in
@@ -3105,7 +3105,7 @@ module Make (T : TRAIL) : UNIFY = struct
           then
             begin
               let mtt1 = Whnf.m_invert (Whnf.cnormMSub theta1) in
-              let mmvar2' = { mmvar2 with depend = Depend.Maybe; constraints = ref [] } in
+              let mmvar2' = { mmvar2 with depend = Depend.implicit; constraints = ref [] } in
               (* why do we drop the constraints here ? -je *)
               let i = CInst (mmvar2', Whnf.mcomp theta2 mtt1) in
               mmvar1.instantiation := Some (ICtx (CtxVar i))

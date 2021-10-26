@@ -59,7 +59,7 @@ let elaborate_exp (cD : LF.mctx) (cG : Comp.gctx)
       (P.fmt_ppr_cmp_gctx cD P.l0) cG
     end;
   let var_store = Store.Var.of_gctx cG in
-  let cvar_store = Store.CVar.of_mctx LF.Depend.to_plicity' cD in
+  let cvar_store = Store.CVar.of_mctx Depend.to_plicity' cD in
   let t = Index.hexp cvar_store var_store t in
   Reconstruct.elExp cD cG t tp
 
@@ -75,7 +75,7 @@ let elaborate_exp' (cD : LF.mctx) (cG : Comp.gctx) (t : ExtComp.exp_syn)
       (P.fmt_ppr_cmp_gctx cD P.l0) cG
     end;
   let var_store = Store.Var.of_gctx cG in
-  let cvar_store = Store.CVar.of_mctx LF.Depend.to_plicity' cD in
+  let cvar_store = Store.CVar.of_mctx Depend.to_plicity' cD in
   let t = Index.hexp' cvar_store var_store t in
   Reconstruct.elExp' cD cG t
 
@@ -447,8 +447,8 @@ let iterMctx (cD : LF.mctx) (cPsi : LF.dctx) (tA : LF.tclo) : Id.name list =
   let rec aux acc c =
     function
     | LF.Empty -> acc
-    | LF.Dec (cD', LF.Decl(n, LF.ClTyp (LF.MTyp tA', cPsi'), LF.Depend.No))
-      | LF.Dec (cD', LF.Decl(n, LF.ClTyp (LF.PTyp tA', cPsi'), LF.Depend.No)) ->
+    | LF.Dec (cD', LF.Decl(n, LF.ClTyp (LF.MTyp tA', cPsi'), depend))
+      | LF.Dec (cD', LF.Decl(n, LF.ClTyp (LF.PTyp tA', cPsi'), depend)) when Depend.is_explicit depend ->
        begin
          try
            Unify.StdTrail.resetGlobalCnstrs ();

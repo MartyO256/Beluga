@@ -46,9 +46,9 @@ module Common = struct
       ]
 
     val fmt_ppr_plicity : formatter -> Plicity.t -> unit
-    val fmt_ppr_lf_depend : formatter -> LF.depend -> unit
-    val fmt_ppr_lf_depend_clean : formatter -> LF.depend -> unit
-    val fmt_ppr_lf_depend_inductive : formatter -> LF.depend -> unit
+    val fmt_ppr_lf_depend : formatter -> Depend.t -> unit
+    val fmt_ppr_lf_depend_clean : formatter -> Depend.t -> unit
+    val fmt_ppr_lf_depend_inductive : formatter -> Depend.t -> unit
     val fmt_ppr_lf_svar_class : formatter -> LF.svar_class -> unit
     val fmt_ppr_cmp_split_kind : formatter -> Harpoon.split_kind -> unit
     val fmt_ppr_cmp_context_case : formatter -> Comp.context_case -> unit
@@ -70,7 +70,7 @@ module Int = struct
     (* LF printers *)
     val fmt_ppr_lf_svar_class : formatter -> LF.svar_class -> unit
     val fmt_ppr_lf_kind : LF.dctx -> lvl -> formatter -> LF.kind -> unit
-    val fmt_ppr_lf_ctyp_decl : ?fmt_ppr_depend:(formatter -> LF.depend -> unit) ->
+    val fmt_ppr_lf_ctyp_decl : ?fmt_ppr_depend:(formatter -> Depend.t -> unit) ->
                                    LF.mctx -> formatter -> LF.ctyp_decl -> unit
     val fmt_ppr_lf_typ_rec : LF.mctx -> LF.dctx -> lvl -> formatter -> LF.typ_rec -> unit
     val fmt_ppr_lf_typ : LF.mctx -> LF.dctx -> lvl -> formatter -> LF.typ -> unit

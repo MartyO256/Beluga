@@ -1176,8 +1176,8 @@ let rec genSpine k names cD cPsi sA tP =
      let u = NameGen.(mvar tA |> renumber names) in
      let dep =
        if k > 0
-       then LF.Depend.Maybe
-       else LF.Depend.No
+       then Depend.implicit
+       else Depend.explicit
      in
      let tN = ConvSigma.etaExpandMMVstr Loc.ghost cD cPsi (tA, s) dep (Some u) (u :: names) in
      dprintf
@@ -1370,7 +1370,7 @@ let genPVarGoal (LF.SchElem (decls, trec)) (cD : LF.mctx) cPsi psi
     Decl
       ( NameGen.(pvar tA |> renumber names)
       , ClTyp (PTyp tA, Whnf.cnormDCtx (LF.CtxVar psi, MShift offset))
-      , Depend.No
+      , Depend.explicit
       )
   in
 
@@ -1975,7 +1975,7 @@ let rec decTomdec names cD' (LF.CtxOffset k as cpsi) (d, decls) =
        LF.Decl
          ( x
          , LF.ClTyp (LF.MTyp (LF.TClo (tP, ssi)), cPsi')
-         , LF.Depend.Maybe
+         , Depend.implicit
          )
      in
      let mv =
@@ -2063,7 +2063,7 @@ let genNthSchemaElemGoal names cD n w =
        Id.(mk_name (SomeString "g"))
        |> NameGen.renumber names
      in
-     let cD' = LF.Dec (cD, LF.Decl (x, LF.CTyp (Some w), LF.Depend.Maybe)) in
+     let cD' = LF.Dec (cD, LF.Decl (x, LF.CTyp (Some w), Depend.implicit)) in
      let psi = LF.CtxOffset 1 in
      genSchemaElemGoal (x :: names) cD' psi e
      end
@@ -2116,13 +2116,13 @@ let genSVCovGoals (cD, (cPsi, (r0, cPhi))) (* cov_problem *) =
      let LF.TypDecl (x, tA) = decl in
      let s = LF.SVar (2, 0, S.LF.id) in
      let mT = LF.ClTyp (LF.STyp (r0, cPhi'), cPsi) in
-     let cD' = LF.Dec (cD, LF.Decl (Id.mk_name (Whnf.newMTypName mT), mT, LF.Depend.No)) in
+     let cD' = LF.Dec (cD, LF.Decl (Id.mk_name (Whnf.newMTypName mT), mT, Depend.explicit)) in
      (* if ren = renaming, generate parameter variable *)
      let tM = LF.Root (Loc.ghost, LF.MVar (LF.Offset 1, S.LF.id), LF.Nil, Plicity.explicit) in
      let tA0 = Whnf.cnormTyp (tA, LF.MShift 1) in
      let cPhi0 = Whnf.cnormDCtx (cPhi', LF.MShift 1) in
      let mT' = LF.ClTyp (LF.MTyp tA0, cPhi0) in
-     let cD'' = LF.Dec (cD', LF.Decl (Id.mk_name (Whnf.newMTypName mT'), mT', LF.Depend.No)) in
+     let cD'' = LF.Dec (cD', LF.Decl (Id.mk_name (Whnf.newMTypName mT'), mT', Depend.explicit)) in
      let cPsi' = Whnf.cnormDCtx (cPsi, LF.MShift 2) in
      let cPhi'' = Whnf.cnormDCtx (cPhi, LF.MShift 2) in
      [(cD'', CovSub (cPsi', LF.Dot (LF.Obj tM, s), LF.STyp (r0, cPhi'')), LF.MShift 2)]
@@ -2413,7 +2413,7 @@ let rec genPattSpine names mk_pat_var k =
 
      let u = NameGen.renumber names u in
      let s =
-       let v = Whnf.newMSVar (Some u) (LF.Empty, cl, cPsi', cPhi') LF.Depend.No in
+       let v = Whnf.newMSVar (Some u) (LF.Empty, cl, cPsi', cPhi') Depend.explicit in
        LF.MSVar (0, ((v, Whnf.m_id), S.LF.id))
      in
      let sO = LF.ClObj (Context.dctxToHat cPsi', LF.SObj s) in
@@ -2585,7 +2585,7 @@ let genPatCGoals names mk_pat_var (cD : LF.mctx) tau =
             Id.(mk_name (SomeString "g"))
             |> NameGen.renumber names
           in
-          LF.Dec (cD, LF.Decl (u, LF.CTyp (Some w), LF.Depend.Maybe))
+          LF.Dec (cD, LF.Decl (u, LF.CTyp (Some w), Depend.implicit))
         in
         genCtx names cD' (LF.CtxOffset 1) elems
         |> List.map
@@ -3172,7 +3172,7 @@ let gen_candidates loc cD covGoal pats =
 let initialize_coverage problem projOpt : cov_problems =
   match problem.ctype with
   | Comp.TypBox (loc, LF.CTyp w) ->
-     let cD' = LF.Dec (problem.cD, LF.Decl (Id.mk_name (Whnf.newMTypName (LF.CTyp w)), LF.CTyp w, LF.Depend.Maybe)) in
+     let cD' = LF.Dec (problem.cD, LF.Decl (Id.mk_name (Whnf.newMTypName (LF.CTyp w)), LF.CTyp w, Depend.implicit)) in
      let cG' = Whnf.cnormGCtx (problem.cG, LF.MShift 1) in
      let cPsi = LF.CtxVar (LF.CtxOffset 1) in
      (* let covGoal = CovPatt (LF.Empty, Comp.PatMetaObj (loc, LF.CObj cPsi)) in *)
@@ -3203,7 +3203,7 @@ let initialize_coverage problem projOpt : cov_problems =
         let mT = Whnf.(cnormMTyp (LF.ClTyp (LF.MTyp tA', cPsi'), m_id)) in
         let name = Id.mk_name (Whnf.newMTypName mT) in
         let cD' =
-          LF.Dec (problem.cD, LF.Decl (name, mT, LF.Depend.Maybe))
+          LF.Dec (problem.cD, LF.Decl (name, mT, Depend.implicit))
         in
         let cG' = Whnf.cnormGCtx (problem.cG, LF.MShift 1) in
         let mv = LF.MVar (LF.Offset 1, s) in
@@ -3242,7 +3242,7 @@ let initialize_coverage problem projOpt : cov_problems =
   | Comp.TypBox (loc, LF.ClTyp (LF.PTyp tA, cPsi)) ->
      let (s, (cPsi', tA')) = gen_str problem.cD cPsi tA in
      let mT = LF.ClTyp (LF.PTyp tA', cPsi') in
-     let cD' = LF.Dec (problem.cD, LF.Decl (Id.mk_name (Whnf.newMTypName mT), mT, LF.Depend.Maybe)) in
+     let cD' = LF.Dec (problem.cD, LF.Decl (Id.mk_name (Whnf.newMTypName mT), mT, Depend.implicit)) in
      let cG' = Whnf.cnormGCtx (problem.cG, LF.MShift 1) in
      let mv =
        match projOpt with
@@ -3260,7 +3260,7 @@ let initialize_coverage problem projOpt : cov_problems =
      [(cD', cG', cand_list, mC)]
 
   | Comp.TypBox (loc, ((LF.ClTyp (LF.STyp (r, cPhi), cPsi)) as mT)) ->
-     let cD' = LF.Dec (problem.cD, LF.Decl (Id.mk_name (Whnf.newMTypName mT), mT, LF.Depend.Maybe)) in
+     let cD' = LF.Dec (problem.cD, LF.Decl (Id.mk_name (Whnf.newMTypName mT), mT, Depend.implicit)) in
      let cG' = Whnf.cnormGCtx (problem.cG, LF.MShift 1) in
      let s = LF.SVar (1, 0, S.LF.id) in
      let cPhi = Whnf.cnormDCtx (cPhi, LF.MShift 1) in
