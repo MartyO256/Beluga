@@ -248,11 +248,6 @@ let _ =
       end
     end
 
-let rec conv_listToString =
-  function
-  | [] -> " "
-  | x::xs -> string_of_int x ^ ", " ^ conv_listToString xs
-
 let rec what_head =
   function
   | Apx.LF.BVar _ -> "BVar"
