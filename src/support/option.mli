@@ -20,7 +20,7 @@ val ( $ ) : 'a option -> ('a -> 'b option) -> 'b option
 (** Named, flipped version of ($). *)
 val flat_map : ('a -> 'b option) -> 'a option -> 'b option
 
-val ( <|> ) : 'a option Lazy.t -> 'a option Lazy.t -> 'a option Lazy.t
+val lazy_alt : 'a option Lazy.t -> 'a option Lazy.t -> 'a option Lazy.t
 
 (** Selects the first alternative that succeeds.
     Forces every thunk until one computes `Some x'.

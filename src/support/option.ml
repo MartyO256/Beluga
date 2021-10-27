@@ -30,20 +30,20 @@ let ( $ ) = bind
 let flat_map k o = o $ k
 
 (** Prioritized choice between options.
-    This will force the first option, but will never force the second.
-    This operation is associative.
  *)
-let ( <|> ) (p : 'a option Lazy.t) (q : 'a option Lazy.t) : 'a option Lazy.t =
-  begin match Lazy.force p with
-  | Some _ -> p
-  | None -> q
-  end
+let lazy_alt (p : 'a option Lazy.t) (q : 'a option Lazy.t) : 'a option Lazy.t =
+  lazy (
+    let p = Lazy.force p in
+    match p with
+    | Some _ -> p
+    | None -> Lazy.force q
+  )
 
 (* This is hoisted out so that forcing becomes a no-op after the first force. *)
 let lazy_none = lazy None
 
 let choice (ps : 'a option Lazy.t list) : 'a option Lazy.t =
-  List.fold_left ( <|> ) lazy_none ps
+  List.fold_left lazy_alt lazy_none ps
 
 (** Non-lazy version of `<|>'. *)
 let alt (o1 : 'a option) (o2 : 'a option) : 'a option =
