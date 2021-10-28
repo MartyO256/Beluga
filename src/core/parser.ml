@@ -3047,9 +3047,9 @@ let thm p =
     (maybe (bracketed' (token T.SLASH) total_decl))
     p
   |> span
-  $> fun (thm_loc, (thm_name, thm_typ, thm_order, thm_body)) ->
-     let open Sgn in
-     { thm_loc; thm_name; thm_typ; thm_order; thm_body }
+  $> fun (location, (name, typ, order, body)) ->
+     let open! Sgn in
+     { location; name; typ; order; body }
 
 let proof_decl : Sgn.thm_decl parser =
   token T.KW_PROOF
