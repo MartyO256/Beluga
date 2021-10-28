@@ -1,3 +1,5 @@
+open Support
+
 type t = int
 
 let of_int x = x
@@ -19,12 +21,12 @@ type name =
 let is_anonymous =
   function
   | Anonymous -> true
-  | _ -> false
+  | Named _ -> false
 
-let name_of_option : string option -> name =
-  function
-  | Some name -> Named name
-  | None -> Anonymous
+let name_of_option =
+  Option.fold
+    ~none:Anonymous
+    ~some:(fun name -> Named name)
 
 let option_of_name : name -> string option =
   function
