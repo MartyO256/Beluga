@@ -10,6 +10,10 @@ type t
 *)
 val make : Location.t -> string -> t
 
+(** [make_blank l] is the name with location [l] and value ["_"].
+*)
+val make_blank : Location.t -> t
+
 (** {1 Destructors} *)
 
 (** [location n] is the location of [n] in a parsed signature.

@@ -1,7 +1,7 @@
 (library
-  (name rework)
-  (modules :standard)
-  (libraries syntax parser extlib support unix str))
+  (name syntax)
+  (libraries common external))
+
 (env
   (dev
     (flags (:standard -w Azep-42-44-48-50-58 -warn-error Ap-37-48-50-60))))
