@@ -71,9 +71,6 @@ let _ =
       end
     end
 
-let print_str f = dprint f
-(* let dprint f = print_string ("\n" ^ f ())*)
-
 exception Not_compatible
 exception CtxNot_compatible
 
