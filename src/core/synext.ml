@@ -28,8 +28,7 @@ module LF = struct
   and loc_ctyp = Location.t * ctyp
 
   and ctyp_decl =
-    | Decl of name * loc_ctyp * depend
-    | DeclOpt of name
+    | Decl of name * loc_ctyp * Depend.t
 
   and typ =
     | Atom of Location.t * name * spine
