@@ -1557,7 +1557,7 @@ and index_fbranches cvars vars fcvars =
      let (patS', fcvars1, vars1) =
        index_pat_spine cvars
          (empty_fvars `open_term)
-         (Var.create ())
+         Var.empty
          patS
      in
      let vars_all = Var.append vars1 vars in
@@ -1657,7 +1657,7 @@ and index_branch cvars vars fcvars =
          Loc.print_short loc
        end;
      let (cD', cvars1, fcvars1) = index_mctx (CVar.create ()) empty_fcvars cD in
-     let (pat', fcvars2, fvars2) = index_pattern cvars1 fcvars1 (Var.create ()) pat in
+     let (pat', fcvars2, fvars2) = index_pattern cvars1 fcvars1 Var.empty pat in
      dprint (fun () -> "[index_branch] index_pattern done");
      let cvars_all = CVar.append cvars1 cvars in
      let vars_all = Var.append fvars2 vars in
@@ -1752,7 +1752,7 @@ and index_hypothetical h =
   in
   let proof = index_proof cvars vars (empty_fvars `closed_term) proof in
   let (cD, cvars, fvars) = index_mctx (CVar.create ()) (empty_fvars `closed_term) cD in
-  let (cG, vars, fvars) = index_gctx cvars (Var.create ()) fvars cG in
+  let (cG, vars, fvars) = index_gctx cvars Var.empty fvars cG in
   ( cvars
   , fvars
   , Apx.Comp.({ hypotheses = { cD; cG }; proof; hypothetical_loc })

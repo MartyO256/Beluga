@@ -710,7 +710,7 @@ let recSgnDecls decls =
          (fun p ->
            p.fmt "[RecSgn Checking] Val at: %a"
              Syntax.Loc.print_short location);
-       let apx_i = Index.exp' (Var.create ()) expression in
+       let apx_i = Index.exp' Var.empty expression in
        let (cD, cG) = (Int.LF.Empty, Int.LF.Empty) in
        let (i', (tau, theta)) =
          Monitor.timer
@@ -790,7 +790,7 @@ let recSgnDecls decls =
          ( "Function Type Check"
          , fun () -> Check.Comp.checkTyp cD tau'
          );
-       let apx_i = Index.exp' (Var.create ()) expression in
+       let apx_i = Index.exp' Var.empty expression in
        let i' =
          Monitor.timer
            ( "Function Elaboration"
@@ -992,7 +992,7 @@ let recSgnDecls decls =
        in
 
        let reconThm loc (f, cid, thm, tau) =
-         let apx_thm = Index.thm (Var.create ()) thm in
+         let apx_thm = Index.thm Var.empty thm in
          dprint (fun () -> "[reconThm] Indexing theorem done.");
          let thm' =
            Monitor.timer

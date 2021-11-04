@@ -1137,7 +1137,7 @@ module Var = struct
     loop 1 store
 
   let to_list (l : entry list) = Fun.id l
-  let create () = []
+  let empty = []
   let extend ctx e = e :: ctx
   let append vars vars' = vars @ vars'
   let get = List.nth
@@ -1150,7 +1150,7 @@ module Var = struct
    *)
   let of_gctx (cG : Int.Comp.gctx) : t =
     let f d v = Int.Comp.name_of_ctyp_decl d |> mk_entry |> extend v in
-    List.fold_right f (Context.to_list_rev cG) (create ())
+    List.fold_right f (Context.to_list_rev cG) empty
 
   let of_list (l : Id.name list) : t =
     List.map mk_entry l

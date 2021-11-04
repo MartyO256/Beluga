@@ -443,7 +443,7 @@ module Var : sig
   val mk_entry : name -> entry
   type t (* NOTE: t is an ordered data structure *)
   val to_list : t -> entry list
-  val create : unit -> t
+  val empty : t
   val extend : t -> entry -> t
   val get : t -> var -> entry
   val append : t -> t -> t
