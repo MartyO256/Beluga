@@ -1167,16 +1167,11 @@ module CVar = struct
 
   type t = entry list
 
-  let lookup store x =
-    let rec loop i = function
-      | [] -> raise Not_found
-      | (e :: es) ->
-         if Id.equals e.name x then
-           (i, e)
-         else
-           loop (i + 1) es
-    in
-    loop 1 store
+  let lookup store name =
+    store
+    |> List.find_index_opt (fun { name = name'; _ } -> Id.equals name name')
+    |> Option.get' Not_found
+    |> fun (i, e) -> (i + 1, e)
 
   let index_of_name store x =
     let (i, e) = lookup store x in
@@ -1185,8 +1180,8 @@ module CVar = struct
   let empty = []
   let extend cvars e = e :: cvars
   let get = List.nth
-  let append cvars cvars' = cvars @ cvars'
-  let length cvars = List.length cvars
+  let append = List.append
+  let length = List.length
 
   let to_string (cvars : t) : string =
     let rec go s =
@@ -1206,8 +1201,8 @@ module CVar = struct
     in
     List.fold_right f (Context.to_list_rev cD) empty
 
-  let of_list (l : (Id.name * Plicity.t) list) : t =
-    List.map (fun (u, p) -> mk_entry u p) l
+  let of_list =
+    List.map (fun (u, p) -> mk_entry u p)
 end
 
 let clear () =
