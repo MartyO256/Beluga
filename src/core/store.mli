@@ -447,7 +447,13 @@ module Var : sig
   val extend : t -> entry -> t
   val get : t -> var -> entry
   val append : t -> t -> t
+
+  (** [index_of_name store name] is the offset of the variable with name [name]
+      in the scope using [store].
+      @raise Not_found If there is no variable in [store] having name [name].
+  *)
   val index_of_name : t -> name -> offset
+
   val size : t -> int
 
   (** Erases the context down to a list of names. *)

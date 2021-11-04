@@ -1125,21 +1125,16 @@ module Var = struct
 
   type t = entry list
 
-  let index_of_name store n =
-    let rec loop i =
-      function
-      | [] -> raise Not_found
-      | (e :: es) ->
-         if Id.equals e.name n
-         then i
-         else loop (i + 1) es
-    in
-    loop 1 store
+  let index_of_name store name =
+    store
+    |> List.index_of (fun { name = name'; _ } -> Id.equals name' name)
+    |> Option.get' Not_found
+    |> (+) 1
 
-  let to_list (l : entry list) = Fun.id l
+  let to_list = Fun.id
   let empty = []
   let extend ctx e = e :: ctx
-  let append vars vars' = vars @ vars'
+  let append = List.append
   let get = List.nth
   let size = List.length
 
@@ -1152,8 +1147,7 @@ module Var = struct
     let f d v = Int.Comp.name_of_ctyp_decl d |> mk_entry |> extend v in
     List.fold_right f (Context.to_list_rev cG) empty
 
-  let of_list (l : Id.name list) : t =
-    List.map mk_entry l
+  let of_list = List.map mk_entry
 end
 
 
