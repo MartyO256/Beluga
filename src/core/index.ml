@@ -85,7 +85,7 @@ type lf_indexing_context =
 
 let empty_lf_indexing_context disambiguate_name =
   { cvars = CVar.empty
-  ; bvars = BVar.create ()
+  ; bvars = BVar.empty
   ; disambiguate_name
   }
 
@@ -1097,7 +1097,7 @@ let index_cltyp' : Ext.LF.cltyp -> Apx.LF.cltyp index =
      seq2 get_env get_fvars
      $ fun (c, fvars) ->
        let (phi', _, fvars) =
-         index_dctx c.disambiguate_name c.cvars (BVar.create ()) fvars phi
+         index_dctx c.disambiguate_name c.cvars BVar.empty fvars phi
        in
        modify_fvars (Fun.const fvars)
        $$ pure (Apx.LF.STyp (index_svar_class cl, phi'))
@@ -1107,7 +1107,7 @@ let index_cltyp loc cvars fvars =
   | Ext.LF.ClTyp (cl, psi) ->
      let disambiguate_name = disambiguate_to_fmvars in
      let (psi', bvars, fvars) =
-       index_dctx disambiguate_name cvars (BVar.create ()) fvars psi
+       index_dctx disambiguate_name cvars BVar.empty fvars psi
      in
      let (fvars, cl) =
        index_cltyp' cl {cvars; bvars; disambiguate_name} fvars
@@ -1173,7 +1173,7 @@ let rec index_elements el_list = List.map index_el el_list
 
 and index_el (Ext.LF.SchElem (_, typ_ctx, typ_rec)) =
   let cvars = CVar.empty in
-  let bvars = BVar.create () in
+  let bvars = BVar.empty in
   let fvars = empty_fvars `open_term in
   let disambiguate_name = disambiguate_to_fvars in
   let (typ_ctx', bvars, _) = index_ctx disambiguate_name cvars bvars fvars typ_ctx in
@@ -1205,7 +1205,7 @@ let rec index_meta_obj cvars fcvars (l, cM) =
   match cM with
   | Ext.LF.CObj cpsi ->
      let (cPsi, _, fcvars') =
-       index_dctx disambiguate_to_fmvars cvars (BVar.create ()) fcvars cpsi
+       index_dctx disambiguate_to_fmvars cvars BVar.empty fcvars cpsi
      in
      ( (l, Apx.Comp.CObj (cPsi))
      , fcvars'
@@ -1213,7 +1213,7 @@ let rec index_meta_obj cvars fcvars (l, cM) =
 
   | Ext.LF.ClObj (cpsi, s) ->
      let (cPsi, bvars, fcvars') =
-       index_dctx disambiguate_to_fmvars cvars (BVar.create ()) fcvars cpsi
+       index_dctx disambiguate_to_fmvars cvars BVar.empty fcvars cpsi
      in
      let disambiguate_name = disambiguate_to_fmvars in
      let (fcvars'', s') =

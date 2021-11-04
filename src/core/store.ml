@@ -1012,7 +1012,7 @@ module BVar = struct
     in
     loop 1 store
 
-  let create () = []
+  let empty = []
   let extend ctx e = e :: ctx
   let length = List.length
   let get = List.nth
