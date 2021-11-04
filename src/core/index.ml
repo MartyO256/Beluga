@@ -84,7 +84,7 @@ type lf_indexing_context =
   }
 
 let empty_lf_indexing_context disambiguate_name =
-  { cvars = CVar.create ()
+  { cvars = CVar.empty
   ; bvars = BVar.create ()
   ; disambiguate_name
   }
@@ -1172,7 +1172,7 @@ let rec index_mctx cvars fvars =
 let rec index_elements el_list = List.map index_el el_list
 
 and index_el (Ext.LF.SchElem (_, typ_ctx, typ_rec)) =
-  let cvars = CVar.create () in
+  let cvars = CVar.empty in
   let bvars = BVar.create () in
   let fvars = empty_fvars `open_term in
   let disambiguate_name = disambiguate_to_fvars in
@@ -1632,7 +1632,7 @@ and index_branch cvars vars fcvars =
        p.fmt "[index_branch] indexing cD in branch at %a"
          Loc.print_short loc
        end;
-     let (cD', cvars1, fcvars1) = index_mctx (CVar.create ()) fcvars' cD in
+     let (cD', cvars1, fcvars1) = index_mctx CVar.empty fcvars' cD in
      let (mO', fcvars2) = index_meta_obj cvars1 fcvars1 mO in
      dprintf
        begin fun p ->
@@ -1656,7 +1656,7 @@ and index_branch cvars vars fcvars =
        p.fmt "[index_branch] general pattern at %a"
          Loc.print_short loc
        end;
-     let (cD', cvars1, fcvars1) = index_mctx (CVar.create ()) empty_fcvars cD in
+     let (cD', cvars1, fcvars1) = index_mctx CVar.empty empty_fcvars cD in
      let (pat', fcvars2, fvars2) = index_pattern cvars1 fcvars1 Var.empty pat in
      dprint (fun () -> "[index_branch] index_pattern done");
      let cvars_all = CVar.append cvars1 cvars in
@@ -1751,7 +1751,7 @@ and index_hypothetical h =
     |> Var.of_list
   in
   let proof = index_proof cvars vars (empty_fvars `closed_term) proof in
-  let (cD, cvars, fvars) = index_mctx (CVar.create ()) (empty_fvars `closed_term) cD in
+  let (cD, cvars, fvars) = index_mctx CVar.empty (empty_fvars `closed_term) cD in
   let (cG, vars, fvars) = index_gctx cvars Var.empty fvars cG in
   ( cvars
   , fvars
@@ -1759,7 +1759,7 @@ and index_hypothetical h =
   )
 
 let comptypdef (cT, cK) =
-  let cK' = index_compkind (CVar.create ()) (empty_fvars `closed_term) cK in
+  let cK' = index_compkind CVar.empty (empty_fvars `closed_term) cK in
   let rec unroll cK cvars =
     match cK with
     | Apx.Comp.Ctype _ -> cvars
@@ -1768,7 +1768,7 @@ let comptypdef (cT, cK) =
        unroll cK cvars'
   in
   let (_, tau) =
-    index_comptyp cT (unroll cK' (CVar.create ())) (empty_fvars `closed_term)
+    index_comptyp cT (unroll cK' CVar.empty) (empty_fvars `closed_term)
   in
   (tau, cK')
 
@@ -1780,25 +1780,25 @@ let typ d tA = run_empty d (index_typ tA)
 let schema = index_schema
 let mctx cD =
   let (cD', _, _) =
-    index_mctx (CVar.create ()) (empty_fvars `open_term) cD
+    index_mctx CVar.empty (empty_fvars `open_term) cD
   in
   cD'
-let compkind = index_compkind (CVar.create ()) (empty_fvars `open_term)
+let compkind = index_compkind CVar.empty (empty_fvars `open_term)
 
 let hcomptyp cvars tau =
   let (_, tau') = index_comptyp tau cvars (empty_fvars `open_term) in
   tau'
 
-let comptyp = hcomptyp (CVar.create ())
+let comptyp = hcomptyp CVar.empty
 
 let exp vars e =
-  index_exp (CVar.create ()) vars (empty_fvars `closed_term) e
+  index_exp CVar.empty vars (empty_fvars `closed_term) e
 
 let exp' vars i =
-  index_exp' (CVar.create ()) vars (empty_fvars `closed_term) i
+  index_exp' CVar.empty vars (empty_fvars `closed_term) i
 
 let proof vars p =
-  index_proof (CVar.create ()) vars (empty_fvars `closed_term) p
+  index_proof CVar.empty vars (empty_fvars `closed_term) p
 
 let thm vars =
   function

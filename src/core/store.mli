@@ -473,7 +473,7 @@ module CVar : sig
 
   type t (* NOTE: t is an ordered data structure *)
 
-  val create : unit -> t
+  val empty : t
   val extend : t -> entry -> t
   val get : t -> var -> entry
 

@@ -1182,7 +1182,7 @@ module CVar = struct
     let (i, e) = lookup store x in
     (e.plicity, i)
 
-  let create () = []
+  let empty = []
   let extend cvars e = e :: cvars
   let get = List.nth
   let append cvars cvars' = cvars @ cvars'
@@ -1204,7 +1204,7 @@ module CVar = struct
       | DeclOpt _ ->
          Error.violation "[of_mctx] DeclOpt impossible"
     in
-    List.fold_right f (Context.to_list_rev cD) (create ())
+    List.fold_right f (Context.to_list_rev cD) empty
 
   let of_list (l : (Id.name * Plicity.t) list) : t =
     List.map (fun (u, p) -> mk_entry u p) l
