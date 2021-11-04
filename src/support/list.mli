@@ -44,6 +44,17 @@ val concat_mapi : (int -> 'a -> 'b list) -> 'a list -> 'b list
 *)
 val index_of : ('a -> bool) -> 'a list -> int option
 
+(** [find_index p l] is [(index, element)], the first element in [l] satisfying
+    [p] along with its zero-based index.
+    @raise Not_found if there is no element in [l] satisfying [p].
+*)
+val find_index : ('a -> bool) -> 'a list -> int * 'a
+
+(** [find_index_opt p l] is the first element in [l] satisfying [p] along with
+    its zero-based index in [l]. Returns [None] if there is no such element.
+*)
+val find_index_opt : ('a -> bool) -> 'a list -> (int * 'a) option
+
 (** [equal eq [a1; ...; an] [b1; ..; bm]] holds when the two input lists have
     the same length, and for each pair of elements [ai], [bi] at the same
     position we have [eq ai bi].

@@ -46,6 +46,26 @@ let index_of p l =
   in
   go 0 l
 
+let find_index p =
+  let rec find_index i =
+    function
+    | [] -> raise Not_found
+    | x :: xs ->
+      if p x then i, x
+      else find_index (i + 1) xs
+  in
+  find_index 0
+
+let find_index_opt p =
+  let rec find_index_opt i =
+    function
+    | [] -> None
+    | x :: xs ->
+      if p x then Some (i, x)
+      else find_index_opt (i + 1) xs
+  in
+  find_index_opt 0
+
 let rec equal eq l1 l2 = match l1, l2 with
   | [], [] -> true
   | x :: xs, y :: ys -> if eq x y then equal eq xs ys else false
@@ -93,6 +113,15 @@ let combine l1 l2 =
     | _ -> raise (Invalid_argument "List.combine")
   in
   combine l1 l2 Fun.id
+
+(*
+let fold_right f l acc =
+  let rec fold_right f l acc return =
+    match l with
+    | [] -> return acc
+    | a :: l -> fold_right f l acc (f a)
+  in fold_right f l acc Fun.id
+*)
 
 module MakeOrd (O: Ord.ORD) : Ord.ORD with type t = O.t list = Ord.Make (struct
   type t = O.t list
