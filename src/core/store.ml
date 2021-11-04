@@ -997,20 +997,15 @@ module BVar = struct
 
   type entry = { name : Id.name }
 
-  let mk_entry n = { name = n }
+  let mk_entry name = { name }
 
   type t = entry list
 
-  let index_of_name store n =
-    let rec loop i =
-      function
-      | [] -> raise Not_found
-      | e :: es ->
-         if Id.equals e.name n
-         then i
-         else loop (i + 1) es
-    in
-    loop 1 store
+  let index_of_name store name =
+    store
+    |> List.index_of (fun { name = name'; _ } -> Id.equals name' name)
+    |> Option.get' Not_found
+    |> (+) 1
 
   let empty = []
   let extend ctx e = e :: ctx
