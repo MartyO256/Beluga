@@ -26,7 +26,6 @@ let _ =
      | _ -> None)
 
 let (dprintf, _, _) = Debug.makeFunctions' (Debug.toFlags [11])
-(* open Debug.Fmt *)
 
 let sym_head = [%sedlex.regexp? id_start | '_']
 let sym_tail = [%sedlex.regexp? id_continue | Chars "\'-*+@=^/#?" ]
