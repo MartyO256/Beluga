@@ -132,8 +132,13 @@ let fold_right f l acc =
   in fold_right f l acc Fun.id
 *)
 
-let partition_take n =
-  partitioni (fun i _ -> i < n)
+let partition_take k l =
+  let rec partition_take k l taken =
+    match l with
+    | x :: xs when k > 0 -> partition_take (k - 1) xs (x :: taken)
+    | _ -> (rev taken, l)
+  in
+  partition_take k l []
 
 module MakeOrd (O: Ord.ORD) : Ord.ORD with type t = O.t list = Ord.Make (struct
   type t = O.t list
