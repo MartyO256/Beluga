@@ -340,8 +340,7 @@ let get_ctxvar_mobj (_, mO) =
 let rec length_typ_rec =
   function
   | Ext.LF.SigmaLast _ -> 1
-  | Ext.LF.SigmaElem (x, _, rest) ->
-     print_string (Id.render_name x ^ "  ");
+  | Ext.LF.SigmaElem (_, _, rest) ->
      1 + length_typ_rec rest
 
 let rec index_kind (k : Ext.LF.kind) : Apx.LF.kind index =
