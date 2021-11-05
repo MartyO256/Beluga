@@ -29,6 +29,7 @@ module LF = struct
 
   and ctyp_decl =
     | Decl of name * loc_ctyp * Depend.t
+    | DeclOpt of name
 
   and typ =
     | Atom of Location.t * name * spine
