@@ -110,6 +110,13 @@ val combine : 'a list -> 'b list -> ('a * 'b) list
 *)
 val partitioni : (int -> 'a -> bool) -> 'a list -> ('a list * 'a list)
 
+(** [partition_take k [x_1; x_2; ...; x_n]] is
+    [([x_1; x_2; ...; x_k], [x_(k+1); x_(k+2); ...; x_n])].
+    If [k < 0], then [([], [x_1; x_2; ...; x_n])] is returned.
+    If [k >= n], then [([x_1; x_2; ...; x_n], [])] is returned.
+*)
+val partition_take : int -> 'a list -> ('a list * 'a list)
+
 (** Functor building an implementation of {!Ord} given a totally ordered type.
     The ordering between two lists of totally ordered types is as follows with
     respect to [compare l r]:

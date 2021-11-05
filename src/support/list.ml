@@ -132,6 +132,9 @@ let fold_right f l acc =
   in fold_right f l acc Fun.id
 *)
 
+let partition_take n =
+  partitioni (fun i _ -> i < n)
+
 module MakeOrd (O: Ord.ORD) : Ord.ORD with type t = O.t list = Ord.Make (struct
   type t = O.t list
 
