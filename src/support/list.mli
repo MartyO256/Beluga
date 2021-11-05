@@ -105,6 +105,11 @@ val split : ('a * 'b) list -> 'a list * 'b list
 *)
 val combine : 'a list -> 'b list -> ('a * 'b) list
 
+(** Same as {!partition}, but the predicate is applied to the zero-based index
+    of the element as first argument and the element itself as second argument.
+*)
+val partitioni : (int -> 'a -> bool) -> 'a list -> ('a list * 'a list)
+
 (** Functor building an implementation of {!Ord} given a totally ordered type.
     The ordering between two lists of totally ordered types is as follows with
     respect to [compare l r]:

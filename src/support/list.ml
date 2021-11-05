@@ -114,6 +114,15 @@ let combine l1 l2 =
   in
   combine l1 l2 Fun.id
 
+let partitioni p l =
+  let rec partitioni i yes no = function
+    | [] -> (rev yes, rev no)
+    | x :: l ->
+      if p i x then partitioni (i + 1) (x :: yes) no l
+      else partitioni (i + 1) yes (x :: no) l
+  in
+  partitioni 0 [] [] l
+
 (*
 let fold_right f l acc =
   let rec fold_right f l acc return =
