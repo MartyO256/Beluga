@@ -14,6 +14,11 @@ let get' (e : exn) (o : 'a option) : 'a =
     (Fun.id)
     o
 
+let get_or_else default =
+  function
+  | None -> default ()
+  | Some x -> x
+
 let get_default def o =
   eliminate
     (Fun.const def)

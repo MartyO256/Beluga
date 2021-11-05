@@ -8,6 +8,10 @@ val get_default : 'a -> 'a option -> 'a
 (** Gets the value from an option if it exists. Otherwise raises the given exception. *)
 val get' : exn -> 'a option -> 'a
 
+(** [get_or_else f o] is [f ()] if [o] is [None] and [v] if [o] is [Some v].
+*)
+val get_or_else : (unit -> 'a) -> 'a option -> 'a
+
 (** Convert a boolean to an option.
     When used with other monadic operations, this is (a specialized)
     `guard` function from Haskell, which allows to abort a monadic
