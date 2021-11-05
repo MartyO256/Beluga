@@ -148,6 +148,7 @@ module Cid : sig
     val freeze : cid_comp_typ -> unit
     val addConstructor : cid_comp_const -> cid_comp_typ -> unit
     val index_of_name : name -> cid_comp_typ
+    val index_of_name_opt : name -> cid_comp_typ option
     val clear : unit -> unit
     val get_implicit_arguments : cid_comp_typ -> int
   end
@@ -177,6 +178,7 @@ module Cid : sig
     val freeze : cid_comp_cotyp -> unit
     val addDestructor : cid_comp_dest -> cid_comp_cotyp -> unit
     val index_of_name : name -> cid_comp_typ
+    val index_of_name_opt : name -> cid_comp_typ option
     val clear : unit -> unit
   end
 
@@ -252,6 +254,7 @@ module Cid : sig
     val fixed_name_of : cid_comp_typdef -> Id.name
     val get_implicit_arguments : cid_comp_typdef -> int
     val index_of_name : name -> cid_comp_typdef
+    val index_of_name_opt : name -> cid_comp_typdef option
     val clear : unit -> unit
   end
 

@@ -1237,31 +1237,26 @@ let rec index_comptyp (tau : Ext.Comp.typ) cvars : Apx.Comp.typ fvar_state =
   fun fvars ->
   match tau with
   | Ext.Comp.TypBase (loc, a, ms) ->
-     begin
-       try
-         let a' = CompTyp.index_of_name a in
-         let (ms', fvars) = index_meta_spine cvars fvars ms in
-         (fvars, Apx.Comp.TypBase (loc, a', ms'))
-       with
-       | Not_found ->
-          begin
-            try
-              let a' = CompCotyp.index_of_name a in
-              let (ms', fvars) = index_meta_spine cvars fvars ms in
-              (fvars, Apx.Comp.TypCobase (loc, a', ms'))
-            with
-            | Not_found ->
-               begin
-                 try
-                   let a' = CompTypDef.index_of_name a in
-                   let (ms', fvars) = index_meta_spine cvars fvars ms in
-                   (fvars, Apx.Comp.TypDef (loc, a', ms'))
-                 with
-                 | Not_found ->
-                    throw loc (UnboundName a)
-               end
-          end
-     end
+    Option.choice
+      [ lazy
+          (CompTyp.index_of_name_opt a
+          |> Option.map (fun a' ->
+                 let ms', fvars = index_meta_spine cvars fvars ms in
+                 fvars, Apx.Comp.TypBase (loc, a', ms')))
+      ; lazy
+          (CompCotyp.index_of_name_opt a
+          |> Option.map (fun a' ->
+                 let ms', fvars = index_meta_spine cvars fvars ms in
+                 fvars, Apx.Comp.TypCobase (loc, a', ms')))
+      ; lazy
+          (CompTypDef.index_of_name_opt a
+          |> Option.map (fun a' ->
+                 let ms', fvars = index_meta_spine cvars fvars ms in
+                 fvars, Apx.Comp.TypDef (loc, a', ms')))
+      ]
+    |> Lazy.force
+    |> Option.get_or_else (fun () -> throw loc (UnboundName a))
+
   | Ext.Comp.TypBox (loc, (loc', mU)) ->
      let (fvars, mU') = index_cltyp loc cvars fvars mU in
      (fvars, Apx.Comp.TypBox (loc, (loc', mU')))
@@ -1363,7 +1358,7 @@ let rec index_exp cvars vars fcvars =
       *)
      disambiguate loc' name [d_dataconst]
      |> Option.eliminate
-          (fun _ -> (* the name is not a data constructor *)
+          (fun () -> (* the name is not a data constructor *)
             let i' = index_exp' cvars vars fcvars i in
             let vars1 = Var.extend vars (Var.mk_entry name) in
             let e' = index_exp cvars vars1 fcvars e in
