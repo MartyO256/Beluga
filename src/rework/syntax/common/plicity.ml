@@ -1,22 +1,22 @@
 open Support
 
-type t =
-  | Implicit
-  | Explicit
+module Plicity = struct
+  type t =
+    | Implicit
+    | Explicit
 
-let implicit = Implicit
+  let implicit = Implicit
+  let explicit = Explicit
 
-let explicit = Explicit
+  let fold ~implicit ~explicit = function
+    | Explicit -> explicit ()
+    | Implicit -> implicit ()
+end
 
-let fold ~implicit ~explicit =
-  function
-  | Explicit -> explicit ()
-  | Implicit -> implicit ()
+include Plicity
 
-module Eq = Eq.Make (struct
-  type tmp = t (* Workaround `type t = t` being recursive *)
-
-  type t = tmp
+include Eq.Make (struct
+  include Plicity
 
   let equal p1 p2 =
     match p1, p2 with
@@ -25,6 +25,5 @@ module Eq = Eq.Make (struct
     | _, _ -> false
 end)
 
-let is_explicit = Eq.equal explicit
-
-let is_implicit = Eq.equal implicit
+let is_explicit = equal explicit
+let is_implicit = equal implicit
