@@ -7,16 +7,6 @@ module Testing = struct
   let print_external_syntax = ref false
 end
 
-module PrinterControl = struct
-  type subst_style =
-    [ `natural
-    | `de_bruijn
-    ]
-
-  let implicit = ref false
-  let subst_style : subst_style ref = ref `natural
-end
-
 module Subord = struct
   let dump = ref false
 end
