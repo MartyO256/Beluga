@@ -366,9 +366,9 @@ let print_error ppf ({ path; location; _ } as e : error) =
            ^^ "Actual type %a"
            ^^ "@]"
          )
-         Name.Show.pp c
-         Name.Show.pp exp
-         Name.Show.pp act
+         Name.pp c
+         Name.pp exp
+         Name.pp act
     (* | Custom s -> fprintf ppf "%s" s *)
     | Violation s -> fprintf ppf "%s" s
   in
@@ -868,7 +868,7 @@ let check_datatype_decl loc a cs : unit parser =
      | Sgn.CompConst { identifier; typ; _ } ->
         retname typ
         $ fun a' ->
-          if not (Name.Eq.equal a a')
+          if not (Name.equal a a')
           then fail (WrongConstructorType (identifier, a, a'))
           else pure ()
      | _ -> fail (Violation "check_datatype_decl invalid input"))
@@ -885,7 +885,7 @@ let check_codatatype_decl loc a cs : unit parser =
      | Sgn.CompDest { identifier; observation_typ=tau0; _} ->
         retname tau0
         $ fun a' ->
-          if not (Name.Eq.equal a a')
+          if not (Name.equal a a')
           then fail (WrongConstructorType (identifier, a, a'))
           else pure ()
      | _ -> fail (Violation "check_codatatype_decl invalid input"))
