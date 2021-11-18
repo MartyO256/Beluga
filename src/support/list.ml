@@ -77,6 +77,16 @@ let hd_opt = function
 
 let index l = mapi (fun i x -> (i, x)) l
 
+let map f l =
+  let rec map l return =
+    match l with
+    | [] -> return []
+    | x :: xs ->
+      let y = f x in
+      map xs (fun ys -> return (y :: ys))
+  in
+  map l Fun.id
+
 let mapi2 f l1 l2 =
   let rec mapi2 index l1 l2 return =
     match l1, l2 with
@@ -125,11 +135,12 @@ let partitioni p l =
 
 (*
 let fold_right f l acc =
-  let rec fold_right f l acc return =
+  let rec fold_right l acc return =
     match l with
     | [] -> return acc
-    | a :: l -> fold_right f l acc (f a)
-  in fold_right f l acc Fun.id
+    | a :: l ->
+      fold_right l acc (f a)
+  in fold_right l acc Fun.id
 *)
 
 let partition_take k l =
@@ -151,9 +162,9 @@ module MakeOrd (O: Ord.ORD) : Ord.ORD with type t = O.t list = Ord.Make (struct
       | _ :: _, [] -> -1
       | x :: xs, y :: ys ->
         let comparison = O.compare x y in
-        if comparison < 0 then -1
-        else if comparison > 0 then 1
-        else compare xs ys
+        if comparison = 0
+        then compare xs ys
+        else comparison
     in
     compare x y
 end)
