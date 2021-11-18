@@ -75,6 +75,15 @@ let hd_opt = function
   | [] -> None
   | x :: _ -> Some x
 
+let iter_rev f l =
+  let rec iter_rev l continue =
+    match l with
+    | [] -> continue () 
+    | x :: xs ->
+      iter_rev xs (fun () -> f x; continue ())
+  in
+  iter_rev l (fun () -> ())
+
 let index l = mapi (fun i x -> (i, x)) l
 
 let map f l =

@@ -68,6 +68,11 @@ val equal : ('a -> 'a -> bool) -> 'a list -> 'a list -> bool
 *)
 val hd_opt : 'a list -> 'a option
 
+(** [iter_rev f [x1; x2; ...; xn]] applies function [f] in turn to
+    [xn; ...; x2; x1]. It is equivalent to
+    [begin f xn; ...; f x2; f x1; () end]. *)
+val iter_rev : ('a -> unit) -> 'a list -> unit
+
 (** [index [x0; x1; ...; xn]] is [[(0, x0); (1, x1); ...; (n, xn)]].
 *)
 val index : 'a list -> (int * 'a) list
