@@ -1,3 +1,5 @@
+open Support
+
 (** @author Marc-Antoine Ouimet *)
 module AbstractSignature (Name : sig
   type t
@@ -24,6 +26,10 @@ end) : sig
       to and including [declaration] and [declaration] is the latest
       declaration in [signature] having name [name]. *)
   val lookup : t -> Name.t -> (t * Declaration.t) option
+
+  (** [iter f signature] applies function [f] in turn on the declarations of
+      [signature] in the order in which they appear in the source files. *)
+  val iter : (t * Declaration.t -> unit) -> t -> unit
 end = struct
   module NameMap = Map.Make (Name)
 
@@ -58,4 +64,7 @@ end = struct
 
   let lookup {bindings; _} name =
     NameMap.find_opt name (Lazy.force bindings)
+
+  let iter f {declarations; _} =
+    List.iter_rev f declarations
 end
