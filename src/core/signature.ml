@@ -17,6 +17,13 @@ end) : sig
   (** [add signature declaration] is the abstract signature constructed by
       adding [declaration] to [signature]. *)
   val add : t -> Declaration.t -> t
+
+  (** [lookup signature name] returns [None] if there is no declaration in
+      [signature] having name [name], and otherwise returns
+      [Some (signature', declaration)] where [signature'] is the signature up
+      to and including [declaration] and [declaration] is the latest
+      declaration in [signature] having name [name]. *)
+  val lookup : t -> Name.t -> (t * Declaration.t) option
 end = struct
   module NameMap = Map.Make (Name)
 
@@ -48,4 +55,7 @@ end = struct
       }
     in
     signature'
+
+  let lookup {bindings; _} name =
+    NameMap.find_opt name (Lazy.force bindings)
 end
