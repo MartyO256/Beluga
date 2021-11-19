@@ -2,13 +2,14 @@ include Stdlib.String
 
 let unpack s =
   let n = length s in
-  let rec go i = match () with
-    | () when i < n -> get s i :: go (i + 1)
-    | () -> []
+  let rec unpack i return =
+    if i < n
+    then (
+      let c = get s i in
+      unpack (i + 1) (fun cs -> return (c :: cs)))
+    else return []
   in
-  go 0
+  unpack 0 Fun.id
 
-let pack cs =
-  concat "" (List.map (make 1) cs)
-
+let pack cs = concat "" (List.map (make 1) cs)
 let drop n s = sub s n (length s - n)

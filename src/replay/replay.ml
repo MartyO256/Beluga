@@ -196,10 +196,8 @@ module TranscriptRunner = struct
   let string_match (s1 : string) (s2 : string) : string_match =
     let l1 = String.length s1 in
     let l2 = String.length s2 in
-    match () with
-    | () when l1 = l2 ->
-       string_match' 0 (String.unpack s1) (String.unpack s2)
-    | () -> LengthDiffers (l1, l2)
+    if l1 = l2 then string_match' 0 (String.unpack s1) (String.unpack s2)
+    else LengthDiffers (l1, l2)
 
   let run_interaction (i : interaction) (e : env) :
         (string, env) Either.t =
