@@ -202,12 +202,6 @@ module Comp = struct
     | NilFBranch of Location.t
     | ConsFBranch of Location.t * (pattern_spine * exp_chk) * fun_branches
 
-  (* the definition of branch_pattern will be removed and replaced by the more general notion of patterns;
-     it remains currently so we can still use the old parser without modifications -bp *)
-  and branch_pattern =
-    | NormalPattern of LF.normal * exp_chk
-    | EmptyPattern
-
   type suffices_typ = typ generic_suffices_typ
 
   type named_order = name generic_order
