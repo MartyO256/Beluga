@@ -138,3 +138,12 @@ val ap_one : 'a -> ('a -> 'b) t -> 'b t
 module Syntax : sig
   val ( $> ) : 'a t -> ('a -> 'b) -> 'b t
 end
+
+(** [pp ?pp_sep pp_v ppf l] prints the items of the non-empty list [l] using
+    [pp_v] to print each item and calling [pp_sep] between items. *)
+val pp
+  :  ?pp_sep:(Format.formatter -> unit -> unit)
+  -> (Format.formatter -> 'a -> unit)
+  -> Format.formatter
+  -> 'a t
+  -> unit

@@ -134,3 +134,6 @@ module Syntax = struct
   let ($>) (p : 'a t) (f : 'a -> 'b) : 'b t =
     map f p
 end
+
+let pp ?(pp_sep = Format.pp_print_cut) pp_v ppf (h, t) =
+  Format.pp_print_list ~pp_sep pp_v ppf (h :: t)
