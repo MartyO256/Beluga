@@ -233,11 +233,6 @@ let rec checkOccurrence loc p =
 (* length cPsi = |cPsi| *)
 let length cPsi = snd (Context.dctxToHat cPsi)
 
-let rec length' =
-  function
-  | I.Empty -> 0
-  | I.Dec (c, _) -> length' c + 1
-
 let rec lengthCollection =
   function
   | I.Empty -> 0
@@ -1185,7 +1180,7 @@ let abstrKind tK =
      let cQ' = abstractCtx cQ in
      let tK'' = abstractKind cQ' 0 (tK', LF.id) in
      let cPsi = ctxToCtx cQ' in
-     (raiseKind cPsi tK'', length' cPsi)
+     (raiseKind cPsi tK'', Context.length cPsi)
 
 and abstrTyp tA =
   let empty_phat = (None, 0) in
@@ -1197,7 +1192,7 @@ and abstrTyp tA =
      let tA2 = abstractTyp cQ' 0 (tA', LF.id) in
      let cPsi = ctxToCtx cQ' in
      begin match raiseType' cPsi tA2 with
-     | (None, tA3) -> (tA3, length' cPsi)
+     | (None, tA3) -> (tA3, Context.length cPsi)
      | _ -> raise (Error (Syntax.Loc.ghost, LeftoverVars))
      end
 
