@@ -119,32 +119,19 @@ let rec list_of_spine : spine -> (Location.t * normal) list = function
 
 
 let loc_of_normal = function
-  | Lam (l, _, _) ->
-      l
-  | Root (l, _, _) ->
-      l
-  | Tuple (l, _) ->
-      l
-  | LFHole (l, _) ->
-      l
-  | Ann (l, _, _) ->
-      l
-  | TList (l, _) ->
-      l
-  | NTyp (l, _) ->
-      l
+  | Lam (l, _, _)
+  | Root (l, _, _)
+  | Tuple (l, _)
+  | LFHole (l, _)
+  | Ann (l, _, _)
+  | TList (l, _)
+  | NTyp (l, _)
   | PatEmpty l ->
       l
 
 
 let loc_of_head = function
-  | Name (l, _, _) ->
-      l
-  | Hole l ->
-      l
-  | PVar (l, _, _) ->
-      l
-  | Proj (l, _, _) ->
+  | Name (l, _, _) | Hole l | PVar (l, _, _) | Proj (l, _, _) ->
       l
 
 
