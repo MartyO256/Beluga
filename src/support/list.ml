@@ -78,7 +78,7 @@ let hd_opt = function
 let iter_rev f l =
   let rec iter_rev l continue =
     match l with
-    | [] -> continue () 
+    | [] -> continue ()
     | x :: xs ->
       iter_rev xs (fun () -> f x; continue ())
   in
@@ -142,15 +142,13 @@ let partitioni p l =
   in
   partitioni 0 [] [] l
 
-(*
 let fold_right f l acc =
   let rec fold_right l acc return =
     match l with
     | [] -> return acc
     | a :: l ->
-      fold_right l acc (f a)
+      fold_right l acc (fun b -> return (f a b))
   in fold_right l acc Fun.id
-*)
 
 let partition_take k l =
   let rec partition_take k l taken =

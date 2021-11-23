@@ -43,10 +43,12 @@ let map (f : 'a -> 'b) (x, l : 'a t) : 'b t =
   let t = List.map f l in
   h, t
 
-let rec fold_right f g (h, l) =
-  match l with
-  | [] -> f h
-  | x :: xs -> g h (fold_right f g (x, xs))
+let fold_right f g l =
+  let rec fold_right (h, l) return =
+    match l with
+    | [] -> return (f h)
+    | x :: xs -> fold_right (x, xs) (fun a -> return (g h a))
+  in fold_right l Fun.id
 
 let fold_left f g (x, l) =
   List.fold_left g (f x) l
