@@ -447,7 +447,7 @@ module LF = struct
       function
       | Null -> Shift n
       | CtxVar _ -> Shift n
-      | DDec (cPsi, _) -> let n = n + 1 in inner n cPsi
+      | DDec (cPsi, _) -> inner (n + 1) cPsi
     in
     inner 0 cPsi
 end
