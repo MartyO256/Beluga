@@ -7,8 +7,11 @@ module Name = struct
     }
 
   let make location value = { location; value }
+
   let make_blank location = make location "_"
+
   let location { location; _ } = location
+
   let value { value; _ } = value
 end
 

@@ -8,8 +8,11 @@ module FullyQualifiedName = struct
     }
 
   let make location modules value = { location; modules; value }
+
   let location { location; _ } = location
+
   let modules { modules; _ } = modules
+
   let value { value; _ } = value
 end
 
@@ -24,7 +27,7 @@ include Show.Make (struct
       "%a::%s"
       (Format.pp_print_list
          ~pp_sep:(fun ppf () -> Format.fprintf ppf "::")
-         (fun ppf x -> Format.fprintf ppf "%s" x))
+         (fun ppf x -> Format.fprintf ppf "%s" x) )
       (modules n)
       (value n)
 end)

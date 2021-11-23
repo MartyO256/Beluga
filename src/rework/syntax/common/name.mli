@@ -22,5 +22,7 @@ val value : t -> string
 (** {1 Instances} *)
 
 include Show.SHOW with type t := t
+
 include Eq.EQ with type t := t
+
 include Ord.ORD with type t := t

@@ -1,6 +1,6 @@
 (library
-  (name syntax)
-  (libraries common external))
+ (name syntax)
+ (libraries common external internal))
 
 (env
   (dev

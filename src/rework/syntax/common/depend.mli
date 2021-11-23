@@ -56,8 +56,8 @@ val to_plicity' : t -> Plicity.t
 (** [fold ~implicit ~explicit ~inductive d] is [implicit ()] if [d] is
     {!implicit}, [explicit ()] if [d] is {!explicit}, and [inductive ()] if
     [d] is {!inductive}. *)
-val fold
-  :  implicit:(unit -> 'a)
+val fold :
+     implicit:(unit -> 'a)
   -> explicit:(unit -> 'a)
   -> inductive:(unit -> 'a)
   -> t

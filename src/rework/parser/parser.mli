@@ -1,10 +1,10 @@
 open Support
 open Syntax
-
 module Comp = Syntax.External.Comp
 module LF = Syntax.External.LF
 
 type input = (Location.t * Token.t) LinkStream.t
+
 type state
 
 (** Constructs the initial state for a parser by providing an input stream. *)
@@ -38,6 +38,7 @@ type 'a t
 type 'a located = Location.t * 'a
 
 (* Eliminator for parsers: *)
+
 (** Runs a parser on a given state, resulting in a final state and a result. *)
 val run : 'a t -> state -> state * 'a result
 
@@ -52,7 +53,7 @@ val span : 'a t -> 'a located t
 val map : ('a -> 'b) -> 'a t -> 'b t
 
 (** Flipped, operator form of `map`. *)
-val ($>) : 'a t -> ('a -> 'b) -> 'b t
+val ( $> ) : 'a t -> ('a -> 'b) -> 'b t
 
 (** Runs the parser, but capturing failure. *)
 val maybe : 'a t -> 'a option t
@@ -76,12 +77,18 @@ val name : Name.t t
 
 (** Parser for a Harpoon command. *)
 val interactive_harpoon_command : Syntax.External.Harpoon.command t
-val interactive_harpoon_command_sequence : Syntax.External.Harpoon.command list t
+
+val interactive_harpoon_command_sequence :
+  Syntax.External.Harpoon.command list t
 
 val trust_order : Comp.total_dec t
+
 val total_order : 'a Comp.generic_order t -> 'a Comp.generic_order t
+
 val numeric_total_order : Syntax.External.Comp.numeric_order t
-val optional_numeric_total_order : Syntax.External.Comp.numeric_order option t
+
+val optional_numeric_total_order :
+  Syntax.External.Comp.numeric_order option t
 
 (** Parser for computation type. *)
 val cmp_typ : Comp.typ t
@@ -95,7 +102,7 @@ val cmp_exp_syn : Comp.exp_syn t
 (** Parser for the next theorem name in Harpoon. *)
 val next_theorem : [ `quit | `next of Name.t ] t
 
-  (*
+(*
 (* exports for debugging! *)
 val cmp_kind : Comp.kind t
 val cmp_exp_syn : Comp.exp_syn t

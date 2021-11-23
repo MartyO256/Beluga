@@ -1,0 +1,7 @@
+version = 0.19.0
+
+profile = sparse
+
+doc-comments = before
+line-endings = lf
+margin = 77

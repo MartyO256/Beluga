@@ -45,84 +45,84 @@ type decl =
       { location : Location.t
       ; identifier : Name.t
       ; kind : LF.kind
-      } (** LF type family declaration *)
+      }  (** LF type family declaration *)
   | Const of
       { location : Location.t
       ; identifier : Name.t
       ; typ : LF.typ
-      } (** LF type constant decalaration *)
+      }  (** LF type constant decalaration *)
   | CompTyp of
       { location : Location.t
       ; identifier : Name.t
       ; kind : Comp.kind
       ; datatype_flavour : datatype_flavour
-      } (** Computation-level data type constant declaration *)
+      }  (** Computation-level data type constant declaration *)
   | CompCotyp of
       { location : Location.t
       ; identifier : Name.t
       ; kind : Comp.kind
-      } (** Computation-level codata type constant declaration *)
+      }  (** Computation-level codata type constant declaration *)
   | CompConst of
       { location : Location.t
       ; identifier : Name.t
       ; typ : Comp.typ
-      } (** Computation-level type constructor declaration *)
+      }  (** Computation-level type constructor declaration *)
   | CompDest of
       { location : Location.t
       ; identifier : Name.t
       ; mctx : LF.mctx
       ; observation_typ : Comp.typ
       ; return_typ : Comp.typ
-      } (** Computation-level type destructor declaration *)
+      }  (** Computation-level type destructor declaration *)
   | CompTypAbbrev of
       { location : Location.t
       ; identifier : Name.t
       ; kind : Comp.kind
       ; typ : Comp.typ
-      } (** Synonym declaration for computation-level type *)
+      }  (** Synonym declaration for computation-level type *)
   | Schema of
       { location : Location.t
       ; identifier : Name.t
       ; schema : LF.schema
-      } (** Declaration of a specification for a set of contexts *)
+      }  (** Declaration of a specification for a set of contexts *)
   | Pragma of
       { location : Location.t
       ; pragma : pragma
-      } (** Compiler directive *)
+      }  (** Compiler directive *)
   | GlobalPragma of
       { location : Location.t
       ; pragma : global_pragma
-      } (** Global directive *)
+      }  (** Global directive *)
   | MRecTyp of
       { location : Location.t
       ; declarations : (decl * decl list) Nonempty.t
-      } (** Mutually-recursive LF type family declaration *)
+      }  (** Mutually-recursive LF type family declaration *)
   | Theorem of
       { location : Location.t
       ; theorems : thm_decl Nonempty.t
-      } (** Mutually recursive theorem declaration(s) *)
+      }  (** Mutually recursive theorem declaration(s) *)
   | Val of
       { location : Location.t
       ; identifier : Name.t
       ; typ : Comp.typ option
       ; expression : Comp.exp_syn
-      } (** Computation-level value declaration *)
+      }  (** Computation-level value declaration *)
   | Query of
       { location : Location.t
       ; name : Name.t option
       ; typ : LF.typ
       ; expected_solutions : int option
       ; maximum_tries : int option
-      } (** Logic programming query on LF type *)
+      }  (** Logic programming query on LF type *)
   | Module of
       { location : Location.t
       ; identifier : Name.t
       ; declarations : decl list
-      } (** Namespace declaration for other declarations *)
+      }  (** Namespace declaration for other declarations *)
   | Comment of
       { location : Location.t
       ; content : string
-      } (** Documentation comment *)
+      }  (** Documentation comment *)
 
 (** Parsed Beluga project *)
 type sgn = decl list
