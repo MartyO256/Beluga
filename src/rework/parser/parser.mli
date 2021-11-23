@@ -83,7 +83,7 @@ val interactive_harpoon_command_sequence :
 
 val trust_order : Comp.total_dec t
 
-val total_order : 'a Comp.generic_order t -> 'a Comp.generic_order t
+val total_order : 'a GenericOrder.t t -> 'a GenericOrder.t t
 
 val numeric_total_order : Syntax.External.Comp.numeric_order t
 

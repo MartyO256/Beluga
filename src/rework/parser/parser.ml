@@ -2504,12 +2504,16 @@ let call_arg =
   |> labelled "call argument"
 
 
-let named_total_arg : Comp.named_order t = name $> fun x -> Comp.Arg x
+let named_total_arg : Comp.named_order t =
+  name $> fun x -> GenericOrder.Arg x
 
-let numeric_total_arg : Comp.numeric_order t = integer $> fun x -> Comp.Arg x
 
-let total_order (arg : 'a Comp.generic_order t) : 'a Comp.generic_order t =
-  alt arg (braces (some arg) $> fun args -> Comp.Lex args)
+let numeric_total_arg : Comp.numeric_order t =
+  integer $> fun x -> GenericOrder.Arg x
+
+
+let total_order (arg : 'a GenericOrder.t t) : 'a GenericOrder.t t =
+  alt arg (braces (some arg) $> fun args -> GenericOrder.Lex args)
   |> labelled "totality ordering"
 
 
