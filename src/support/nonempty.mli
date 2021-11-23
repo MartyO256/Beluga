@@ -1,12 +1,25 @@
-(** Nonempty list. *)
+(** The type of non-empty lists. *)
 type 'a t
 
+(** Type alias for {!t}. *)
 type 'a nonempty = 'a t
 
+(** [uncons l] is [(head l, tail l)]. *)
 val uncons : 'a t -> 'a * 'a list
+
+(** [head l] is the first element in [l]. *)
 val head : 'a t -> 'a
+
+(** [tail l] is the list of elements that succeed the head of [l]. *)
 val tail : 'a t -> 'a list
+
+(** [unsnoc (a_1, \[a_2; ...; a_(n-1); a_n\])] is
+    [(\[a_1; a_2; ...; a_(n-1)\], a_n)], with [a_n] being the last element in
+    the non-empty list, and [\[a_1; a_2; ...; a_(n-1)\]] being the list of
+    elements that precede [a_n] in order. *)
 val unsnoc : 'a t -> 'a list * 'a
+
+(** [last l] is the last element in [l]. *)
 val last : 'a t -> 'a
 
 (** Constructs a nonempty list given an element. *)
