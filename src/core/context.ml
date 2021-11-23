@@ -328,11 +328,12 @@ let length cD =
     | Dec (cD', _) -> length cD' (1 + acc)
   in length cD 0
 
-let rec dctxLength =
-  function
-  | Null -> 0
-  | CtxVar _ -> 0
-  | DDec (cPsi, _) -> 1 + dctxLength cPsi
+let dctxLength cPsi =
+  let rec dctxLength cPsi acc =
+    match cPsi with
+    | Null | CtxVar _ -> acc
+    | DDec (cPsi', _) -> dctxLength cPsi' (1 + acc)
+  in dctxLength cPsi 0
 
 
 (* Lookup name in context
