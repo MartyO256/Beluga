@@ -899,15 +899,14 @@ module Make (_ : Store.Cid.RENDERER) : Printer.Ext.T = struct
     fmt_ppr_mrec (fl_to_prefix k) lvl ppf k;
     List.iter (fun d -> fmt_ppr_mrec "" lvl ppf d) body
 
-  let fmt_ppr_mrecs lvl ppf =
-    Nonempty.destructure (fun h t ->
-      fmt_ppr_mrec' lvl ppf h;
-      t |> List.iter (fun e ->
-        fprintf ppf "@\n%s " (to_html "and" Keyword);
-        fmt_ppr_mrec' lvl ppf e
-      );
-      fprintf ppf ";@\n"
-    )
+  let fmt_ppr_mrecs lvl ppf l =
+    let (h, t) = Nonempty.uncons l in
+    fmt_ppr_mrec' lvl ppf h;
+    t |> List.iter (fun e ->
+      fprintf ppf "@\n%s " (to_html "and" Keyword);
+      fmt_ppr_mrec' lvl ppf e
+    );
+    fprintf ppf ";@\n"
 
   let rec fmt_ppr_sgn_decl ppf =
     function
