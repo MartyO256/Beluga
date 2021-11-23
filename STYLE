@@ -5,10 +5,10 @@ Naming conventions
 ------------------
 - LF objects are prefixed with a t: tA, tK, tM, ...
 
-  LF Terms	      tM, tN
-  LF Types	      tA, tB
+  LF Terms        tM, tN
+  LF Types        tA, tB
   LF Spines           tS
-  LF Heads	      tH
+  LF Heads        tH
 
 - LF objects under a substitution are prefixed with a s: sA, sK, sM, ...
 
@@ -28,7 +28,7 @@ Naming conventions
 - Beluga types under a meta-substitution are prefixed with a t: ttau
 
 
-- function names follow the CamelCase convention
+- function names follow the camelCase convention
 
 Lexical conventions
 -------------------
@@ -66,7 +66,7 @@ Comments
 --------
 - each function must list its invariants
 
-- catching of Ocaml errors must be explained by a comment
+- catching of OCaml errors must be explained by a comment
 
 - leave revision comments to the revision control system
 
