@@ -81,9 +81,7 @@ and typ_rec =
   | SigmaLast of Name.t option * typ
   | SigmaElem of Name.t * typ * typ_rec
 
-and tuple =
-  | Last of normal
-  | Cons of normal * tuple
+and tuple = normal Nonempty.t
 
 and dctx =
   | Null
