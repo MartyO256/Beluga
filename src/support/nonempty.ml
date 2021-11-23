@@ -7,18 +7,16 @@ let uncons : 'a t -> 'a * 'a list = Fun.id
 let head = fst
 let tail = snd
 
-(** Gets the last element of the nonempty list and the list of all elements
-    before the last.
-    Not tail-recursive.
- *)
-let rec unsnoc (h, t) =
-  match t with
-  | [] -> ([], h)
-  | x :: xs ->
-     let (t', last) = unsnoc (x, xs) in
-     (h :: t', last)
+let unsnoc l =
+  let rec unsnoc (h, t) return =
+    match t with
+    | [] ->
+      return ([], h)
+    | x :: xs ->
+      unsnoc (x, xs) (fun (t', last) -> return (h :: t', last))
+  in
+  unsnoc l Fun.id
 
-(** Gets the last element of a nonempty list. *)
 let rec last (h, t) =
   match t with
   | [] -> h
