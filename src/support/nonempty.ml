@@ -35,7 +35,7 @@ let rec fold_right f g (h, l) =
   | [] -> f h
   | x :: xs -> g h (fold_right f g (x, xs))
 
-let fold_left (type a) (type b) (f : a -> b) (g : b -> a -> b) (x, l) =
+let fold_left f g (x, l) =
   List.fold_left g (f x) l
 
 let destructure f l = f (head l) (tail l)

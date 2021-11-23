@@ -15,18 +15,20 @@ val from : 'a -> 'a list -> 'a t
 (** [singleton e] is the non-empty list with the single element [e] in it. *)
 val singleton : 'a -> 'a t
 
-(** Elimination principle for `Nonempty.t'. *)
+(** [fold_right sing cons (a1, \[a2; ...; an\])] is
+    [cons a1 (cons a2 (... (sing an) ...))]. *)
 val fold_right
   :  ('a -> 'b)
-  -> (* for the Sing case *) ('a -> 'b -> 'b)
-  -> (* for the Cons case *) 'a t
+  -> ('a -> 'b -> 'b)
+  -> 'a t
   -> 'b
 
-(** Elimination principle for `Nonempty.t'. *)
+(** [fold_left sing cons (a1, \[a2; ...; an\])] is
+    [cons (... (cons (sing a1) a2) ....) an]. *)
 val fold_left
   :  ('a -> 'b)
-  -> (* for the Sing case *) ('b -> 'a -> 'b)
-  -> (* for the Cons cas *) 'a t
+  -> ('b -> 'a -> 'b)
+  -> 'a t
   -> 'b
 
 (** [destructure f l] is [f h t], where [h] and [t] are the head and tail of
