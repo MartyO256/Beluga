@@ -2661,17 +2661,21 @@ and elSpineIW loc recT cD cPsi spine i sA =
  *   O' = extension of O containing new meta-variables of S
  *)
 and elSpine loc recT cD cPsi spine sA =
-  let rec spineLength =
-    function
-    | Apx.LF.Nil -> 0
-    | Apx.LF.App (_, tS) -> 1 + spineLength tS
+  let spineLength tS =
+    let rec spineLength tS acc =
+      match tS with
+      | Apx.LF.Nil -> acc
+      | Apx.LF.App (_, tS) -> spineLength tS (1 + acc)
+    in spineLength tS 0
   in
 
-  let rec typLength =
-    function
-    | Int.LF.Atom _ -> 0
-    | Int.LF.PiTyp (_, tB2) -> 1 + typLength tB2
-    | Int.LF.Sigma _ -> 0 (* raise (Error (loc, SigmaTypImpos (cD, cPsi, sA))) *)
+  let typLength tB =
+    let rec typLength tB acc =
+      match tB with
+      | Int.LF.Atom _ -> acc
+      | Int.LF.PiTyp (_, tB2) -> typLength tB2 (1 + acc)
+      | Int.LF.Sigma _ -> acc (* raise (Error (loc, SigmaTypImpos (cD, cPsi, sA))) *)
+    in typLength tB 0
   in
 
   (* Check first that we didn't supply too many arguments. *)

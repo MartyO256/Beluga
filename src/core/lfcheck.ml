@@ -353,17 +353,21 @@ and checkTuple loc cD cPsi (tuple, s1) (trec, s2) =
 
 
 and syn cD cPsi (Root (loc, h, tS, _), s (* id *)) =
-  let rec spineLength =
-    function
-    | Nil -> 0
-    | SClo (tS, _) -> spineLength tS
-    | App (_, tS) -> 1 + spineLength tS
+  let spineLength tS =
+    let rec spineLength tS acc =
+      match tS with
+      | Nil -> acc
+      | SClo (tS, _) -> spineLength tS acc
+      | App (_, tS) -> spineLength tS (1 + acc)
+    in spineLength tS 0
   in
 
-  let rec typLength =
-    function
-    | PiTyp (_, tB2) -> 1 + typLength tB2
-    | _ -> 0
+  let typLength tB =
+    let rec typLength tB acc =
+      match tB with
+      | PiTyp (_, tB2) -> typLength tB2 (1 + acc)
+      | _ -> acc
+    in typLength tB 0
   in
 
   let rec syn tS sA =
