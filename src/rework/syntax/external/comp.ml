@@ -20,22 +20,6 @@ type case_label =
       Location.t * int (* schema element number (1-based) *) * int option
 (* the number of the projection, if any (1-based) *)
 
-(** Type specified in an interactive use of `suffices` *)
-type 'a generic_suffices_typ =
-  [ `exact of 'a (* user specified an exact type annotation *)
-  | `infer of
-    Location.t
-    (* user specified `_` and expects the type to be known *)
-  ]
-
-let map_suffices_typ (f : 'a -> 'b) :
-    'a generic_suffices_typ -> 'b generic_suffices_typ = function
-  | `exact x ->
-      `exact (f x)
-  | `infer loc ->
-      `infer loc
-
-
 type kind =
   | Ctype of Location.t
   | PiKind of Location.t * LF.ctyp_decl * kind
@@ -104,7 +88,7 @@ and fun_branches =
   | NilFBranch of Location.t
   | ConsFBranch of Location.t * (pattern_spine * exp_chk) * fun_branches
 
-type suffices_typ = typ generic_suffices_typ
+type suffices_typ = typ GenericSufficesTyp.t
 
 type named_order = Name.t GenericOrder.t
 
