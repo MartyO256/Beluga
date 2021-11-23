@@ -321,10 +321,12 @@ let find_index_rev' (ctx : 'a LF.ctx) (f : 'a -> bool) : int option =
   find_with_index_rev' ctx (fun (x, _) -> f x)
   |> Option.map snd
 
-let rec length =
-  function
-  | Empty -> 0
-  | Dec (cD', _) -> 1 + length cD'
+let length cD =
+  let rec length cD acc =
+    match cD with
+    | Empty -> acc
+    | Dec (cD', _) -> length cD' (1 + acc)
+  in length cD 0
 
 let rec dctxLength =
   function
