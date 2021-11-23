@@ -1332,7 +1332,7 @@ and collectExp' cQ =
      (cQ'', Comp.Apply (loc, i', e'))
 
   | Comp.MApp (loc, i, cM, cU, pl) ->
-     let (cQ', i') = collectExp' cQ i in (* cQ' is unused? -je *)
+     let (cQ', i') = collectExp' cQ i in
      let (cQ'', cM') = collect_meta_obj 0 cQ' cM in
      let (cQ''', cU') = collectMetaTyp loc 0 cQ'' cU in
      (cQ''', Comp.MApp (loc, i', cM', cU', pl))
