@@ -2678,15 +2678,18 @@ and elSpine loc recT cD cPsi spine sA =
     in typLength tB 0
   in
 
+  let length_whnf_sA = typLength (fst (Whnf.whnfTyp sA)) in
+  let length_spine = spineLength spine in
+
   (* Check first that we didn't supply too many arguments. *)
-  if typLength (fst (Whnf.whnfTyp sA)) < spineLength spine
+  if length_whnf_sA < length_spine
   then
     raise
       (Check.LF.Error
          ( loc
          , Check.LF.SpineIllTyped
-             ( typLength (fst (Whnf.whnfTyp sA))
-             , spineLength spine
+             ( length_whnf_sA
+             , length_spine
              )
          )
       );
