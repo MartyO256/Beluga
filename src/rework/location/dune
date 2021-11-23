@@ -1,0 +1,4 @@
+(library
+ (name location)
+ (libraries support)
+ (modules :standard))
