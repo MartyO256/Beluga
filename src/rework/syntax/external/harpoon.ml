@@ -1,11 +1,6 @@
 open Support
 open Common
 
-type defer_kind =
-  [ `subgoal
-  | `theorem
-  ]
-
 type invoke_kind =
   [ `ih
   | `lemma
