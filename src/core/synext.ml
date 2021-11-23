@@ -74,9 +74,7 @@ module LF = struct
     | SigmaLast of name option * typ
     | SigmaElem of name * typ * typ_rec
 
-  and tuple =
-    | Last of normal
-    | Cons of normal * tuple
+  and tuple = normal Nonempty.t
 
   and dctx =
     | Null

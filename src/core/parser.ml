@@ -1666,14 +1666,7 @@ and clf_normal =
         |> angles
         |> span
         |> labelled "LF tuple"
-        $> fun (loc, ms) ->
-           LF.Tuple
-             ( loc
-             , Nonempty.fold_right
-                 (fun x -> LF.Last x)
-                 (fun x r -> LF.Cons (x, r))
-                 ms
-             )
+        $> fun (loc, ms) -> LF.Tuple (loc, ms)
       in
       let p =
         choice

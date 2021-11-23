@@ -687,15 +687,15 @@ and index_typ_rec : Ext.LF.typ_rec -> Apx.LF.typ_rec index =
      $> fun (a', rest') -> Apx.LF.SigmaElem (x, a', rest')
 
 and index_tuple : Ext.LF.tuple -> Apx.LF.tuple index =
-  let open Bind in
-  function
-  | Ext.LF.Last m ->
-     index_term m $> fun m' -> Apx.LF.Last m'
-
-  | Ext.LF.Cons (m, rest) ->
-     seq2 (index_term m) (index_tuple rest)
-     $> fun (m', rest') ->
-        Apx.LF.Cons (m', rest')
+  fun tuple ->
+    Nonempty.fold_right
+      Bind.(fun m ->
+        index_term m
+        $> fun m' -> Apx.LF.Last m')
+      Bind.(fun m rest ->
+        seq2 (index_term m) rest
+        $> fun (m', rest') -> Apx.LF.Cons (m', rest'))
+      tuple
 
 and index_term : Ext.LF.normal -> Apx.LF.normal index =
   let open Bind in

@@ -144,15 +144,9 @@ module Make (_ : Store.Cid.RENDERER) : Printer.Ext.T = struct
 
 
 
-  and fmt_ppr_tuple lvl ppf =
-    function
-    | LF.Last tM ->
-       fmt_ppr_lf_normal lvl ppf tM
-
-    | LF.Cons (tM, rest) ->
-       fprintf ppf "%a, %a"
-         (fmt_ppr_lf_normal lvl) tM
-         (fmt_ppr_tuple lvl) rest (* the level should probably change here? -je *)
+  and fmt_ppr_tuple lvl ppf tuple =
+    Nonempty.pp ~pp_sep:Fmt.comma (fmt_ppr_lf_normal lvl) ppf tuple
+    (* the level should probably change here? -je *)
 
   and fmt_ppr_lf_normal lvl ppf =
     let deimplicitize_spine _ ms = ms in
