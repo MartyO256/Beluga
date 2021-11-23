@@ -396,7 +396,8 @@ module BVar : sig
   val index_of_name : t -> name -> offset
 end
 
-
+(** Store of named free LF-bound variables for abstraction and LF
+    reconstruction. *)
 module FVar : sig
  (* NOTE: FVars are stored in an an ordered data structure *)
   val add : name -> LF.typ_free_var -> unit

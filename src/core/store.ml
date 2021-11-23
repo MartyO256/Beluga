@@ -1014,7 +1014,8 @@ module BVar = struct
 end
 
 
-(* Free Bound Variables *)
+(** Store of named free LF-bound variables for abstraction and LF
+    reconstruction. *)
 module FVar = struct
   let store = ref []
 
