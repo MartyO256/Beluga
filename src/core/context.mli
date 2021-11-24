@@ -40,6 +40,11 @@ val append : 'a ctx -> 'a ctx -> 'a ctx
     {!val:Support.List.fold_right}. *)
 val fold : 'b -> ('b -> 'a -> 'b) -> 'a ctx -> 'b
 
+(** [fold' f init ctx] where [ctx = x1:'a1, x2:'a2, ..., xn:'an] is
+    [f (... (f (f init x1:'a1) x2:'a2) ...) xn:'an]. This is analogous to
+    {!val:Support.List.fold_left}. *)
+val fold': ('b -> 'a -> 'b) -> 'b -> 'a ctx -> 'b
+
 (** Lift a function into contexts. *)
 val map : ('a -> 'b) -> 'a ctx -> 'b ctx
 

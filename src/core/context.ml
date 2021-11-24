@@ -165,6 +165,11 @@ let fold empty f ctx =
       fold acc ctx' (fun a -> return (f a d))
   in fold empty ctx Fun.id
 
+let rec fold' f acc ctx =
+  match ctx with
+  | LF.Empty -> acc
+  | LF.Dec (ctx', d) -> fold' f (f acc d) ctx'
+
 let map f ctx =
   fold LF.Empty (fun ctx' x -> LF.Dec (ctx', f x)) ctx
 
