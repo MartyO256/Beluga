@@ -157,10 +157,13 @@ let append left =
   in
   go
 
-let rec fold (empty : 'b) (f : 'b -> 'a -> 'b) =
-  function
-  | LF.Empty -> empty
-  | LF.Dec (ctx', d) -> f (fold empty f ctx') d
+let fold empty f ctx =
+  let rec fold acc ctx return =
+    match ctx with
+    | LF.Empty -> return acc
+    | LF.Dec (ctx', d) ->
+      fold acc ctx' (fun a -> return (f a d))
+  in fold empty ctx Fun.id
 
 let map f ctx =
   fold LF.Empty (fun ctx' x -> LF.Dec (ctx', f x)) ctx
