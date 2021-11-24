@@ -163,11 +163,9 @@ let rec raiseType' cPsi tA =
   | I.Dec (cPsi', decl) ->
      raiseType' cPsi' (I.PiTyp ((decl, Depend.implicit), tA))
 
-let rec raiseKind cPsi tK =
-  match cPsi with
-  | I.Empty -> tK
-  | I.Dec (cPsi', decl) ->
-     raiseKind cPsi' (I.PiKind ((decl, Depend.implicit), tK))
+(** [raiseKind cPsi tK] where [ctx = x1:'a1, x2:'a2, ..., xn:'an] constructs
+    the LF kind {[{x1:'a1} {x2:'a2} ... {xn:'an} tK]} using implicit dependent
+    product types. *)
 
 let rec fmt_ppr_collection ppf : free_var I.ctx -> unit =
   let open Format in
