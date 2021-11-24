@@ -140,10 +140,12 @@ type free_var =
 
 type fctx = free_var I.ctx
 
-let rec prefixCompTyp =
-  function
-  | Comp.TypPiBox (_, _, tau) -> 1 + prefixCompTyp tau
-  | _ -> 0
+let prefixCompTyp tau =
+  let rec prefixCompTyp tau acc =
+    match tau with
+    | Comp.TypPiBox (_, _, tau') -> prefixCompTyp tau' (1 + acc)
+    | _ -> acc
+  in prefixCompTyp tau 0
 
 let rec prefixCompKind =
   function
