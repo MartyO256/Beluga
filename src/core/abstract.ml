@@ -164,7 +164,7 @@ let rec raiseType' cPsi tA =
      raiseType' cPsi' (I.PiTyp ((decl, Depend.implicit), tA))
 
 (** [raiseKind cPsi tK] where [ctx = x1:'a1, x2:'a2, ..., xn:'an] constructs
-    the LF kind {[{x1:'a1} {x2:'a2} ... {xn:'an} tK]} using implicit dependent
+    the LF kind [{x1:'a1} {x2:'a2} ... {xn:'an} tK] using implicit dependent
     product types. *)
 let raiseKind cPsi tK =
   Context.fold'
