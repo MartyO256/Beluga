@@ -35,7 +35,9 @@ val hasCtxVar : dctx -> bool (* true if ctxVar dctx = Some _ *)
 
 val append : 'a ctx -> 'a ctx -> 'a ctx
 
-(** General eliminator for contexts. *)
+(** [fold init f ctx] where [ctx = x1:'a1, x2:'a2, ..., xn:'an] is
+    [f (f (... (f init xn:'an) ...) x2:'a2) x1:'a1]. This is analogous to
+    {!val:Support.List.fold_right}. *)
 val fold : 'b -> ('b -> 'a -> 'b) -> 'a ctx -> 'b
 
 (** Lift a function into contexts. *)
