@@ -129,10 +129,11 @@ let ap xs = map2 (fun x f -> f x) xs
 
 let ap_one x = map (fun f -> f x)
 
-let pp ?(pp_sep = Format.pp_print_cut) pp_v ppf l =
-  Format.pp_print_list ~pp_sep pp_v ppf (to_list l)
+let pp ?(pp_sep = Format.pp_print_cut) pp_v ppf (h, t) =
+  pp_v ppf h;
+  List.iter (fun v -> pp_sep ppf (); pp_v ppf v) t
 
-  module Syntax = struct
+module Syntax = struct
   let ($>) (p : 'a t) (f : 'a -> 'b) : 'b t =
     map f p
 end
