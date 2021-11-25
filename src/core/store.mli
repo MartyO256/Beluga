@@ -479,7 +479,6 @@ module CVar : sig
 
   val empty : t
   val extend : t -> entry -> t
-  val get : t -> var -> entry
 
   (** Looks up the index of a given name in scope.
       Raises Not_found if no such variable is in scope.

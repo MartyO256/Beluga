@@ -1175,7 +1175,6 @@ module CVar = struct
 
   let empty = []
   let extend cvars e = e :: cvars
-  let get = List.nth
   let append = List.append
   let length = List.length
 
