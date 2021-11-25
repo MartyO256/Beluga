@@ -202,15 +202,6 @@ let rec fmt_ppr_collection ppf : free_var I.ctx -> unit =
   | I.Dec _ ->
      fprintf ppf " ?? "
 
-(* checkOccurrence p cQ = result
-
-   If the first occurrence of Y in cQ s.t. p(Y) = Some Pure, then Yes
-   If the first occurrence of Y:Impure in cQ s.t. p(Y) = Some Impure then Cycle
-   otherwise No
-
-*)
-type occurs = Yes | No
-
 (* eqMMVar mV mV' = B
    where B iff mV and mV' represent same variable
 *)
@@ -220,6 +211,15 @@ let eqVar mmV1 mmV2 =
   | (FV n1, FV n2) -> Id.equals n1 n2
   | _ -> false
 
+type occurs = Yes | No
+
+(* checkOccurrence p cQ = result
+
+   If the first occurrence of Y in cQ s.t. p(Y) = Some Pure, then Yes
+   If the first occurrence of Y:Impure in cQ s.t. p(Y) = Some Impure then Cycle
+   otherwise No
+
+*)
 let rec checkOccurrence loc p =
   function
   | I.Empty -> No
