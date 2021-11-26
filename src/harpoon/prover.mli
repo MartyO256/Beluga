@@ -10,6 +10,6 @@ end
     state.
     May raise {!Error.E}.
  *)
-val process_command : State.t -> State.triple ->
+val process_command : HarpoonState.t -> HarpoonState.triple ->
                       Syntax.Ext.Harpoon.command ->
                       unit
