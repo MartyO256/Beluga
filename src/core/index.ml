@@ -1792,7 +1792,7 @@ let thm vars =
 
 let hexp cvars vars e =
   let closed =
-    if Store.CVar.length cvars = 0
+    if CVar.length cvars = 0
     then `closed_term
     else `open_term
   in
@@ -1800,7 +1800,7 @@ let hexp cvars vars e =
 
 let hexp' cvars vars e =
   let closed =
-    if Store.CVar.length cvars = 0
+    if CVar.length cvars = 0
     then `closed_term
     else `open_term
   in
