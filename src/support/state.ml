@@ -8,27 +8,34 @@ module type STATE = sig
   val put : state -> unit t
 
   val run : 'a t -> init:state -> state * 'a
+
+  include Functor.FUNCTOR with type 'a t := 'a t
 end
 
-module Make (State : sig
+module Make (S : sig
   type t
-end) : STATE with type state = State.t = struct
-  type state = State.t
+end) : STATE with type state = S.t = struct
+  module State = struct
+    type state = S.t
 
-  include Monad.Make (struct
-    (** The type of state transformers. *)
-    type 'a t = state -> state * 'a
+    include Monad.Make (struct
+      (** The type of state transformers. *)
+      type 'a t = state -> state * 'a
 
-    let return a s = (s, a)
+      let return a s = (s, a)
 
-    let bind f v s =
-      let s', a = v s in
-      f a s'
-  end)
+      let bind f v s =
+        let s', a = v s in
+        f a s'
+    end)
 
-  let get s = (s, s)
+    let get s = (s, s)
 
-  let put s' _ = (s', ())
+    let put s' _ = (s', ())
 
-  let run m ~init = m init
+    let run m ~init = m init
+  end
+
+  include State
+  include Functor.Make (State)
 end
