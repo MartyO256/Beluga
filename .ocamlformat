@@ -5,3 +5,5 @@ profile = sparse
 doc-comments = before
 line-endings = lf
 margin = 77
+wrap-comments
+parse-docstrings
