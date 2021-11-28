@@ -18,6 +18,8 @@ module type STATE = sig
   (** {1 Instances} *)
 
   include Functor.FUNCTOR with type 'a t := 'a t
+
+  include Apply.APPLY with type 'a t := 'a t
 end
 
 (** Functor building an implementation of {!STATE} for a given type of

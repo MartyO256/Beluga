@@ -10,6 +10,8 @@ module type STATE = sig
   val run : 'a t -> init:state -> state * 'a
 
   include Functor.FUNCTOR with type 'a t := 'a t
+
+  include Apply.APPLY with type 'a t := 'a t
 end
 
 module Make (S : sig
@@ -38,4 +40,5 @@ end) : STATE with type state = S.t = struct
 
   include State
   include Functor.Make (State)
+  include Apply.Make (State)
 end
