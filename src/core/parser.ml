@@ -905,7 +905,7 @@ let satisfy' (expected : content) (f : T.t -> 'a option) : 'a parser =
 (** Parses an exact token. *)
 let token (t : T.t) : unit parser =
   satisfy' (`token (Some t))
-    (fun x -> Option.of_bool (Token.equals x t))
+    (fun x -> Option.of_bool Token.(x = t))
 
 (** Parses an exact sequence of tokens. *)
 let tokens (ts : T.t list) : unit parser =
@@ -918,7 +918,7 @@ let tokens (ts : T.t list) : unit parser =
  *)
 let keyword (kw : string) : unit parser =
   satisfy' (`keyword (Some kw))
-    F.(Option.of_bool ++ Token.equals (T.IDENT kw))
+    F.(Option.of_bool ++ Token.equal (T.IDENT kw))
 
 let identifier : string parser =
   satisfy' (`identifier None)
