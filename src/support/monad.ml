@@ -22,5 +22,5 @@ struct
 
   let pure = return
 
-  let ( >>= ) a f = bind f a
+  let[@inline] ( >>= ) a f = bind f a
 end

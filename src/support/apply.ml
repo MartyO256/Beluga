@@ -29,29 +29,29 @@ end
 module Make (M : Monad.MONAD) : APPLY with type 'a t = 'a M.t = struct
   include M
 
-  let ap a f = a >>= fun a -> f >>= fun f -> return (f a)
+  let[@inline] ap a f = a >>= fun a -> f >>= fun f -> return (f a)
 
-  let ap_first m2 m1 = m1 >>= fun x -> m2 >>= Fun.const (return x)
+  let[@inline] ap_first m2 m1 = m1 >>= fun x -> m2 >>= Fun.const (return x)
 
-  let ( <& ) m1 m2 = ap_first m2 m1
+  let[@inline] ( <& ) m1 m2 = ap_first m2 m1
 
-  let ap_second m2 m1 = m1 >>= fun _ -> m2 >>= return
+  let[@inline] ap_second m2 m1 = m1 >>= fun _ -> m2 >>= return
 
-  let ( &> ) m1 m2 = ap_second m2 m1
+  let[@inline] ( &> ) m1 m2 = ap_second m2 m1
 
-  let seq2 m1 m2 = m1 >>= fun x1 -> m2 >>= fun x2 -> return (x1, x2)
+  let[@inline] seq2 m1 m2 = m1 >>= fun x1 -> m2 >>= fun x2 -> return (x1, x2)
 
-  let seq3 m1 m2 m3 =
+  let[@inline] seq3 m1 m2 m3 =
     m1 >>= fun x1 -> m2 >>= fun x2 -> m3 >>= fun x3 -> return (x1, x2, x3)
 
 
-  let seq4 m1 m2 m3 m4 =
+  let[@inline] seq4 m1 m2 m3 m4 =
     m1
     >>= fun x1 ->
     m2 >>= fun x2 -> m3 >>= fun x3 -> m4 >>= fun x4 -> return (x1, x2, x3, x4)
 
 
-  let seq5 m1 m2 m3 m4 m5 =
+  let[@inline] seq5 m1 m2 m3 m4 m5 =
     m1
     >>= fun x1 ->
     m2

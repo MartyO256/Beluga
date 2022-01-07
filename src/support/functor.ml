@@ -9,7 +9,7 @@ end
 module Make (M : Monad.MONAD) : FUNCTOR with type 'a t = 'a M.t = struct
   include M
 
-  let map f a = a >>= fun x -> return (f x)
+  let[@inline] map f a = a >>= fun x -> return (f x)
 
-  let ( $> ) a f = map f a
+  let[@inline] ( $> ) a f = map f a
 end

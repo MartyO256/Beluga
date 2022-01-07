@@ -19,14 +19,14 @@ module Make (T : sig
 end) : ORD with type t = T.t = struct
   include T
 
-  let ( = ) x y = compare x y = 0
-  let ( <> ) x y = compare x y <> 0
-  let ( < ) x y = compare x y < 0
-  let ( <= ) x y = compare x y <= 0
-  let ( > ) x y = compare x y > 0
-  let ( >= ) x y = compare x y >= 0
-  let min x y = if x <= y then x else y
-  let max x y = if x >= y then x else y
+  let[@inline] ( = ) x y = compare x y = 0
+  let[@inline] ( <> ) x y = compare x y <> 0
+  let[@inline] ( < ) x y = compare x y < 0
+  let[@inline] ( <= ) x y = compare x y <= 0
+  let[@inline] ( > ) x y = compare x y > 0
+  let[@inline] ( >= ) x y = compare x y >= 0
+  let[@inline] min x y = if x <= y then x else y
+  let[@inline] max x y = if x >= y then x else y
 end
 
 module Reverse (Ord : ORD) : ORD with type t = Ord.t = Make (struct

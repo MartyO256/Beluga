@@ -14,5 +14,5 @@ end) : EQ with type t = T.t = struct
   include T
 
   let ( = ) = equal
-  let ( <> ) x y = not (x = y)
+  let[@inline] ( <> ) x y = not (x = y)
 end
