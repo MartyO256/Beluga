@@ -190,7 +190,7 @@ include Show.Make (struct
 end)
 
 module Class = struct
-    include Show.Make (struct
+  include Show.Make (struct
     include Token
     let pp ppf =
       let p x = Format.fprintf ppf x in
