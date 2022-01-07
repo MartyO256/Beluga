@@ -2,6 +2,8 @@ module type ORD = sig
   type t
 
   val compare : t -> t -> int
+  val ( = ) : t -> t -> bool
+  val ( <> ) : t -> t -> bool
   val ( < ) : t -> t -> bool
   val ( <= ) : t -> t -> bool
   val ( > ) : t -> t -> bool
@@ -17,6 +19,8 @@ module Make (T : sig
 end) : ORD with type t = T.t = struct
   include T
 
+  let ( = ) x y = compare x y = 0
+  let ( <> ) x y = compare x y <> 0
   let ( < ) x y = compare x y < 0
   let ( <= ) x y = compare x y <= 0
   let ( > ) x y = compare x y > 0

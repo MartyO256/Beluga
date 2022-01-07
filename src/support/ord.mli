@@ -18,6 +18,8 @@ module type ORD = sig
         then [(compare a b) = 0] *)
   val compare : t -> t -> int
 
+  val ( = ) : t -> t -> bool
+  val ( <> ) : t -> t -> bool
   val ( < ) : t -> t -> bool
   val ( <= ) : t -> t -> bool
   val ( > ) : t -> t -> bool
