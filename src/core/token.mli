@@ -87,14 +87,12 @@ type t =
   | INTLIT  of int (** An integer literal. *)
   | BLOCK_COMMENT of string (** A block comment of the form [%{{ ... }}%] *)
 
-type class_or_string = [ `CLASS | `TOKEN ]
-
-val print : class_or_string -> Format.formatter -> t -> unit
-
-val to_string : t -> string
-
-val class_to_string : t -> string
-
 (** {1 Instances} *)
 
 include Eq.EQ with type t := t
+
+include Show.SHOW with type t := t
+
+module Class : sig
+  include Show.SHOW with type t := t
+end

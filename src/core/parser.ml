@@ -218,7 +218,7 @@ let print_content ppf : content -> unit =
   function
   | `token t ->
      fprintf ppf "token%a"
-       (format_option_with (Token.print `TOKEN)) t
+       (format_option_with Token.pp) t
   | `dot_integer -> fprintf ppf "dot integer"
   | `string_literal -> fprintf ppf "string literal"
   | `identifier i ->
