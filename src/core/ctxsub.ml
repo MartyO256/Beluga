@@ -263,7 +263,9 @@ let rec drop n =
   | MDot (_, t') -> drop (n - 1) t'
 
 (** Counts the entries in an msub. *)
-let rec length =
-  function
-  | MShift _ -> 0
-  | MDot (_, t') -> 1 + length t'
+let length =
+  let rec length acc =
+    function
+    | MShift _ -> acc
+    | MDot (_, t') -> length (1 + acc) t'
+  in length 0
