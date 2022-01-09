@@ -33,11 +33,11 @@ module Make (Element : Ord.ORD) : RANGE with type e = Element.t = struct
     { start_point; end_point }
 
 
-  let make_from_point point = make ~start_point:point ~end_point:point
+  let[@inline] make_from_point point = make ~start_point:point ~end_point:point
 
-  let start_point { start_point; _ } = start_point
+  let[@inline] start_point { start_point; _ } = start_point
 
-  let end_point { end_point; _ } = end_point
+  let[@inline] end_point { end_point; _ } = end_point
 
   let join r1 r2 =
     make

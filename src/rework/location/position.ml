@@ -14,15 +14,15 @@ module Position = struct
     { offset; offset_beginning_of_line; line }
 
 
-  let line { line; _ } = line
+  let[@inline] line { line; _ } = line
 
-  let column { offset; offset_beginning_of_line; _ } =
+  let[@inline] column { offset; offset_beginning_of_line; _ } =
     offset - offset_beginning_of_line + 1
 
 
   let initial = make ~line:1 ~offset:0 ~offset_beginning_of_line:0
 
-  let line_start_position { offset_beginning_of_line; line; _ } =
+  let[@inline] line_start_position { offset_beginning_of_line; line; _ } =
     { offset = offset_beginning_of_line; offset_beginning_of_line; line }
 end
 
@@ -31,7 +31,8 @@ include Position
 include Ord.Make (struct
   include Position
 
-  let compare { offset = o1; _ } { offset = o2; _ } = Stdlib.compare o1 o2
+  let[@inline] compare { offset = o1; _ } { offset = o2; _ } =
+    Stdlib.compare o1 o2
 end)
 
 include Show.Make (struct

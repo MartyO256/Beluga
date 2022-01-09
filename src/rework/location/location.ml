@@ -29,23 +29,27 @@ module Location = struct
       ~range:(PositionRange.make_from_point Position.initial)
 
 
-  let filename { filename; _ } = filename
+  let[@inline] filename { filename; _ } = filename
 
-  let range { range; _ } = range
+  let[@inline] range { range; _ } = range
 
-  let start_position location =
+  let[@inline] start_position location =
     location |> range |> PositionRange.start_point
 
 
-  let end_position location = location |> range |> PositionRange.end_point
+  let[@inline] end_position location =
+    location |> range |> PositionRange.end_point
 
-  let start_line location = location |> start_position |> Position.line
+  let[@inline] start_line location =
+    location |> start_position |> Position.line
 
-  let end_line location = location |> end_position |> Position.line
+  let[@inline] end_line location = location |> end_position |> Position.line
 
-  let start_column location = location |> start_position |> Position.column
+  let[@inline] start_column location =
+    location |> start_position |> Position.column
 
-  let end_column location = location |> end_position |> Position.column
+  let[@inline] end_column location =
+    location |> end_position |> Position.column
 end
 
 include Location

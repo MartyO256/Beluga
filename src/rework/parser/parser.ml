@@ -222,7 +222,7 @@ let print_content ppf : content -> unit =
   let format_with ppf s f x = fprintf ppf "%s%a" s f x in
   function
   | `token t ->
-      fprintf ppf "token%a" (format_option_with (Token.print `TOKEN)) t
+      fprintf ppf "token%a" (format_option_with Token.pp) t
   | `dot_integer ->
       fprintf ppf "dot integer"
   | `string_literal ->
@@ -952,7 +952,7 @@ let satisfy' (expected : content) (f : T.t -> 'a option) : 'a parser =
 
 (** Parses an exact token. *)
 let token (t : T.t) : unit parser =
-  satisfy' (`token (Some t)) (fun x -> Option.of_bool (Token.equals x t))
+  satisfy' (`token (Some t)) (fun x -> Option.of_bool Token.(x = t))
 
 
 (** Parses an exact sequence of tokens. *)
@@ -966,7 +966,7 @@ let tokens (ts : T.t list) : unit parser = traverse_ token ts
 let keyword (kw : string) : unit parser =
   satisfy'
     (`keyword (Some kw))
-    F.(Option.of_bool ++ Token.equals (T.IDENT kw))
+    F.(Option.of_bool ++ Token.equal (T.IDENT kw))
 
 
 let identifier : string parser =
