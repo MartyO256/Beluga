@@ -172,29 +172,21 @@ let index_bvar (name : Id.name) : Id.offset option index =
 let get_closed_status : open_or_closed index =
   fun c fvars -> (fvars, fvars.open_flag)
 
-module Bind = struct
-  let pure (type a) (x : a) : a index =
-    fun _ fvars -> (fvars, x)
-
-  let (>>=) (type a) (type b) (m : a index) (k : a -> b index) : b index =
-    fun c fvars ->
-    let (fvars', x) = m c fvars in
-    k x c fvars'
-
-  let ($>) (type a) (type b) (m : a index) (f : a -> b) : b index =
-    m >>= fun x -> pure (f x)
-
-  (** Runs `m' ignoring the unit, then runs `m''. *)
-  let ($$) (type a) (m : unit index) (m' : a index) : a index =
-    m >>= fun () -> m'
-
-  let (<&) (type a) (m1 : a index) (m2 : unit index) : a index =
-    m1 >>= fun x -> m2 $$ pure x
-
-  (** Runs two actions, and combines the result into a tuple. *)
-  let seq2 (type a1) (type a2) (m1 : a1 index) (m2 : a2 index)
-      : (a1 * a2) index =
-    m1 >>= fun x1 -> m2 >>= fun x2 -> pure (x1, x2)
+module rec Bind : sig
+  include Monad.MONAD with type 'a t = 'a index
+  include Functor.FUNCTOR with type 'a t := 'a index
+  include Apply.APPLY with type 'a t := 'a index
+end = struct
+  include Monad.Make (struct
+    type 'a t = 'a index
+    let return x = fun _ fvars -> (fvars, x)
+    let bind k m =
+      fun c fvars ->
+      let (fvars', x) = m c fvars in
+      k x c fvars'
+  end)
+  include Functor.Make (Bind)
+  include Apply.Make (Bind)
 end
 
 (** Hints can be attached to certain errors. *)
@@ -756,7 +748,7 @@ and index_head : Ext.LF.head -> Apx.LF.head index =
                index_sub_opt s
                >>= fun s' ->
                  modify_fvars (extending_by p)
-                 $$ pure (Apx.LF.FPVar (p, s'))
+                 &> pure (Apx.LF.FPVar (p, s'))
             | (_, Either.Right offset) ->
                index_sub_opt s
                $> fun s' ->
@@ -945,7 +937,7 @@ and index_sub : Ext.LF.sub -> Apx.LF.sub index =
                index_sub_opt s
                >>= fun s' ->
                  modify_fvars (extending_by u)
-                 $$ pure (Apx.LF.FSVar (u, s'))
+                 &> pure (Apx.LF.FSVar (u, s'))
             | (_, Either.Right offset) ->
                index_sub_opt s
                $> fun s' -> Apx.LF.SVar (Apx.LF.Offset offset, s')
@@ -1090,7 +1082,7 @@ let index_cltyp' : Ext.LF.cltyp -> Apx.LF.cltyp index =
          index_dctx c.disambiguate_name c.cvars BVar.empty fvars phi
        in
        modify_fvars (Fun.const fvars)
-       $$ pure (Apx.LF.STyp (index_svar_class cl, phi'))
+       &> pure (Apx.LF.STyp (index_svar_class cl, phi'))
 
 let index_cltyp loc cvars fvars =
   function
