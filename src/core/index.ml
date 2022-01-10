@@ -176,25 +176,25 @@ module Bind = struct
   let pure (type a) (x : a) : a index =
     fun _ fvars -> (fvars, x)
 
-  let ($) (type a) (type b) (m : a index) (k : a -> b index) : b index =
+  let (>>=) (type a) (type b) (m : a index) (k : a -> b index) : b index =
     fun c fvars ->
     let (fvars', x) = m c fvars in
     k x c fvars'
 
   let ($>) (type a) (type b) (m : a index) (f : a -> b) : b index =
-    m $ fun x -> pure (f x)
+    m >>= fun x -> pure (f x)
 
   (** Runs `m' ignoring the unit, then runs `m''. *)
   let ($$) (type a) (m : unit index) (m' : a index) : a index =
-    m $ fun _ -> m'
+    m >>= fun () -> m'
 
   let (<&) (type a) (m1 : a index) (m2 : unit index) : a index =
-    m1 $ fun x -> m2 $$ pure x
+    m1 >>= fun x -> m2 $$ pure x
 
   (** Runs two actions, and combines the result into a tuple. *)
   let seq2 (type a1) (type a2) (m1 : a1 index) (m2 : a2 index)
       : (a1 * a2) index =
-    m1 $ fun x1 -> m2 $ fun x2 -> pure (x1, x2)
+    m1 >>= fun x1 -> m2 >>= fun x2 -> pure (x1, x2)
 end
 
 (** Hints can be attached to certain errors. *)
@@ -744,17 +744,17 @@ and index_head : Ext.LF.head -> Apx.LF.head index =
      pure Apx.LF.Hole
 
   | Ext.LF.PVar (loc, p, s) ->
-     lookup_fv p $
+     lookup_fv p >>=
        function
        | true ->
           index_sub_opt s $> fun s' -> Apx.LF.FPVar (p, s')
        | false ->
-          seq2 get_closed_status (index_cvar p) $
+          seq2 get_closed_status (index_cvar p) >>=
             function
             | (`closed_term, Either.Left _) -> throw loc (UnboundName p)
             | (`open_term, Either.Left _) ->
                index_sub_opt s
-               $ fun s' ->
+               >>= fun s' ->
                  modify_fvars (extending_by p)
                  $$ pure (Apx.LF.FPVar (p, s'))
             | (_, Either.Right offset) ->
@@ -931,19 +931,19 @@ and index_sub : Ext.LF.sub -> Apx.LF.sub index =
      pure Apx.LF.EmptySub
 
   | (Ext.LF.SVar (loc, u, s), []) ->
-     lookup_fv u $
+     lookup_fv u >>=
        function
        | true ->
           index_sub_opt s
           $> fun s' -> Apx.LF.FSVar (u, s')
        | false ->
-          seq2 get_closed_status (index_cvar u) $
+          seq2 get_closed_status (index_cvar u) >>=
             function
             | (`closed_term, Either.Left e) ->
                throw_hint' loc (cvar_error_to_hint e) (UnboundName u)
             | (`open_term, Either.Left _) ->
                index_sub_opt s
-               $ fun s' ->
+               >>= fun s' ->
                  modify_fvars (extending_by u)
                  $$ pure (Apx.LF.FSVar (u, s'))
             | (_, Either.Right offset) ->
@@ -994,11 +994,11 @@ let index_decl disambiguate_name (cvars : CVar.t) (bvars : BVar.t) fvars =
 let index_ctx_var name : (cvar_error_status, Apx.LF.dctx) Either.t index =
   let open Bind in
   lookup_fv name
-  $ function
+  >>= function
     | true -> Either.Right (Apx.LF.CtxVar (Apx.LF.CtxName name)) |> pure
     | false ->
        seq2 (get_fvars) (index_cvar name)
-       $ function
+       >>= function
          | (_, Either.Right k) ->
             Either.Right (Apx.LF.CtxVar (Apx.LF.CtxOffset k)) |> pure
          | (fvars, Either.Left e) ->
@@ -1085,7 +1085,7 @@ let index_cltyp' : Ext.LF.cltyp -> Apx.LF.cltyp index =
          (P.fmt_ppr_lf_dctx P.l0) phi
        end;
      seq2 get_env get_fvars
-     $ fun (c, fvars) ->
+     >>= fun (c, fvars) ->
        let (phi', _, fvars) =
          index_dctx c.disambiguate_name c.cvars BVar.empty fvars phi
        in
