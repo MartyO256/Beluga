@@ -329,11 +329,12 @@ let get_ctxvar_mobj (_, mO) =
   | Ext.LF.ClObj (cPsi, (Ext.LF.EmptySub _, [_])) -> get_ctxvar cPsi
   | _ -> None
 
-let rec length_typ_rec =
-  function
-  | Ext.LF.SigmaLast _ -> 1
+let length_typ_rec =
+  let rec length_typ_rec acc = function
+  | Ext.LF.SigmaLast _ -> acc
   | Ext.LF.SigmaElem (_, _, rest) ->
-     1 + length_typ_rec rest
+     length_typ_rec (acc + 1) rest
+  in length_typ_rec 1
 
 let rec index_kind (k : Ext.LF.kind) : Apx.LF.kind index =
   let open Bind in
