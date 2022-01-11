@@ -707,8 +707,8 @@ and index_term : Ext.LF.normal -> Apx.LF.normal index =
   | Ext.LF.LFHole (loc, name) -> pure (Apx.LF.LFHole (loc, name))
 
   | Ext.LF.Ann (loc, m, a) ->
-     seq2 (index_typ a) (index_term m)
-     $> fun (a', m') ->
+     seq2 (index_term m) (index_typ a)
+     $> fun (m', a') ->
         Apx.LF.Ann (loc, m', a')
 
   | Ext.LF.TList (loc, nl) ->
