@@ -19,6 +19,9 @@ harpoon-test: build
 all-test: test
 	dune exec ./TEST.sh -- -- +htmltest
 
+fmt:
+	dune build @fmt --auto-promote
+
 clean:
 	dune clean
 

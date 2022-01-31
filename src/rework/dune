@@ -4,5 +4,6 @@
  (libraries location syntax parser extlib support unix str))
 
 (env
-  (dev
-    (flags (:standard -w +A-z-e-p-42-44-48-50-58-42-44-48-50-58 -warn-error +A-p-37-48-50-60))))
+ (dev
+  (flags
+   (:standard -w +A-z-e-p-42-44-48-50-58 -warn-error +A-p-37-48-50-60))))
