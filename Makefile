@@ -27,3 +27,4 @@ clean:
 
 doc:
 	make -C doc html
+	dune build @doc-private
