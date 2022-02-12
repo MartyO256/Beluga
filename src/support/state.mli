@@ -3,7 +3,7 @@ module type STATE = sig
   (** The type of states inside the monad. *)
   type state
 
-  include Monad.MONAD
+  include Monad.MONAD with type 'a t = state -> state * 'a
 
   (** Return the state from the internals of the monad. *)
   val get : state t

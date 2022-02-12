@@ -1,7 +1,7 @@
 module type STATE = sig
   type state
 
-  include Monad.MONAD
+  include Monad.MONAD with type 'a t = state -> state * 'a
 
   val get : state t
 
