@@ -2,6 +2,7 @@ module type SHOW = sig
   type t
 
   val pp : Format.formatter -> t -> unit
+
   val show : t -> string
 end
 

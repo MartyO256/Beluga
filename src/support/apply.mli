@@ -7,6 +7,9 @@ module type APPLY = sig
       {!type:t}. *)
   val ap : 'a t -> ('a -> 'b) t -> 'b t
 
+  (** [(<&>)] is an infix synonym of {!ap}. *)
+  val ( <&> ) : ('a -> 'b) t -> 'a t -> 'b t
+
   (** {1 Combinators} *)
 
   (** [ap_first second first] combines actions [first] and [second] but keeps
