@@ -21,6 +21,18 @@ declare -r ROOTDIR=${ROOTDIR:-$(pwd)}
 declare -r TEMPDIR=${TEMPDIR:-$(mktemp -d)}
 declare SKIP_RSYNC=0
 
+# Path to the Beluga executable to test.
+declare -r EXE=${EXE:-$(dune exec which beluga)}
+
+# Path to the Beluga lex_check to test.
+declare -r LEX_CHECK=${LEX_CHECK:-$(dune exec which lex_check)}
+
+# Path to the Beluga replay to test.
+declare -r REPLAY=${REPLAY:-$(dune exec which replay)}
+
+# Path to the Harpoon to test.
+declare -r HARPOON=${HARPOON:-$(dune exec which harpoon)}
+
 declare -r TESTROOTDIR=${TESTROOTDIR:-"./t"}
 declare -r TESTDIR=${TESTDIR:-"${TESTROOTDIR}/code"}
 declare -r EXAMPLEDIR=${EXAMPLEDIR:-"./examples"}

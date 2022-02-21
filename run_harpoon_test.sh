@@ -12,7 +12,7 @@ shift
 
 sig=$(sed -n '1p' "${input_path}")
 
-harpoon \
+exec $(dune exec which harpoon) \
      --sig "${sig}" \
      --test "${input_path}" \
      --test-start 2 \
