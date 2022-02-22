@@ -1,29 +1,31 @@
 open Support
 
-type t =
-  | Implicit
-  | Explicit
+module Base = struct
+  type t =
+    | Implicit
+    | Explicit
 
-let implicit = Implicit
+  let implicit = Implicit
 
-let explicit = Explicit
+  let explicit = Explicit
 
-let fold ~implicit ~explicit = function
-  | Explicit -> explicit ()
-  | Implicit -> implicit ()
+  let[@inline] fold ~implicit ~explicit = function
+    | Explicit -> explicit ()
+    | Implicit -> implicit ()
+end
 
-module Eq = Eq.Make (struct
-  type tmp = t (* Workaround `type t = t` being recursive *)
+include Base
 
-  type t = tmp
+include Eq.Make (struct
+  include Base
 
   let equal p1 p2 =
-    match p1, p2 with
+    match (p1, p2) with
     | Explicit, Explicit -> true
     | Implicit, Implicit -> true
     | _, _ -> false
 end)
 
-let is_explicit = Eq.equal explicit
+let is_explicit = ( = ) explicit
 
-let is_implicit = Eq.equal implicit
+let is_implicit = ( = ) implicit
