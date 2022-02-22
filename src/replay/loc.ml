@@ -9,6 +9,15 @@ type t =
     (** The offset at which the current line begins on. *)
   }
 
+let[@inline] line { line; _ } = line
+
+let[@inline] offset { offset; _ } = offset
+
+let[@inline] beginning_of_line { bol; _ } = bol
+
+let[@inline] shift offset loc =
+  { loc with offset = loc.offset + offset }
+
 let column (l : t) : int =
   l.offset - l.bol
 

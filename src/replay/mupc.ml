@@ -328,7 +328,7 @@ module Make (P : ParserInfo) = struct
   i.e. the line at which the last token processed by the parser *ends
   on*. *)
   let get_line : int t =
-    get_loc $> fun l -> l.Loc.line
+    get_loc $> Loc.line
 
   (** Runs a parser with backtracking enabled.
   This will allow alternation to succeed if this parser fails even
@@ -523,10 +523,9 @@ module Make (P : ParserInfo) = struct
   (** A parser that succeeds only if the parser is at the beginning of
   a line. *)
   let bol : unit t =
-    let open Loc in
     get_loc $
-      fun { bol; offset; _ } ->
-      if bol = offset then
+      fun loc ->
+      if Loc.beginning_of_line loc = Loc.offset loc then
         pure ()
       else
         throw "expected to be at beginning of line"

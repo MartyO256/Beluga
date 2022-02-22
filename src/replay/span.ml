@@ -22,8 +22,8 @@ let of_pair' (start : loc) (stop : loc) : t =
 
 let to_string (s : t) : string =
   let open Printf in
-  if s.start.line = s.stop.line then
-    sprintf "line %d column %d-%d" s.start.line (column s.start) (column s.stop)
+  if line s.start = line s.stop then
+    sprintf "line %d column %d-%d" (line s.start) (column s.start) (column s.stop)
   else
     sprintf "line %d column %d to line %d column %d"
-      s.start.line (column s.start) s.stop.line (column s.stop)
+      (line s.start) (column s.start) (line s.stop) (column s.stop)

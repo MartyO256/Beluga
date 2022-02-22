@@ -1,13 +1,21 @@
 (** A location inside an input stream.
 *)
-type t =
-  { line : int;
-    (** The line that the parser is on. *)
-    offset : int;
-    (** The offset that the parser is on inside the file. *)
-    bol : int;
-    (** The offset at which the current line begins on. *)
-  }
+type t
+
+(** [line location] is the [location]'s line. *)
+val line : t -> int
+
+(** [offset location] is the [location]'s character offset from the beginning
+    of the file. *)
+val offset : t -> int
+
+(** [beginning_of_line location] is the [location]'s character offset from the
+    beginning of the file to the beginning of the line in which the located
+    character appears. *)
+val beginning_of_line : t -> int
+
+(** [shift offset location] is [location] shifted by [offset] characters. *)
+val shift : int -> t -> t
 
 (** Computes what column the location refers to within its line. *)
 val column : t -> int

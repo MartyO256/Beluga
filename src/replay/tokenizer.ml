@@ -31,9 +31,7 @@ module Make (T : TokenizerInfo) : Base
 
   module Stream = T.Stream
 
-  let trivial_inc (l : Loc.t) : Loc.t =
-    let open Loc in
-    { l with offset = l.offset + 1 }
+  let trivial_inc : Loc.t -> Loc.t = Loc.shift 1
 
   let trivial_tokenize_from (l : Loc.t) (s : 'a Stream.t) : 'a token Stream.t =
     Stream.unfold
