@@ -1,5 +1,5 @@
 module type MONAD = sig
-  type 'a t
+  type +'a t
 
   val return : 'a -> 'a t
 
@@ -11,7 +11,7 @@ module type MONAD = sig
 end
 
 module Make (Monad : sig
-  type 'a t
+  type +'a t
 
   val return : 'a -> 'a t
 

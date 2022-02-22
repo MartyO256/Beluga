@@ -1,7 +1,7 @@
 (** The abstract datatype of actions. *)
 module type MONAD = sig
   (** The type of actions in the monad. *)
-  type 'a t
+  type +'a t
 
   (** [return a] injects [a] into the monadic type. *)
   val return : 'a -> 'a t
@@ -19,7 +19,7 @@ end
 
 (** Functor building the aliases for a minimal implementation for {!MONAD}. *)
 module Make (Monad : sig
-  type 'a t
+  type +'a t
 
   val return : 'a -> 'a t
 
