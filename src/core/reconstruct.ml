@@ -711,7 +711,7 @@ and elMetaSpine loc cD s cKt =
   | (Apx.Comp.MetaApp (m, s), (Int.Comp.Ctype _, _)) ->
      raise (Error (loc, TooManyMetaObj))
 
-  | (s, (Int.Comp.PiKind (loc', Int.LF.Decl (u, cU, depend), cK), t)) when Depend.is_implicit depend ->
+  | (s, (Int.Comp.PiKind (loc', Int.LF.Decl (u, cU, Depend.Implicit), cK), t)) ->
      let (mO, t') = Whnf.dotMMVar loc cD t (u, cU, Depend.implicit) in
      Int.Comp.MetaApp(mO, Whnf.cnormMTyp (cU, t), elMetaSpine loc cD s (cK, t'), Plicity.implicit)
 
@@ -995,16 +995,16 @@ and elExpW cD cG e theta_tau =
 
   (* Allow uniform abstractions for all meta-objects *)
   | ( Apx.Comp.MLam (loc, u, e)
-    , (Int.Comp.TypPiBox(_, (Int.LF.Decl (_, _, depend) as cdec), tau), theta)
-    ) when Depend.is_explicit depend ->
+    , (Int.Comp.TypPiBox(_, (Int.LF.Decl (_, _, Depend.Explicit) as cdec), tau), theta)
+    ) ->
      let cD' = extend_mctx cD (u, cdec, theta) in
      let cG' = Whnf.cnormGCtx (cG, Int.LF.MShift 1) in
      let e' = elExp cD' cG' e (tau, C.mvar_dot1 theta) in
      Int.Comp.MLam (loc, u, e', Plicity.explicit)
 
   | ( e
-    , (Int.Comp.TypPiBox(_, (Int.LF.Decl(_, _, depend) as cdec), tau), theta)
-    ) when Depend.is_implicit depend ->
+    , (Int.Comp.TypPiBox(_, (Int.LF.Decl(_, _, Depend.Implicit) as cdec), tau), theta)
+    ) ->
      let u = mk_name_cdec cdec in
      let cG' = Whnf.cnormGCtx (cG, Int.LF.MShift 1) in
      let cD' = extend_mctx cD (u, cdec, theta) in
@@ -1604,7 +1604,7 @@ and elPatSpineW cD cG pat_spine ttau =
   match pat_spine with
   | Apx.Comp.PatNil loc ->
      begin match ttau with
-     | (Int.Comp.TypPiBox (_, Int.LF.Decl (u, cU, depend), tau), t) when Depend.is_implicit depend ->
+     | (Int.Comp.TypPiBox (_, Int.LF.Decl (u, cU, Depend.Implicit), tau), t) ->
         let (mO, t') = Whnf.dotMMVar loc cD t (u, cU, Depend.implicit) in
         let pat' = Int.Comp.PatMetaObj (loc, mO) in
         let ttau' = (tau, t') in
@@ -1625,7 +1625,7 @@ and elPatSpineW cD cG pat_spine ttau =
         let (cG', pat) = elPatChk cD cG pat' (tau1, theta) in
         let (cG'', pat_spine, ttau2) = elPatSpine cD cG' pat_spine' (tau2, theta) in
         (cG'', Int.Comp.PatApp (loc, pat, pat_spine), ttau2)
-     | (Int.Comp.TypPiBox (_, (Int.LF.Decl (u, cU, depend)), tau), theta) when Depend.is_implicit depend ->
+     | (Int.Comp.TypPiBox (_, (Int.LF.Decl (u, cU, Depend.Implicit)), tau), theta) ->
         dprintf
           begin fun p ->
           p.fmt "[elPatSpine] @[<v>TypPiBox implicit ttau =@,@[%a@]@]"
@@ -1706,7 +1706,7 @@ and elPatSpineW cD cG pat_spine ttau =
           | Unify.Failure _ ->
              raise (Error (loc, TypMismatch (cD, ttau, (tau0, t))))
         end
-     | (Int.Comp.TypPiBox (_, Int.LF.Decl (u, cU, depend), tau), theta) when Depend.is_implicit depend ->
+     | (Int.Comp.TypPiBox (_, Int.LF.Decl (u, cU, Depend.Implicit), tau), theta) ->
         let (mO, t') = Whnf.dotMMVar loc cD theta (u, cU, Depend.implicit) in
         let pat' = Int.Comp.PatMetaObj (loc, mO) in
         let ttau' = (tau, t') in

@@ -1547,7 +1547,7 @@ let abstrCompKind cK =
 
 let rec dropExplicitCTyp = function
   | I.Empty -> I.Empty
-  | I.Dec (cD', I.Decl (_, I.CTyp _, depend)) when Depend.equal Depend.explicit depend -> dropExplicitCTyp cD'
+  | I.Dec (cD', I.Decl (_, I.CTyp _, Depend.Explicit)) -> dropExplicitCTyp cD'
   | I.Dec (cD', d) -> I.Dec (dropExplicitCTyp cD', d)
 
 let abstrCompTyp tau =

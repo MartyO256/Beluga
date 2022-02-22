@@ -447,8 +447,8 @@ let iterMctx (cD : LF.mctx) (cPsi : LF.dctx) (tA : LF.tclo) : Id.name list =
   let rec aux acc c =
     function
     | LF.Empty -> acc
-    | LF.Dec (cD', LF.Decl(n, LF.ClTyp (LF.MTyp tA', cPsi'), depend))
-      | LF.Dec (cD', LF.Decl(n, LF.ClTyp (LF.PTyp tA', cPsi'), depend)) when Depend.is_explicit depend ->
+    | LF.Dec (cD', LF.Decl(n, LF.ClTyp (LF.MTyp tA', cPsi'), Depend.Explicit))
+      | LF.Dec (cD', LF.Decl(n, LF.ClTyp (LF.PTyp tA', cPsi'), Depend.Explicit)) ->
        begin
          try
            Unify.StdTrail.resetGlobalCnstrs ();

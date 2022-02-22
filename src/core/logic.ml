@@ -237,9 +237,9 @@ module Convert = struct
   *)
   let rec typToClause' eV cG tM (cS, dS, dR) =
     match tM with
-    | LF.PiTyp ((tD, depend), tM') when Depend.is_implicit depend ->
+    | LF.PiTyp ((tD, Depend.Implicit), tM') ->
        typToClause' (LF.DDec (eV, tD)) cG tM' (cS, dS, dR)
-    | LF.PiTyp ((LF.TypDecl (_, tA), depend), tB) when Depend.is_explicit depend ->
+    | LF.PiTyp ((LF.TypDecl (_, tA), Depend.Explicit), tB) ->
        typToClause' eV (Conjunct (cG, typToGoal tA (cS, dS, dR)))
          tB (cS + 1, dS, dR)
     | LF.Atom _ ->
@@ -250,18 +250,18 @@ module Convert = struct
 
   and typToGoal tM (cS, dS, dR) =
     match tM with
-    | LF.PiTyp ((tD, depend), tM') when Depend.is_implicit depend ->
+    | LF.PiTyp ((tD, Depend.Implicit), tM') ->
        All (tD, typToGoal tM' (cS, dS, dR + 1))
-    | LF.PiTyp ((LF.TypDecl (x, tA) as tD, depend), tB) when Depend.is_explicit depend ->
+    | LF.PiTyp ((LF.TypDecl (x, tA) as tD, Depend.Explicit), tB) ->
        Impl ((typToRes tA (cS, dS, dR), tD), typToGoal tB (cS, dS, dR + 1))
     | LF.Atom _ ->
        Atom (Shift.shiftAtom tA (-cS, -dS, dR))
 
   and typToRes tM (cS, dS, dR) =
     match tM with
-    | LF.PiTyp ((tD, depend), tM') when Depend.is_implicit depend ->
+    | LF.PiTyp ((tD, Depend.Implicit), tM') ->
        Exists (tD, typToRes tM' (cS, dS, dR + 1))
-    | LF.PiTyp ((LF.TypDecl (_, tA), depend), tB) when Depend.is_explicit depend ->
+    | LF.PiTyp ((LF.TypDecl (_, tA), Depend.Explicit), tB) ->
        And (typToGoal tA (cS, dS, dR), typToRes tB (cS + 1, dS + 1, dR + 1))
     | LF.Atom _ ->
        Head (Shift.shiftAtom tM (-cS, -dS, dR))
@@ -478,7 +478,7 @@ module Convert = struct
   let typToQuery cD cPsi (tA, i) =
     let rec typToQuery' (tA, i) s xs =
       match tA with
-      | LF.PiTyp ((LF.TypDecl (x, tA), depend), tB) when Depend.is_implicit depend && i > 0 ->
+      | LF.PiTyp ((LF.TypDecl (x, tA), Depend.Implicit), tB) when i > 0 ->
          let tN' = etaExpand cD cPsi (tA, s) in
          typToQuery' (tB, i - 1) (LF.Dot (LF.Obj tN', s)) ((x, tN') :: xs)
       | _ -> ((typToGoal tA (0, 0, 0), s), tA, s, xs)
