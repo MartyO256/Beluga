@@ -1,10 +1,12 @@
 open Support
 
+type depend =
+  | Implicit
+  | Explicit
+  | Inductive
+
 module Base = struct
-  type t =
-    | Implicit
-    | Explicit
-    | Inductive
+  type t = depend
 
   let implicit = Implicit
 

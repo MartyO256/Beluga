@@ -1,7 +1,12 @@
 open Support
 
 (** The type for implicit or explicit values. *)
-type t
+type plicity =
+  | Implicit
+  | Explicit
+
+(** Alias of [plicity]. *)
+type t = plicity
 
 (** {1 Constructors} *)
 

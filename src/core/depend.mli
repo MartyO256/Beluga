@@ -1,7 +1,13 @@
 open Support
 
 (** The type for implicit, explicit or inductive values. *)
-type t
+type depend =
+  | Implicit
+  | Explicit
+  | Inductive
+
+(** Alias of [depend]. *)
+type t = depend
 
 (** {1 Constructors} *)
 

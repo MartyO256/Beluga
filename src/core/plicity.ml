@@ -1,9 +1,11 @@
 open Support
 
+type plicity =
+  | Implicit
+  | Explicit
+
 module Base = struct
-  type t =
-    | Implicit
-    | Explicit
+  type t = plicity
 
   let implicit = Implicit
 
