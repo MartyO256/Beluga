@@ -9,11 +9,9 @@ module Plicity = struct
 
   let explicit = Explicit
 
-  let fold ~implicit ~explicit = function
-    | Explicit ->
-        explicit ()
-    | Implicit ->
-        implicit ()
+  let[@inline] fold ~implicit ~explicit = function
+    | Explicit -> explicit ()
+    | Implicit -> implicit ()
 end
 
 include Plicity
@@ -23,12 +21,9 @@ include Eq.Make (struct
 
   let equal p1 p2 =
     match (p1, p2) with
-    | Explicit, Explicit ->
-        true
-    | Implicit, Implicit ->
-        true
-    | _, _ ->
-        false
+    | Explicit, Explicit -> true
+    | Implicit, Implicit -> true
+    | _, _ -> false
 end)
 
 let is_explicit = equal explicit

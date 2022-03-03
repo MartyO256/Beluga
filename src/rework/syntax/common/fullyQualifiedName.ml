@@ -9,11 +9,11 @@ module FullyQualifiedName = struct
 
   let make location modules value = { location; modules; value }
 
-  let location { location; _ } = location
+  let[@inline] location { location; _ } = location
 
-  let modules { modules; _ } = modules
+  let[@inline] modules { modules; _ } = modules
 
-  let value { value; _ } = value
+  let[@inline] value { value; _ } = value
 end
 
 include FullyQualifiedName
@@ -22,14 +22,11 @@ include Show.Make (struct
   include FullyQualifiedName
 
   let pp ppf n =
-    Format.fprintf
-      ppf
-      "%a::%s"
+    Format.fprintf ppf "%a::%s"
       (Format.pp_print_list
          ~pp_sep:(fun ppf () -> Format.fprintf ppf "::")
-         (fun ppf x -> Format.fprintf ppf "%s" x) )
-      (modules n)
-      (value n)
+         (fun ppf x -> Format.fprintf ppf "%s" x))
+      (modules n) (value n)
 end)
 
 include Eq.Make (struct
@@ -54,7 +51,6 @@ include Ord.Make (struct
 
   let compare x y =
     let comparison = ModuleListOrd.compare (modules x) (modules y) in
-    if Stdlib.(comparison <> 0)
-    then comparison
+    if Stdlib.(comparison <> 0) then comparison
     else String.compare (value x) (value y)
 end)

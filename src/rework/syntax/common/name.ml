@@ -10,9 +10,9 @@ module Name = struct
 
   let make_blank location = make location "_"
 
-  let location { location; _ } = location
+  let[@inline] location { location; _ } = location
 
-  let value { value; _ } = value
+  let[@inline] value { value; _ } = value
 end
 
 include Name
