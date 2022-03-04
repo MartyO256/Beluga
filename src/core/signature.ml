@@ -73,7 +73,7 @@ module type ABSTRACT_SIGNATURE = sig
       [Some (signature', declaration)] where [signature'] is the signature up
       to and including [declaration] and [declaration] is the latest
       declaration in [signature] having name [name]. *)
-  val lookup : t -> name -> (t * declaration) option
+  val lookup : t -> name -> (t * declaration) Option.t
 
   (** [is_bound signature name] is [true] if [name] appears in a declaration
       in [signature], and [false] otherwise. *)
@@ -82,11 +82,16 @@ module type ABSTRACT_SIGNATURE = sig
   (** The logical negation of {!is_bound}. *)
   val is_unbound : t -> name -> bool
 
-  (** {1 Traversals} *)
+  (** {1 Iterators} *)
 
   (** [iter f signature] applies function [f] in turn on the declarations of
       [signature] in the order in which they appear in the source files. *)
-  val iter : (t * declaration -> unit) -> t -> unit
+  val iter : (t -> declaration -> unit) -> t -> unit
+
+  (** [fold f init signature] reduces [signature] to a value by applying [f]
+      in turn on the declarations of [signature] in the order in which they
+      appear in the source files, starting with accumulator [init]. *)
+  val fold : ('a -> t -> declaration -> 'a) -> 'a -> t -> 'a
 end
 
 module AbstractSignature
@@ -141,5 +146,13 @@ module AbstractSignature
 
   let is_unbound signature name = not @@ is_bound signature name
 
-  let iter f { declarations; _ } = List.iter_rev f declarations
+  let iter f { declarations; _ } =
+    List.iter_rev
+      (fun (signature, declaration) -> f signature declaration)
+      declarations
+
+  let fold f init { declarations; _ } =
+    List.fold_right
+      (fun (signature, declaration) acc -> f acc signature declaration)
+      declarations init
 end
