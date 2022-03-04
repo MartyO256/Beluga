@@ -4,23 +4,52 @@
 
 open Support
 
+(** Bound variable names.
+
+    Bound variable names are totally ordered for efficient lookups in map
+    data structures.
+
+    For signatures, a name is typically a string. *)
 module type NAME = sig
+  (** The type of names for bound variables. *)
   type t
+
+  (** {1 Instances} *)
 
   include Ord.ORD with type t := t
 end
 
+(** Bindings of entries to names. *)
 module type DECLARATION = sig
-  type name
-
+  (** The type of declarations for bound variables referring to signature
+      entries. *)
   type t
 
+  (** The type of bound variable names for a declaration.
+
+      This is the domain of signature declarations. *)
+  type name
+
+  (** The type of entries referred to by name for a declaration.
+
+      This is the range of signature declarations. *)
+  type entry
+
+  (** {1 Destructors} *)
+
+  (** [name declaration] is the variable name bound by [declaration]. *)
   val name : t -> name
+
+  (** [entry declaration] is the entry referred to by [declaration]. *)
+  val entry : t -> entry
 end
 
 module type ABSTRACT_SIGNATURE = sig
   (** The type of bound names in the abstract signature. *)
   type name
+
+  (** The type of signature entries. *)
+  type entry
 
   (** The type of declarations in the abstract signature. *)
   type declaration
@@ -51,13 +80,16 @@ module AbstractSignature
     (Name : NAME)
     (Declaration : DECLARATION with type name = Name.t) :
   ABSTRACT_SIGNATURE
-    with type declaration = Declaration.t
-     and type name = Name.t = struct
+    with type name = Name.t
+     and type entry = Declaration.entry
+     and type declaration = Declaration.t = struct
   module NameMap = Map.Make (Name)
 
-  type declaration = Declaration.t
+  type name = Declaration.name
 
-  type name = Name.t
+  type entry = Declaration.entry
+
+  type declaration = Declaration.t
 
   type t =
     { declarations : bound_declaration list
