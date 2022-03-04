@@ -57,6 +57,8 @@ module type ABSTRACT_SIGNATURE = sig
   (** The type of abstract signatures. *)
   type t
 
+  (** {1 Constructors} *)
+
   (** The empty abstract signature. *)
   val empty : t
 
@@ -64,12 +66,23 @@ module type ABSTRACT_SIGNATURE = sig
       adding [declaration] to [signature]. *)
   val add : t -> declaration -> t
 
+  (** {1 Utils} *)
+
   (** [lookup signature name] returns [None] if there is no declaration in
       [signature] having name [name], and otherwise returns
       [Some (signature', declaration)] where [signature'] is the signature up
       to and including [declaration] and [declaration] is the latest
       declaration in [signature] having name [name]. *)
   val lookup : t -> name -> (t * declaration) option
+
+  (** [is_bound signature name] is [true] if [name] appears in a declaration
+      in [signature], and [false] otherwise. *)
+  val is_bound : t -> name -> bool
+
+  (** The logical negation of {!is_bound}. *)
+  val is_unbound : t -> name -> bool
+
+  (** {1 Traversals} *)
 
   (** [iter f signature] applies function [f] in turn on the declarations of
       [signature] in the order in which they appear in the source files. *)
@@ -121,7 +134,12 @@ module AbstractSignature
     signature'
 
   let lookup { bindings; _ } name =
-    NameMap.find_opt name (Lazy.force bindings)
+    Lazy.force bindings |> NameMap.find_opt name
+
+  let is_bound signature name =
+    lookup signature name |> Option.fold ~none:false ~some:(fun _ -> true)
+
+  let is_unbound signature name = not @@ is_bound signature name
 
   let iter f { declarations; _ } = List.iter_rev f declarations
 end
