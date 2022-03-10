@@ -212,3 +212,26 @@ end = struct
   let prefixed_fresh_name_supplier base =
     find_distinct @@ Seq.cons base (names_seq base 1)
 end
+
+module Declaration = struct
+  module Make
+      (Name : NAME) (Entry : sig
+        type t
+      end) : DECLARATION with type name = Name.t and type entry = Entry.t =
+  struct
+    type name = Name.t
+
+    type entry = Entry.t
+
+    type t =
+      { name : name
+      ; entry : entry
+      }
+
+    let[@inline] make name entry = { name; entry }
+
+    let[@inline] name { name; _ } = name
+
+    let[@inline] entry { entry; _ } = entry
+  end
+end
