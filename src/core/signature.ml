@@ -45,6 +45,9 @@ module type DECLARATION = sig
 end
 
 module type ABSTRACT_SIGNATURE = sig
+  (** The type of abstract signatures. *)
+  type t
+
   (** The type of bound names in the abstract signature. *)
   type name
 
@@ -53,9 +56,6 @@ module type ABSTRACT_SIGNATURE = sig
 
   (** The type of declarations in the abstract signature. *)
   type declaration
-
-  (** The type of abstract signatures. *)
-  type t
 
   (** {1 Constructors} *)
 
