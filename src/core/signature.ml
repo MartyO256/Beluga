@@ -17,6 +17,8 @@ module type NAME = sig
   (** {1 Instances} *)
 
   include Ord.ORD with type t := t
+
+  module Set : Set.S with type elt = t
 end
 
 (** Bindings of entries to names. *)
