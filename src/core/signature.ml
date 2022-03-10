@@ -35,6 +35,12 @@ module type DECLARATION = sig
       This is the range of signature declarations. *)
   type entry
 
+  (** {1 Constructors} *)
+
+  (** [make name entry] is the declaration having name [name] and entry
+      [entry]. *)
+  val make : name -> entry -> t
+
   (** {1 Destructors} *)
 
   (** [name declaration] is the variable name bound by [declaration]. *)
