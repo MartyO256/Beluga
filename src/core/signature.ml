@@ -231,8 +231,6 @@ end = struct
   module Ord : Ord.ORD with type t := t = Ord.Make (String)
 
   module Show : Show.SHOW with type t := string = struct
-    type nonrec t = t
-
     let pp ppf name = Format.fprintf ppf "%s" name
 
     let show = Fun.id
