@@ -352,3 +352,40 @@ module Declaration = struct
     let[@inline] entry { entry; _ } = entry
   end
 end
+
+(** Unique identifiers for declarations in a signature.
+
+    An ID uniquely refers to a signature declaration in a source file.
+    However, since declarations may be elaborated in steps, derived
+    declarations share the same ID.
+
+    IDs are generated when initial entries are introduced to a signature. *)
+module type ID = sig
+  (** The type of identifiers for signature declarations. *)
+  type t
+
+  (** {1 Instances} *)
+
+  include Ord.ORD with type t := t
+
+  (** {1 Collections} *)
+
+  module Set : Set.S with type elt := t
+
+  module Map : Map.S with type key := t
+end
+
+(** Unique identifiers for declarations in a signature as integers.
+
+    This module type enables internal modules to construct IDs as integers.
+    The type for IDs remains abstract in exported module signatures. *)
+module type INTERNAL_ID = ID with type t = int
+
+(** Base implementation for IDs as integers. *)
+module BaseID : INTERNAL_ID = struct
+  include Int
+  include Ord.Make (Int)
+  module Set = Set.Make (Int)
+  module Map = Map.Make (Int)
+end
+
