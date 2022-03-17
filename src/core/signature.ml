@@ -6,8 +6,7 @@ open Support
 
 (** Bound variable names.
 
-    Bound variable names are totally ordered for efficient lookups in map
-    data structures.
+    These are totally ordered for efficient lookups in map data structures.
 
     For signatures, a name is typically a string. *)
 module type NAME = sig
@@ -16,9 +15,17 @@ module type NAME = sig
 
   (** {1 Instances} *)
 
+  include Eq.EQ with type t := t
+
   include Ord.ORD with type t := t
 
+  include Show.SHOW with type t := t
+
+  (** {1 Collections} *)
+
   module Set : Set.S with type elt = t
+
+  module Map : Map.S with type key = t
 end
 
 (** Bindings of entries to names. *)
@@ -176,11 +183,25 @@ module Name : sig
       names prefixed by [base] and optionally having an integer suffix. *)
   val prefixed_fresh_name_supplier : string -> fresh_name_supplier
 end = struct
-  include Ord.Make (String)
-
   type t = string
 
+  module Eq : Eq.EQ with type t := t = Eq.Make (String)
+
+  module Ord : Ord.ORD with type t := t = Ord.Make (String)
+
+  module Show : Show.SHOW with type t := string = struct
+    type nonrec t = t
+
+    let pp ppf name = Format.fprintf ppf "%s" name
+
+    let show = Fun.id
+  end
+
+  include Eq
+  include Ord
+  include Show
   module Set = Set.Make (String)
+  module Map = Map.Make (String)
 
   type fresh_name_supplier = Set.t -> t
 
