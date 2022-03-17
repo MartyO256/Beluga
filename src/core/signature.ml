@@ -28,6 +28,47 @@ module type NAME = sig
   module Map : Map.S with type key = t
 end
 
+(** Namespaced bound variable names.
+
+    These are names for referring to bound variable names nested in modules. *)
+module type QUALIFIED_NAME = sig
+  (** The type of names for referring to names in the current module or in a
+      different module. *)
+  type t
+
+  (** The type of names for modules and declarations. *)
+  type name
+
+  (** {1 Constructors} *)
+
+  (** [make ms n] is the qualified name with name [n] when successively
+      opening the modules named [ms]. *)
+  val make : ?modules:name List.t -> name -> t
+
+  (** {1 Destructors} *)
+
+  (** [name n] is the declaration name referred to by [n]. *)
+  val name : t -> name
+
+  (** [modules n] is the list of module names for modules to open to refer to
+      [n] in the module opening order. *)
+  val modules : t -> name List.t
+
+  (** {1 Instances} *)
+
+  include Show.SHOW with type t := t
+
+  include Eq.EQ with type t := t
+
+  include Ord.ORD with type t := t
+
+  (** {1 Collections} *)
+
+  module Set : Set.S with type elt = t
+
+  module Map : Map.S with type key = t
+end
+
 (** Bindings of entries to names. *)
 module type DECLARATION = sig
   (** The type of declarations for bound variables referring to signature
@@ -232,6 +273,61 @@ end = struct
 
   let prefixed_fresh_name_supplier base =
     find_distinct @@ Seq.cons base (names_seq base 1)
+end
+
+module QualifiedName (Name : NAME) : QUALIFIED_NAME with type name = Name.t =
+struct
+  type name = Name.t
+
+  type t =
+    { name : name
+    ; modules : name List.t
+    }
+
+  let make ?(modules = []) name = { name; modules }
+
+  let[@inline] name { name; _ } = name
+
+  let[@inline] modules { modules; _ } = modules
+
+  module Show : Show.SHOW with type t := t = Show.Make (struct
+    type nonrec t = t
+
+    let pp ppf n =
+      Format.fprintf ppf "%a::%a"
+        (Format.pp_print_list
+           ~pp_sep:(fun ppf () -> Format.fprintf ppf "::")
+           (fun ppf x -> Format.fprintf ppf "%a" Name.pp x))
+        (modules n) Name.pp (name n)
+  end)
+
+  module Eq : Eq.EQ with type t := t = Eq.Make (struct
+    type nonrec t = t
+
+    let equal x y =
+      List.equal Name.equal (modules x) (modules y)
+      && Name.equal (name x) (name y)
+  end)
+
+  module Ord' : Ord.ORD with type t = t = Ord.Make (struct
+    type nonrec t = t
+
+    module ModuleListOrd : Ord.ORD with type t = Name.t list =
+      List.MakeOrd (Name)
+
+    let compare x y =
+      let comparison = ModuleListOrd.compare (modules x) (modules y) in
+      if Stdlib.(comparison <> 0) then comparison
+      else Name.compare (name x) (name y)
+  end)
+
+  module Ord : Ord.ORD with type t := t = Ord'
+
+  include Show
+  include Eq
+  include Ord
+  module Set = Set.Make (Ord')
+  module Map = Map.Make (Ord')
 end
 
 module Declaration = struct
