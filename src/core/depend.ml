@@ -38,7 +38,7 @@ let fold ~implicit ~explicit ~inductive = function
   | Explicit -> explicit ()
   | Inductive -> inductive ()
 
-include Eq.Make (struct
+module Eq : Eq.EQ with type t := t = Eq.Make (struct
   type nonrec t = t
 
   let equal d1 d2 =
@@ -48,6 +48,8 @@ include Eq.Make (struct
     | Inductive, Inductive -> true
     | _ -> false
 end)
+
+include Eq
 
 let is_implicit = ( = ) implicit
 

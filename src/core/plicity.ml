@@ -14,7 +14,7 @@ let[@inline] fold ~implicit ~explicit = function
   | Explicit -> explicit ()
   | Implicit -> implicit ()
 
-include Eq.Make (struct
+module Eq : Eq.EQ with type t := t = Eq.Make (struct
   type nonrec t = t
 
   let equal p1 p2 =
@@ -23,6 +23,8 @@ include Eq.Make (struct
     | Implicit, Implicit -> true
     | _, _ -> false
 end)
+
+include Eq
 
 let is_explicit = ( = ) explicit
 
