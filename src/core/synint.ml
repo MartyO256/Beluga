@@ -959,7 +959,7 @@ module Sgn = struct
     | MRecTyp of
       { location: Location.t
       ; declarations: decl list Nonempty.t
-      } (** Mutually-recursive LF type family declaration *)
+      } (** Mutually-recursive LF type family or computation type declaration *)
 
     | Module of
       { location: Location.t
