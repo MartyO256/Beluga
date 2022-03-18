@@ -73,31 +73,26 @@ end
 module type DECLARATION = sig
   (** The type of declarations for bound variables referring to signature
       entries. *)
-  type t
+  type +'entry t
 
   (** The type of bound variable names for a declaration.
 
       This is the domain of signature declarations. *)
   type name
 
-  (** The type of entries referred to by name for a declaration.
-
-      This is the range of signature declarations. *)
-  type entry
-
   (** {1 Constructors} *)
 
   (** [make name entry] is the declaration having name [name] and entry
       [entry]. *)
-  val make : name -> entry -> t
+  val make : name -> 'entry -> 'entry t
 
   (** {1 Destructors} *)
 
   (** [name declaration] is the variable name bound by [declaration]. *)
-  val name : t -> name
+  val name : 'entry t -> name
 
   (** [entry declaration] is the entry referred to by [declaration]. *)
-  val entry : t -> entry
+  val entry : 'entry t -> 'entry
 end
 
 module type ABSTRACT_SIGNATURE = sig
@@ -329,18 +324,12 @@ struct
 end
 
 module Declaration = struct
-  module Make
-      (Name : NAME) (Entry : sig
-        type t
-      end) : DECLARATION with type name = Name.t and type entry = Entry.t =
-  struct
+  module Make (Name : NAME) : DECLARATION with type name = Name.t = struct
     type name = Name.t
 
-    type entry = Entry.t
-
-    type t =
+    type 'entry t =
       { name : name
-      ; entry : entry
+      ; entry : 'entry
       }
 
     let[@inline] make name entry = { name; entry }
