@@ -256,10 +256,17 @@ end
 module type INTERNAL_ID = ID with type t = int
 
 (** Base implementation for IDs as integers. *)
-module BaseID : INTERNAL_ID = struct
+module BaseId : sig
+  include INTERNAL_ID
+
+  (** {1 Constructors} *)
+
+  val make : int -> t
+end = struct
   include Int
   include Ord.Make (Int)
   module Set = Set.Make (Int)
   module Map = Map.Make (Int)
-end
 
+  let make = Fun.id
+end
