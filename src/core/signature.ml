@@ -270,3 +270,280 @@ end = struct
 
   let make = Fun.id
 end
+
+module Id = struct
+  module Typ = BaseId
+  module Const = BaseId
+end
+
+(** LF type family declarations. *)
+module Typ : sig
+  open Syntax.Int
+
+  type t
+
+  (** {1 Constructors} *)
+
+  val make_initial_entry :
+       id:int
+    -> name:Name.t
+    -> location:Location.t
+    -> implicit_arguments:int
+    -> LF.kind
+    -> t
+
+  (** {1 Destructors} *)
+
+  val id : t -> Id.Typ.t
+
+  val name : t -> Name.t
+
+  val kind : t -> LF.kind
+
+  (** {1 Freezing} *)
+
+  val is_frozen : t -> bool
+
+  val is_unfrozen : t -> bool
+
+  val freeze :
+       subordinates:Id.Typ.Set.t
+    -> type_subordinated:Id.Typ.Set.t
+    -> t
+    -> (t, [> `Frozen_declaration_error of Id.Typ.t ]) Result.t
+
+  (** {1 LF Constructors} *)
+
+  val add_constructor :
+       Name.t
+    -> Id.Const.t
+    -> t
+    -> (t, [> `Frozen_declaration_error of Id.Typ.t ]) result
+
+  val constructors : t -> Id.Const.t Name.Map.t
+
+  val has_constructor_with_name : Name.t -> t -> bool
+
+  (** {1 Naming} *)
+
+  val fresh_var_name :
+    t -> ?default_base_name:string -> Name.fresh_name_supplier
+
+  val fresh_mvar_name :
+    t -> ?default_base_name:string -> Name.fresh_name_supplier
+
+  val set_var_naming_convention : Name.t option -> t -> t
+
+  val set_mvar_naming_convention : Name.t option -> t -> t
+
+  val set_naming_conventions :
+    var:Name.t option -> mvar:Name.t option -> t -> t
+
+  (** {1 Subordination} *)
+
+  val is_subordinate :
+       t
+    -> Id.Typ.t
+    -> (bool, [> `Unfrozen_declaration_error of Id.Typ.t ]) Result.t
+
+  val is_type_subordinated :
+       t
+    -> Id.Typ.t
+    -> (bool, [> `Unfrozen_declaration_error of Id.Typ.t ]) Result.t
+end = struct
+  open Syntax.Int
+
+  module Unfrozen = struct
+    type t =
+      { id : Id.Typ.t
+      ; name : Name.t
+      ; location : Location.t
+      ; implicit_arguments : int
+      ; kind : LF.kind
+      ; var_name_base : Name.t Option.t
+      ; mvar_name_base : Name.t Option.t
+      ; constructors : Id.Const.t Name.Map.t
+      }
+
+    let make ~id ~name ~location ~implicit_arguments
+        ?(var_name_base = Option.none) ?(mvar_name_base = Option.none)
+        ?(constructors = Name.Map.empty) kind =
+      { id
+      ; name
+      ; location
+      ; implicit_arguments
+      ; kind
+      ; var_name_base
+      ; mvar_name_base
+      ; constructors
+      }
+
+    let add_constructor entry name const =
+      { entry with
+        constructors = Name.Map.add name const entry.constructors
+      }
+
+    let set_var_naming_convention var entry =
+      { entry with var_name_base = var }
+
+    let set_mvar_naming_convention mvar entry =
+      { entry with mvar_name_base = mvar }
+
+    let set_naming_conventions ~var ~mvar entry =
+      { entry with var_name_base = var; mvar_name_base = mvar }
+  end
+
+  module Frozen = struct
+    type t =
+      { id : Id.Typ.t
+      ; name : Name.t
+      ; location : Location.t
+      ; implicit_arguments : int
+      ; kind : LF.kind
+      ; var_name_base : Name.t Option.t
+      ; mvar_name_base : Name.t Option.t
+      ; constructors : Id.Const.t Name.Map.t
+      ; subordinates : Id.Typ.Set.t
+      ; type_subordinated : Id.Typ.Set.t
+      }
+
+    let set_var_naming_convention var entry =
+      { entry with var_name_base = var }
+
+    let set_mvar_naming_convention mvar entry =
+      { entry with mvar_name_base = mvar }
+
+    let set_naming_conventions ~var ~mvar entry =
+      { entry with var_name_base = var; mvar_name_base = mvar }
+  end
+
+  type t =
+    | Frozen of Frozen.t
+    | Unfrozen of Unfrozen.t
+
+  let[@inline] id = function
+    | Frozen { Frozen.id; _ } | Unfrozen { Unfrozen.id; _ } -> id
+
+  let[@inline] name = function
+    | Frozen { Frozen.name; _ } | Unfrozen { Unfrozen.name; _ } -> name
+
+  let[@inline] kind = function
+    | Frozen { Frozen.kind; _ } | Unfrozen { Unfrozen.kind; _ } -> kind
+
+  let[@inline] var_name_base = function
+    | Frozen { Frozen.var_name_base; _ }
+    | Unfrozen { Unfrozen.var_name_base; _ } -> var_name_base
+
+  let[@inline] mvar_name_base = function
+    | Frozen { Frozen.mvar_name_base; _ }
+    | Unfrozen { Unfrozen.mvar_name_base; _ } -> mvar_name_base
+
+  let[@inline] constructors = function
+    | Frozen { Frozen.constructors; _ }
+    | Unfrozen { Unfrozen.constructors; _ } -> constructors
+
+  let make_initial_entry ~id ~name ~location ~implicit_arguments kind =
+    Unfrozen (Unfrozen.make ~id ~name ~location ~implicit_arguments kind)
+
+  let is_frozen = function
+    | Frozen _ -> true
+    | Unfrozen _ -> false
+
+  let is_unfrozen entry = not @@ is_frozen entry
+
+  let if_unfrozen f = function
+    | Frozen { Frozen.id; _ } -> Result.error @@ `Frozen_declaration_error id
+    | Unfrozen entry -> Result.ok @@ f entry
+
+  let if_frozen f = function
+    | Frozen entry -> Result.ok @@ f entry
+    | Unfrozen { Unfrozen.id; _ } ->
+      Result.error @@ `Unfrozen_declaration_error id
+
+  let add_constructor name const =
+    if_unfrozen (fun x -> Unfrozen (Unfrozen.add_constructor x name const))
+
+  let has_constructor_with_name name entry =
+    entry |> constructors |> Name.Map.mem name
+
+  let frozen ~subordinates ~type_subordinated
+      { Unfrozen.id
+      ; name
+      ; location
+      ; implicit_arguments
+      ; kind
+      ; var_name_base
+      ; mvar_name_base
+      ; constructors
+      } =
+    { Frozen.id
+    ; name
+    ; location
+    ; implicit_arguments
+    ; kind
+    ; constructors
+    ; var_name_base
+    ; mvar_name_base
+    ; subordinates
+    ; type_subordinated
+    }
+
+  let freeze ~subordinates ~type_subordinated =
+    if_unfrozen (fun x -> Frozen (frozen ~subordinates ~type_subordinated x))
+
+  let fresh_var_name entry ?(default_base_name = "x") =
+    entry |> var_name_base |> Option.map Name.show
+    |> Option.get_default default_base_name
+    |> Name.prefixed_fresh_name_supplier
+
+  let fresh_mvar_name entry ?(default_base_name = "X") =
+    entry |> mvar_name_base |> Option.map Name.show
+    |> Option.get_default default_base_name
+    |> Name.prefixed_fresh_name_supplier
+
+  let set_var_naming_convention var = function
+    | Frozen x -> Frozen (Frozen.set_var_naming_convention var x)
+    | Unfrozen x -> Unfrozen (Unfrozen.set_var_naming_convention var x)
+
+  let set_mvar_naming_convention mvar = function
+    | Frozen x -> Frozen (Frozen.set_mvar_naming_convention mvar x)
+    | Unfrozen x -> Unfrozen (Unfrozen.set_mvar_naming_convention mvar x)
+
+  let set_naming_conventions ~var ~mvar = function
+    | Frozen x -> Frozen (Frozen.set_naming_conventions ~var ~mvar x)
+    | Unfrozen x -> Unfrozen (Unfrozen.set_naming_conventions ~var ~mvar x)
+
+  let is_subordinate entry typ =
+    entry
+    |> if_frozen (fun { Frozen.subordinates; _ } ->
+           Id.Typ.Set.mem typ subordinates)
+
+  let is_type_subordinated entry typ =
+    entry
+    |> if_frozen (fun { Frozen.type_subordinated; _ } ->
+           Id.Typ.Set.mem typ type_subordinated)
+end
+
+(** LF type constant declarations. *)
+module Const : sig
+  open Syntax.Int
+
+  type t
+
+  val name : t -> Name.t
+
+  val typ : t -> LF.typ
+end = struct
+  open Syntax.Int
+
+  type t =
+    { name : Name.t
+    ; location : Location.t
+    ; implicit_arguments : int
+    ; typ : LF.typ
+    }
+
+  let[@inline] name { name; _ } = name
+
+  let[@inline] typ { typ; _ } = typ
+end
