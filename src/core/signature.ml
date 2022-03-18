@@ -547,3 +547,64 @@ end = struct
 
   let[@inline] typ { typ; _ } = typ
 end
+
+module BelugaDeclaration = struct
+  module Declaration = Declaration.Make (Name)
+
+  module Typ = struct
+    type t = [ `Typ_declaration of Typ.t Declaration.t ]
+  end
+
+  module Const = struct
+    type t = [ `Const_declaration of Const.t Declaration.t ]
+  end
+end
+
+module type BELUGA_SIGNATURE = sig
+  (** The type of Beluga signatures. *)
+  type t
+
+  (** The type of bound names in Beluga signatures. *)
+  type name
+
+  (** The type of namespaced bound names in Beluga signatures. *)
+  type qualified_name
+
+  (** The type of declarations in Beluga signatures. *)
+  type declaration =
+    [ BelugaDeclaration.Typ.t
+    | BelugaDeclaration.Const.t
+    ]
+
+  (** {1 Constructors} *)
+
+  (** The empty Beluga signature. *)
+  val empty : t
+
+  val add_lf_constant :
+    t -> Const.t -> (t, [> `Frozen_LF_family of Id.Typ.t ]) Result.t
+
+  (** {1 Lookups} *)
+
+  (** [lookup signature name] returns [None] if there is no declaration in
+      [signature] having name [name], and otherwise returns
+      [Some (signature', declaration)] where [signature'] is the signature up
+      to and including [declaration] and [declaration] is the latest
+      declaration in [signature] having name [name]. *)
+  val lookup : t -> qualified_name -> (t * declaration) Option.t
+
+  val lookup_lf_family : t -> qualified_name -> (t * Typ.t) Option.t
+
+  val lookup_lf_const : t -> qualified_name -> (t * Const.t) Option.t
+
+  (** {1 Iterators} *)
+
+  (** [iter f signature] applies function [f] in turn on the declarations of
+      [signature] in the order in which they appear in the source files. *)
+  val iter : (t -> declaration -> unit) -> t -> unit
+
+  (** [fold f init signature] reduces [signature] to a value by applying [f]
+      in turn on the declarations of [signature] in the order in which they
+      appear in the source files, starting with accumulator [init]. *)
+  val fold : ('a -> t -> declaration -> 'a) -> 'a -> t -> 'a
+end
