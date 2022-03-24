@@ -154,6 +154,8 @@ module Typ : sig
 
   val id : t -> Id.Typ.t
 
+  val location : t -> Location.t
+
   val name : t -> Name.t
 
   val kind : t -> LF.kind
@@ -227,6 +229,10 @@ module Const : sig
     -> t
 
   (** {1 Destructors}*)
+
+  val id : t -> Id.Const.t
+
+  val location : t -> Location.t
 
   val name : t -> Name.t
 

@@ -246,6 +246,10 @@ module Typ = struct
   let[@inline] id = function
     | Frozen { Frozen.id; _ } | Unfrozen { Unfrozen.id; _ } -> id
 
+  let[@inline] location = function
+    | Frozen { Frozen.location; _ } | Unfrozen { Unfrozen.location; _ } ->
+      location
+
   let[@inline] name = function
     | Frozen { Frozen.name; _ } | Unfrozen { Unfrozen.name; _ } -> name
 
@@ -359,6 +363,10 @@ module Const = struct
 
   let make ~id ~name ~location ~implicit_arguments typ =
     { id; name; location; implicit_arguments; typ }
+
+  let[@inline] id { id; _ } = id
+
+  let[@inline] location { location; _ } = location
 
   let[@inline] name { name; _ } = name
 
