@@ -683,8 +683,28 @@ module type BELUGA_SIGNATURE = sig
   (** The empty Beluga signature. *)
   val empty : t
 
+  val add_lf_family : t -> Typ.t -> t
+
   val add_lf_constant :
-    t -> Const.t -> (t, [> `Frozen_LF_family of Id.Typ.t ]) Result.t
+       t
+    -> Const.t
+    -> (t, [> `Frozen_typ_declaration_error of Id.Typ.t ]) Result.t
+
+  val add_comp_typ : t -> CompTyp.t -> t
+
+  val add_comp_constructor :
+       t
+    -> CompConst.t
+    -> (t, [> `Frozen_comp_typ_declaration_error of Id.CompTyp.t ]) Result.t
+
+  val add_comp_cotyp : t -> CompCotyp.t -> t
+
+  val add_comp_destructor :
+       t
+    -> CompDest.t
+    -> ( t
+       , [> `Frozen_comp_cotyp_declaration_error of Id.CompCotyp.t ] )
+       Result.t
 
   (** {1 Lookups} *)
 
@@ -697,7 +717,17 @@ module type BELUGA_SIGNATURE = sig
 
   val lookup_lf_family : t -> QualifiedName.t -> (t * Typ.t) Option.t
 
-  val lookup_lf_const : t -> QualifiedName.t -> (t * Const.t) Option.t
+  val lookup_lf_constant : t -> QualifiedName.t -> (t * Const.t) Option.t
+
+  val lookup_comp_typ : t -> QualifiedName.t -> (t * CompTyp.t) Option.t
+
+  val lookup_comp_constructor :
+    t -> QualifiedName.t -> (t * CompConst.t) Option.t
+
+  val lookup_comp_cotyp : t -> QualifiedName.t -> (t * CompCotyp.t) Option.t
+
+  val lookup_comp_destructor :
+    t -> QualifiedName.t -> (t * CompDest.t) Option.t
 
   (** {1 Iterators} *)
 
