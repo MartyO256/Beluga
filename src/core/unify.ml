@@ -32,12 +32,6 @@ let next_constraint_id =
   incr counter;
   !counter
 
-let numPruneSub = ref 0
-
-(* let print_trail () =
-   Printf.printf "\nPruneSub failed because notInvertible : %d times.\n" !numPruneSub *)
-
-
 module type UNIFY = sig
   type unifTrail
 
@@ -1340,7 +1334,6 @@ module Make (T : TRAIL) : UNIFY = struct
     try
       pruneSub' cD0 cPsi phat (s, cPsi1) ss rOccur
     with NotInvertible ->
-      numPruneSub := !numPruneSub + 1;
       raise NotInvertible
 
   and pruneSub' cD0 cPsi phat (s, cPsi1) ss rOccur =
