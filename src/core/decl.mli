@@ -27,11 +27,6 @@ val (<) : t -> t -> bool
  *)
 val next : unit -> t
 
-(** Resets the declaration counter.
-    Any declaration generated before this call becomes invalid.
- *)
-val reset : unit -> unit
-
 (** {1 Instances} *)
 
 include Ord.ORD with type t := t

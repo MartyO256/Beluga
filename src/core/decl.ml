@@ -2,13 +2,13 @@ open Support
 
 type t = int
 
-let decl_counter = ref 0
+let counter () =
+  let count = ref 0 in
+  fun () ->
+    incr count;
+    !count
 
-let next () =
-  incr decl_counter;
-  !decl_counter
-
-let reset () = decl_counter := 0
+let next = counter ()
 
 module Ord : Ord.ORD with type t := t = Ord.Make (Int)
 
