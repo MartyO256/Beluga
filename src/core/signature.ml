@@ -486,6 +486,32 @@ module CompTyp = struct
   let freeze = if_unfrozen (fun x -> Frozen (frozen x))
 end
 
+module CompConst = struct
+  open Syntax.Int
+
+  type t =
+    { id : Id.CompConst.t
+    ; name : Name.t
+    ; location : Location.t
+    ; implicit_arguments : int
+    ; typ : Comp.typ
+    }
+
+  let make ~id ~name ~location ~implicit_arguments typ =
+    { id; name; location; implicit_arguments; typ }
+
+  let[@inline] id { id; _ } = id
+
+  let[@inline] location { location; _ } = location
+
+  let[@inline] name { name; _ } = name
+
+  let[@inline] implicit_arguments { implicit_arguments; _ } =
+    implicit_arguments
+
+  let[@inline] typ { typ; _ } = typ
+end
+
 module CompCotyp = struct
   open Syntax.Int
 
@@ -572,6 +598,46 @@ module CompCotyp = struct
   let freeze = if_unfrozen (fun x -> Frozen (frozen x))
 end
 
+module CompDest = struct
+  open Syntax.Int
+
+  type t =
+    { id : Id.CompDest.t
+    ; name : Name.t
+    ; location : Location.t
+    ; implicit_arguments : int
+    ; mctx : LF.mctx
+    ; observation_typ : Comp.typ
+    ; return_typ : Comp.typ
+    }
+
+  let make ~id ~name ~location ~implicit_arguments ~mctx ~observation_typ
+      ~return_typ =
+    { id
+    ; name
+    ; location
+    ; implicit_arguments
+    ; mctx
+    ; observation_typ
+    ; return_typ
+    }
+
+  let[@inline] id { id; _ } = id
+
+  let[@inline] location { location; _ } = location
+
+  let[@inline] name { name; _ } = name
+
+  let[@inline] implicit_arguments { implicit_arguments; _ } =
+    implicit_arguments
+
+  let[@inline] mctx { mctx; _ } = mctx
+
+  let[@inline] observation_typ { observation_typ; _ } = observation_typ
+
+  let[@inline] return_typ { return_typ; _ } = return_typ
+end
+
 module BelugaDeclaration = struct
   module Typ = struct
     type t = [ `Typ_declaration of Typ.t Declaration.t ]
@@ -585,8 +651,16 @@ module BelugaDeclaration = struct
     type t = [ `Comp_typ_declaration of CompTyp.t Declaration.t ]
   end
 
+  module CompConst = struct
+    type t = [ `Comp_const_declaration of CompConst.t Declaration.t ]
+  end
+
   module CompCotyp = struct
     type t = [ `Comp_cotyp_declaration of CompCotyp.t Declaration.t ]
+  end
+
+  module CompDest = struct
+    type t = [ `Comp_dest_declaration of CompDest.t Declaration.t ]
   end
 end
 
@@ -599,7 +673,9 @@ module type BELUGA_SIGNATURE = sig
     [ BelugaDeclaration.Typ.t
     | BelugaDeclaration.Const.t
     | BelugaDeclaration.CompTyp.t
+    | BelugaDeclaration.CompConst.t
     | BelugaDeclaration.CompCotyp.t
+    | BelugaDeclaration.CompDest.t
     ]
 
   (** {1 Constructors} *)

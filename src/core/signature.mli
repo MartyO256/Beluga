@@ -297,7 +297,36 @@ module CompTyp : sig
   val has_constructor_with_name : Name.t -> t -> bool
 end
 
-(** Computation-level data type constant declarations. *)
+(** Computation-level type constructor declarations. *)
+module CompConst : sig
+  open Syntax.Int
+
+  type t
+
+  (** {1 Constructors} *)
+
+  val make :
+       id:int
+    -> name:Name.t
+    -> location:Location.t
+    -> implicit_arguments:int
+    -> Comp.typ
+    -> t
+
+  (** {1 Destructors}*)
+
+  val id : t -> Id.Const.t
+
+  val location : t -> Location.t
+
+  val name : t -> Name.t
+
+  val implicit_arguments : t -> int
+
+  val typ : t -> Comp.typ
+end
+
+(** Computation-level codata type constant declarations. *)
 module CompCotyp : sig
   open Syntax.Int
 
@@ -348,4 +377,39 @@ module CompCotyp : sig
   val destructors : t -> Id.CompDest.t Name.Map.t
 
   val has_destructor_with_name : Name.t -> t -> bool
+end
+
+(** Computation-level type destructor declarations. *)
+module CompDest : sig
+  open Syntax.Int
+
+  type t
+
+  (** {1 Constructors} *)
+
+  val make :
+       id:int
+    -> name:Name.t
+    -> location:Location.t
+    -> implicit_arguments:int
+    -> mctx:LF.mctx
+    -> observation_typ:Comp.typ
+    -> return_typ:Comp.typ
+    -> t
+
+  (** {1 Destructors}*)
+
+  val id : t -> Id.Const.t
+
+  val location : t -> Location.t
+
+  val name : t -> Name.t
+
+  val implicit_arguments : t -> int
+
+  val mctx : t -> LF.mctx
+
+  val observation_typ : t -> Comp.typ
+
+  val return_typ : t -> Comp.typ
 end
