@@ -1,11 +1,9 @@
 let level : int ref = ref 1
 
-let ppf = Format.std_formatter
-
-let print lvl x =
+let print lvl =
   let ppf =
     if lvl <= !level
-    then ppf
+    then Format.std_formatter
     else Support.Fmt.null_formatter
   in
-  Format.fprintf ppf x
+  fun x -> Format.fprintf ppf x
