@@ -170,6 +170,8 @@ end
 module Id = struct
   module Typ = BaseId
   module Const = BaseId
+  module CompTyp = BaseId
+  module CompConst = BaseId
 end
 
 module Typ = struct
@@ -200,10 +202,8 @@ module Typ = struct
       ; constructors
       }
 
-    let add_constructor entry name const =
-      { entry with
-        constructors = Name.Map.add name const entry.constructors
-      }
+    let add_constructor ({ constructors; _ } as entry) name const =
+      { entry with constructors = Name.Map.add name const constructors }
 
     let set_var_naming_convention var entry =
       { entry with var_name_base = var }
@@ -278,13 +278,14 @@ module Typ = struct
   let is_unfrozen entry = not @@ is_frozen entry
 
   let if_unfrozen f = function
-    | Frozen { Frozen.id; _ } -> Result.error @@ `Frozen_declaration_error id
+    | Frozen { Frozen.id; _ } ->
+      Result.error @@ `Frozen_typ_declaration_error id
     | Unfrozen entry -> Result.ok @@ f entry
 
   let if_frozen f = function
     | Frozen entry -> Result.ok @@ f entry
     | Unfrozen { Unfrozen.id; _ } ->
-      Result.error @@ `Unfrozen_declaration_error id
+      Result.error @@ `Unfrozen_typ_declaration_error id
 
   let add_constructor name const =
     if_unfrozen (fun x -> Unfrozen (Unfrozen.add_constructor x name const))
@@ -371,6 +372,116 @@ module Const = struct
   let[@inline] name { name; _ } = name
 
   let[@inline] typ { typ; _ } = typ
+end
+
+module CompTyp = struct
+  open Syntax.Int
+
+  module Unfrozen = struct
+    type t =
+      { id : Id.CompTyp.t
+      ; name : Name.t
+      ; location : Location.t
+      ; implicit_arguments : int
+      ; kind : Comp.kind
+      ; positivity : Sgn.positivity_flag
+      ; constructors : Id.CompConst.t Name.Map.t
+      }
+
+    let make ~id ~name ~location ~implicit_arguments ~positivity
+        ?(constructors = Name.Map.empty) kind =
+      { id
+      ; name
+      ; location
+      ; implicit_arguments
+      ; kind
+      ; positivity
+      ; constructors
+      }
+
+    let add_constructor ({ constructors; _ } as entry) name const =
+      { entry with constructors = Name.Map.add name const constructors }
+  end
+
+  module Frozen = struct
+    type t =
+      { id : Id.CompTyp.t
+      ; name : Name.t
+      ; location : Location.t
+      ; implicit_arguments : int
+      ; kind : Comp.kind
+      ; positivity : Sgn.positivity_flag
+      ; constructors : Id.CompConst.t Name.Map.t
+      }
+  end
+
+  type t =
+    | Frozen of Frozen.t
+    | Unfrozen of Unfrozen.t
+
+  let[@inline] id = function
+    | Frozen { Frozen.id; _ } | Unfrozen { Unfrozen.id; _ } -> id
+
+  let[@inline] location = function
+    | Frozen { Frozen.location; _ } | Unfrozen { Unfrozen.location; _ } ->
+      location
+
+  let[@inline] name = function
+    | Frozen { Frozen.name; _ } | Unfrozen { Unfrozen.name; _ } -> name
+
+  let[@inline] kind = function
+    | Frozen { Frozen.kind; _ } | Unfrozen { Unfrozen.kind; _ } -> kind
+
+  let[@inline] constructors = function
+    | Frozen { Frozen.constructors; _ }
+    | Unfrozen { Unfrozen.constructors; _ } -> constructors
+
+  let make_initial_entry ~id ~name ~location ~implicit_arguments ~positivity
+      kind =
+    Unfrozen
+      (Unfrozen.make ~id ~name ~location ~implicit_arguments ~positivity kind)
+
+  let is_frozen = function
+    | Frozen _ -> true
+    | Unfrozen _ -> false
+
+  let is_unfrozen entry = not @@ is_frozen entry
+
+  let if_unfrozen f = function
+    | Frozen { Frozen.id; _ } ->
+      Result.error @@ `Frozen_comp_typ_declaration_error id
+    | Unfrozen entry -> Result.ok @@ f entry
+
+  let if_frozen f = function
+    | Frozen entry -> Result.ok @@ f entry
+    | Unfrozen { Unfrozen.id; _ } ->
+      Result.error @@ `Unfrozen_comp_typ_declaration_error id
+
+  let add_constructor name const =
+    if_unfrozen (fun x -> Unfrozen (Unfrozen.add_constructor x name const))
+
+  let has_constructor_with_name name entry =
+    entry |> constructors |> Name.Map.mem name
+
+  let frozen
+      { Unfrozen.id
+      ; name
+      ; location
+      ; implicit_arguments
+      ; kind
+      ; positivity
+      ; constructors
+      } =
+    { Frozen.id
+    ; name
+    ; location
+    ; implicit_arguments
+    ; kind
+    ; positivity
+    ; constructors
+    }
+
+  let freeze = if_unfrozen (fun x -> Frozen (frozen x))
 end
 
 module BelugaDeclaration = struct

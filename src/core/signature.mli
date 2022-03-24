@@ -132,6 +132,10 @@ module Id : sig
   module Typ : ID
 
   module Const : ID
+
+  module CompTyp : ID
+
+  module CompConst : ID
 end
 
 (** LF type family declarations. *)
@@ -170,7 +174,7 @@ module Typ : sig
        subordinates:Id.Typ.Set.t
     -> type_subordinated:Id.Typ.Set.t
     -> t
-    -> (t, [> `Frozen_declaration_error of Id.Typ.t ]) Result.t
+    -> (t, [> `Frozen_typ_declaration_error of Id.Typ.t ]) Result.t
 
   (** {1 LF Constructors} *)
 
@@ -178,7 +182,7 @@ module Typ : sig
        Name.t
     -> Id.Const.t
     -> t
-    -> (t, [> `Frozen_declaration_error of Id.Typ.t ]) result
+    -> (t, [> `Frozen_typ_declaration_error of Id.Typ.t ]) result
 
   val constructors : t -> Id.Const.t Name.Map.t
 
@@ -204,12 +208,12 @@ module Typ : sig
   val is_subordinate :
        t
     -> Id.Typ.t
-    -> (bool, [> `Unfrozen_declaration_error of Id.Typ.t ]) Result.t
+    -> (bool, [> `Unfrozen_typ_declaration_error of Id.Typ.t ]) Result.t
 
   val is_type_subordinated :
        t
     -> Id.Typ.t
-    -> (bool, [> `Unfrozen_declaration_error of Id.Typ.t ]) Result.t
+    -> (bool, [> `Unfrozen_typ_declaration_error of Id.Typ.t ]) Result.t
 end
 
 (** LF type constant declarations. *)
@@ -237,4 +241,53 @@ module Const : sig
   val name : t -> Name.t
 
   val typ : t -> LF.typ
+end
+
+(** Computation-level data type constant declarations. *)
+module CompTyp : sig
+  open Syntax.Int
+
+  type t
+
+  (** {1 Constructors} *)
+
+  val make_initial_entry :
+       id:int
+    -> name:Name.t
+    -> location:Location.t
+    -> implicit_arguments:int
+    -> positivity:Sgn.positivity_flag
+    -> Comp.kind
+    -> t
+
+  (** {1 Destructors} *)
+
+  val id : t -> Id.CompTyp.t
+
+  val location : t -> Location.t
+
+  val name : t -> Name.t
+
+  val kind : t -> Comp.kind
+
+  (** {1 Freezing} *)
+
+  val is_frozen : t -> bool
+
+  val is_unfrozen : t -> bool
+
+  val freeze :
+    t -> (t, [> `Frozen_comp_typ_declaration_error of Id.Typ.t ]) Result.t
+
+  (** {1 LF Constructors} *)
+
+  val add_constructor :
+       Name.t
+    -> Id.CompConst.t
+    -> t
+    -> (t, [> `Frozen_comp_typ_declaration_error of Id.Typ.t ]) result
+
+  val constructors : t -> Id.CompConst.t Name.Map.t
+
+  val has_constructor_with_name : Name.t -> t -> bool
 end
