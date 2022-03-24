@@ -135,7 +135,11 @@ module Id : sig
 
   module CompTyp : ID
 
+  module CompCotyp : ID
+
   module CompConst : ID
+
+  module CompDest : ID
 end
 
 (** LF type family declarations. *)
@@ -277,17 +281,71 @@ module CompTyp : sig
   val is_unfrozen : t -> bool
 
   val freeze :
-    t -> (t, [> `Frozen_comp_typ_declaration_error of Id.Typ.t ]) Result.t
+       t
+    -> (t, [> `Frozen_comp_typ_declaration_error of Id.CompTyp.t ]) Result.t
 
-  (** {1 LF Constructors} *)
+  (** {1 Constructors} *)
 
   val add_constructor :
        Name.t
     -> Id.CompConst.t
     -> t
-    -> (t, [> `Frozen_comp_typ_declaration_error of Id.Typ.t ]) result
+    -> (t, [> `Frozen_comp_typ_declaration_error of Id.CompTyp.t ]) result
 
   val constructors : t -> Id.CompConst.t Name.Map.t
 
   val has_constructor_with_name : Name.t -> t -> bool
+end
+
+(** Computation-level data type constant declarations. *)
+module CompCotyp : sig
+  open Syntax.Int
+
+  type t
+
+  (** {1 Constructors} *)
+
+  val make_initial_entry :
+       id:int
+    -> name:Name.t
+    -> location:Location.t
+    -> implicit_arguments:int
+    -> Comp.kind
+    -> t
+
+  (** {1 Destructors} *)
+
+  val id : t -> Id.CompCotyp.t
+
+  val location : t -> Location.t
+
+  val name : t -> Name.t
+
+  val kind : t -> Comp.kind
+
+  (** {1 Freezing} *)
+
+  val is_frozen : t -> bool
+
+  val is_unfrozen : t -> bool
+
+  val freeze :
+       t
+    -> ( t
+       , [> `Frozen_comp_cotyp_declaration_error of Id.CompCotyp.t ] )
+       Result.t
+
+  (** {1 Destructors} *)
+
+  val add_destructor :
+       Name.t
+    -> Id.CompDest.t
+    -> t
+    -> ( t
+       , [> `Frozen_comp_cotyp_declaration_error of Id.CompCotyp.t ] )
+       result
+
+  val destructors : t -> Id.CompDest.t Name.Map.t
+
+  val has_destructor_with_name : Name.t -> t -> bool
 end

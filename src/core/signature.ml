@@ -171,7 +171,9 @@ module Id = struct
   module Typ = BaseId
   module Const = BaseId
   module CompTyp = BaseId
+  module CompCotyp = BaseId
   module CompConst = BaseId
+  module CompDest = BaseId
 end
 
 module Typ = struct
@@ -484,6 +486,92 @@ module CompTyp = struct
   let freeze = if_unfrozen (fun x -> Frozen (frozen x))
 end
 
+module CompCotyp = struct
+  open Syntax.Int
+
+  module Unfrozen = struct
+    type t =
+      { id : Id.CompCotyp.t
+      ; name : Name.t
+      ; location : Location.t
+      ; implicit_arguments : int
+      ; kind : Comp.kind
+      ; destructors : Id.CompDest.t Name.Map.t
+      }
+
+    let make ~id ~name ~location ~implicit_arguments
+        ?(destructors = Name.Map.empty) kind =
+      { id; name; location; implicit_arguments; kind; destructors }
+
+    let add_destructor ({ destructors; _ } as entry) name dest =
+      { entry with destructors = Name.Map.add name dest destructors }
+  end
+
+  module Frozen = struct
+    type t =
+      { id : Id.CompTyp.t
+      ; name : Name.t
+      ; location : Location.t
+      ; implicit_arguments : int
+      ; kind : Comp.kind
+      ; destructors : Id.CompDest.t Name.Map.t
+      }
+  end
+
+  type t =
+    | Frozen of Frozen.t
+    | Unfrozen of Unfrozen.t
+
+  let[@inline] id = function
+    | Frozen { Frozen.id; _ } | Unfrozen { Unfrozen.id; _ } -> id
+
+  let[@inline] location = function
+    | Frozen { Frozen.location; _ } | Unfrozen { Unfrozen.location; _ } ->
+      location
+
+  let[@inline] name = function
+    | Frozen { Frozen.name; _ } | Unfrozen { Unfrozen.name; _ } -> name
+
+  let[@inline] kind = function
+    | Frozen { Frozen.kind; _ } | Unfrozen { Unfrozen.kind; _ } -> kind
+
+  let[@inline] destructors = function
+    | Frozen { Frozen.destructors; _ } | Unfrozen { Unfrozen.destructors; _ }
+      -> destructors
+
+  let make_initial_entry ~id ~name ~location ~implicit_arguments kind =
+    Unfrozen (Unfrozen.make ~id ~name ~location ~implicit_arguments kind)
+
+  let is_frozen = function
+    | Frozen _ -> true
+    | Unfrozen _ -> false
+
+  let is_unfrozen entry = not @@ is_frozen entry
+
+  let if_unfrozen f = function
+    | Frozen { Frozen.id; _ } ->
+      Result.error @@ `Frozen_comp_cotyp_declaration_error id
+    | Unfrozen entry -> Result.ok @@ f entry
+
+  let if_frozen f = function
+    | Frozen entry -> Result.ok @@ f entry
+    | Unfrozen { Unfrozen.id; _ } ->
+      Result.error @@ `Unfrozen_comp_cotyp_declaration_error id
+
+  let add_destructor name dest =
+    if_unfrozen (fun x -> Unfrozen (Unfrozen.add_destructor x name dest))
+
+  let has_destructor_with_name name entry =
+    entry |> destructors |> Name.Map.mem name
+
+  let frozen
+      { Unfrozen.id; name; location; implicit_arguments; kind; destructors }
+      =
+    { Frozen.id; name; location; implicit_arguments; kind; destructors }
+
+  let freeze = if_unfrozen (fun x -> Frozen (frozen x))
+end
+
 module BelugaDeclaration = struct
   module Typ = struct
     type t = [ `Typ_declaration of Typ.t Declaration.t ]
@@ -491,6 +579,14 @@ module BelugaDeclaration = struct
 
   module Const = struct
     type t = [ `Const_declaration of Const.t Declaration.t ]
+  end
+
+  module CompTyp = struct
+    type t = [ `Comp_typ_declaration of CompTyp.t Declaration.t ]
+  end
+
+  module CompCotyp = struct
+    type t = [ `Comp_cotyp_declaration of CompCotyp.t Declaration.t ]
   end
 end
 
@@ -502,6 +598,8 @@ module type BELUGA_SIGNATURE = sig
   type declaration =
     [ BelugaDeclaration.Typ.t
     | BelugaDeclaration.Const.t
+    | BelugaDeclaration.CompTyp.t
+    | BelugaDeclaration.CompCotyp.t
     ]
 
   (** {1 Constructors} *)
