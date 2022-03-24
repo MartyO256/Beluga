@@ -1,3 +1,5 @@
+open Support
+
 (** Uniform declaration numbering for late scope-checking.
 
     During typechecking, we must double-check scoping for constants
@@ -29,3 +31,7 @@ val next : unit -> t
     Any declaration generated before this call becomes invalid.
  *)
 val reset : unit -> unit
+
+(** {1 Instances} *)
+
+include Ord.ORD with type t := t
