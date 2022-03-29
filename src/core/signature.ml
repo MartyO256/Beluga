@@ -145,15 +145,13 @@ module type ID = sig
   module Map : Map.S with type key := t
 end
 
-(** Unique identifiers for declarations in a signature as integers.
-
-    This module type enables internal modules to construct IDs as integers.
-    The type for IDs remains abstract in exported module signatures. *)
-module type INTERNAL_ID = ID with type t = int
-
 (** Base implementation for IDs as integers. *)
 module BaseId : sig
-  include INTERNAL_ID
+  (** Unique identifiers for declarations in a signature as integers.
+
+      This module type enables internal modules to construct IDs as integers.
+      The type for IDs remains abstract in exported module signatures. *)
+  include ID with type t = int
 
   (** {1 Constructors} *)
 
