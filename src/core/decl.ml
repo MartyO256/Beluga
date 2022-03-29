@@ -10,6 +10,4 @@ let counter () =
 
 let next = counter ()
 
-module Ord : Ord.ORD with type t := t = Ord.Make (Int)
-
-include Ord
+include (Ord.Make (Int) : Ord.ORD with type t := t)
