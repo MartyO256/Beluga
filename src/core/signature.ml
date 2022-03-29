@@ -116,7 +116,7 @@ module Declaration = struct
     ; entry : 'entry
     }
 
-  let[@inline] make name entry = { name; entry }
+  let[@inline] make ~name ~entry = { name; entry }
 
   let[@inline] name { name; _ } = name
 

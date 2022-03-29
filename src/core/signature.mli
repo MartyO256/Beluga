@@ -94,7 +94,7 @@ module Declaration : sig
 
   (** [make name entry] is the declaration having name [name] and entry
       [entry]. *)
-  val make : name -> 'entry -> 'entry t
+  val make : name:name -> entry:'entry -> 'entry t
 
   (** {1 Destructors} *)
 
