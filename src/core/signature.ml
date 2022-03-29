@@ -7,19 +7,18 @@ open Support
 module Name = struct
   type t = string
 
-  module Eq : Eq.EQ with type t := t = Eq.Make (String)
+  include (Eq.Make (String) : Eq.EQ with type t := t)
 
-  module Ord : Ord.ORD with type t := t = Ord.Make (String)
+  include (Ord.Make (String) : Ord.ORD with type t := t)
 
-  module Show : Show.SHOW with type t := string = struct
-    let pp ppf name = Format.fprintf ppf "%s" name
+  include (
+    struct
+      let pp ppf name = Format.fprintf ppf "%s" name
 
-    let show = Fun.id
-  end
+      let show = Fun.id
+    end :
+      Show.SHOW with type t := t)
 
-  include Eq
-  include Ord
-  include Show
   module Set = Set.Make (String)
   module Map = Map.Make (String)
 
@@ -68,24 +67,28 @@ module QualifiedName = struct
 
   let[@inline] modules { modules; _ } = modules
 
-  module Show : Show.SHOW with type t := t = Show.Make (struct
-    type nonrec t = t
+  include (
+    Show.Make (struct
+      type nonrec t = t
 
-    let pp ppf n =
-      Format.fprintf ppf "%a::%a"
-        (Format.pp_print_list
-           ~pp_sep:(fun ppf () -> Format.fprintf ppf "::")
-           (fun ppf x -> Format.fprintf ppf "%a" Name.pp x))
-        (modules n) Name.pp (name n)
-  end)
+      let pp ppf n =
+        Format.fprintf ppf "%a::%a"
+          (Format.pp_print_list
+             ~pp_sep:(fun ppf () -> Format.fprintf ppf "::")
+             (fun ppf x -> Format.fprintf ppf "%a" Name.pp x))
+          (modules n) Name.pp (name n)
+    end) :
+      Show.SHOW with type t := t)
 
-  module Eq : Eq.EQ with type t := t = Eq.Make (struct
-    type nonrec t = t
+  include (
+    Eq.Make (struct
+      type nonrec t = t
 
-    let equal x y =
-      List.equal Name.equal (modules x) (modules y)
-      && Name.equal (name x) (name y)
-  end)
+      let equal x y =
+        List.equal Name.equal (modules x) (modules y)
+        && Name.equal (name x) (name y)
+    end) :
+      Eq.EQ with type t := t)
 
   module Ord' : Ord.ORD with type t = t = Ord.Make (struct
     type nonrec t = t
@@ -99,11 +102,8 @@ module QualifiedName = struct
       else Name.compare (name x) (name y)
   end)
 
-  module Ord : Ord.ORD with type t := t = Ord'
+  include (Ord' : Ord.ORD with type t := t)
 
-  include Show
-  include Eq
-  include Ord
   module Set = Set.Make (Ord')
   module Map = Map.Make (Ord')
 end
