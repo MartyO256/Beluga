@@ -1,5 +1,6 @@
 (** A Harpoon session represents a set of mutually proven theorems. *)
 
+open Support
 open Beluga
 open Syntax.Int
 
@@ -11,11 +12,11 @@ type t
 
     Requirement: the mutual group identified by the given cid must
     indeed contain every given theorem. *)
-val make : Id.cid_mutual_group -> Theorem.t list -> t
+val make : Id.cid_mutual_group -> Theorem.t Nonempty.t -> t
 
 (** Retrieves the mutual declarations associated to this session's
     mutual group. *)
-val get_mutual_decs : t -> Comp.total_dec list
+val get_mutual_decs : t -> Comp.total_dec Nonempty.t
 
 (** Looks up an incomplete theorem by name in the session. *)
 val lookup_theorem : t -> Id.name -> Theorem.t option

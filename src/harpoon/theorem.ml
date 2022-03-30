@@ -192,7 +192,7 @@ let serialize ppf (t : t) =
   in
   let order =
     let open Option in
-    Total.lookup_dec name (CompS.total_decs t.cid)
+    Total.lookup_dec name (CompS.total_decs t.cid |> Nonempty.to_list)
     $> fun o -> o.Comp.order
   in
   Printer.with_implicits false
@@ -346,11 +346,11 @@ let configure cid ppf hooks initial_state gs =
 (** Converts Theorem.Conf.t to Theorem.t by adding all the theorems
     to the store.
  *)
-let configure_set ppf (hooks : (t -> Comp.proof_state -> unit) list) (confs : Conf.t list)
-    : Id.cid_mutual_group * t list =
+let configure_set ppf (hooks : (t -> Comp.proof_state -> unit) list) (confs : Conf.t Nonempty.t)
+    : Id.cid_mutual_group * t Nonempty.t =
   let mutual_group =
     CompS.add_mutual_group
-      (List.map fst confs)
+      (Nonempty.map fst confs)
   in
   let configure ({ Comp.name; tau; order }, k) =
     let tau' = Total.annotate Loc.ghost order tau in
@@ -378,7 +378,7 @@ let configure_set ppf (hooks : (t -> Comp.proof_state -> unit) list) (confs : Co
     (* configure the theorem *)
     configure cid ppf hooks g [g]
   in
-  (mutual_group, List.map configure confs)
+  (mutual_group, Nonempty.map configure confs)
 
 type completeness =
   [ `incomplete

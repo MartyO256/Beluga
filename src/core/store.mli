@@ -259,7 +259,7 @@ module Cid : sig
   end
 
   module Comp : sig
-    val add_mutual_group : Comp.total_dec list -> cid_mutual_group
+    val add_mutual_group : Comp.total_dec Nonempty.t -> cid_mutual_group
 
     module Entry : sig
       type t =
@@ -279,7 +279,7 @@ module Cid : sig
     val name : cid_prog -> name
 
     (** Looks up the total declarations for the given mutual group. *)
-    val lookup_mutual_group : cid_mutual_group -> Comp.total_dec list
+    val lookup_mutual_group : cid_mutual_group -> Comp.total_dec Nonempty.t
 
     (** Gets the mutual group ID for a given function reference. *)
     val mutual_group : cid_prog -> cid_mutual_group
@@ -287,7 +287,7 @@ module Cid : sig
     (** Looks up the total declarations for the mutual group of the
         given function.
      *)
-    val total_decs : cid_prog -> Comp.total_dec list
+    val total_decs : cid_prog -> Comp.total_dec Nonempty.t
 
     (** Looks up the totality declaration for the given theorem. *)
     val get_total_decl : cid_prog -> Comp.total_dec

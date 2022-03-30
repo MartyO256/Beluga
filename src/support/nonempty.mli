@@ -65,6 +65,11 @@ val filter_map : ('a -> 'b option) -> 'a t -> 'b list
     are (structurally) equal. *)
 val all_equal : 'a t -> 'a option
 
+(** Maps a function that may fail over a nonempty list, and eagerly fails as
+    soon as any individual call fails. Note that elements beyond the first
+    failing one will not be processed. *)
+val traverse : ('a -> 'b option) -> 'a t -> 'b t option
+
 (** {1 Iterators on two lists} *)
 
 (** [map2 f (a1, \[a2; ...; an\]) (b1, \[b2; ...; bn\])] is

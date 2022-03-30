@@ -154,11 +154,11 @@ let process_command
           begin fun p ->
           p.fmt "[harpoon] [mfs] @[<v>got mutual decs:\
                  @,-> @[<v>%a@]@]"
-            (Format.pp_print_list ~pp_sep: Format.pp_print_cut
+            (Nonempty.pp ~pp_sep: Format.pp_print_cut
                P.fmt_ppr_cmp_total_dec)
             ds
           end;
-        ds
+        ds |> Nonempty.to_list
       end
   in
 

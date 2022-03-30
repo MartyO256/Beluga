@@ -889,7 +889,7 @@ module Cid = struct
       let name = e.Entry.name in
       let mg = lookup_mutual_group e.Entry.mutual_group in
       match
-        List.find_opt
+        Nonempty.find_opt
           (fun d -> Id.equals d.Int.Comp.name name)
           mg
       with

@@ -747,13 +747,16 @@ let recSgnDecls decls =
          then
            begin
              let v = Some (Opsem.eval expression'') in
-             let open Comp in
-             add begin fun _ ->
-               let mgid =
-                 Comp.add_mutual_group
-                   Int.Comp.[{ name = identifier; tau = tau'; order = `not_recursive }]
+             Comp.add begin fun _ ->
+              let mgid =
+                Comp.add_mutual_group
+                @@ Nonempty.singleton
+                     { Int.Comp.name = identifier
+                     ; tau = tau'
+                     ; order = `not_recursive
+                     }
                in
-               mk_entry (Some (Decl.next ())) identifier tau' 0 mgid v
+               Comp.mk_entry (Some (Decl.next ())) identifier tau' 0 mgid v
                end
              |> ignore;
              v
@@ -826,13 +829,16 @@ let recSgnDecls decls =
          then
            begin
              let v = Some (Opsem.eval expression'') in
-             let open Comp in
              let mgid =
-               add_mutual_group
-                 Int.Comp.[ {name = identifier; tau = tau'; order = `not_recursive } ]
+              Comp.add_mutual_group
+              @@ Nonempty.singleton
+                   { Int.Comp.name = identifier
+                   ; tau = tau'
+                   ; order = `not_recursive
+                   }
              in
-             add begin fun _ ->
-               mk_entry (Some (Decl.next ())) identifier tau' 0 mgid v
+             Comp.add begin fun _ ->
+               Comp.mk_entry (Some (Decl.next ())) identifier tau' 0 mgid v
                end;
              |> ignore;
              v
@@ -900,7 +906,7 @@ let recSgnDecls decls =
        (* and check that all or none of the declarations are present. *)
        let total_decs =
          let prelim_total_decs =
-           Nonempty.map (fun t -> Ext.Sgn.(t.name, t.order)) recFuns
+           Nonempty.map (fun Ext.Sgn.{name; order; _} -> (name, order)) recFuns
          in
          match
             Nonempty.partition
@@ -962,7 +968,7 @@ let recSgnDecls decls =
            end
        in
 
-       let (thm_list, registers) = Nonempty.split (preprocess recFuns) in
+       let (thm_list, registers) = preprocess recFuns |> Nonempty.split in
 
        (* We have the elaborated types of the theorems,
           so we construct the final list of totality declarations for
@@ -988,7 +994,7 @@ let recSgnDecls decls =
         *)
        let thm_cid_list =
           registers
-          |> Nonempty.ap_one (Comp.add_mutual_group (Nonempty.to_list total_decs))
+          |> Nonempty.ap_one (Comp.add_mutual_group total_decs)
        in
 
        let reconThm loc (f, cid, thm, tau) =

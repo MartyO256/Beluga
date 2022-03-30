@@ -77,12 +77,12 @@ let recover_session ppf hooks (mutual_group, thm_confs) =
            an Nonempty.t, lazily map the sequence, and the force the
            sequence with DynArray.of_seq
      *)
-    map f thm_confs |> to_list
+    map f thm_confs
   in
   dprintf begin fun p ->
     p.fmt "[recover_session] @[<v>recovered a session with the following theorems:\
            @,  @[<hv>%a@]@]"
-      (Format.pp_print_list ~pp_sep: Fmt.comma
+      (Nonempty.pp ~pp_sep: Fmt.comma
          (fun ppf t -> Format.fprintf ppf "%a" Id.print (Theorem.get_name t)))
       theorems
     end;

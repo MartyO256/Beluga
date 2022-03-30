@@ -1,3 +1,4 @@
+open Support
 open Beluga
 open Syntax.Int.Comp
 
@@ -115,8 +116,8 @@ val rename_variable : Id.name -> Id.name -> [ `comp | `meta ] -> t -> proof_stat
 
 val configure : Id.cid_comp_const -> Format.formatter -> (t -> unit subgoal_hook) list ->
                 proof_state -> proof_state list -> t
-val configure_set : Format.formatter -> (t -> unit subgoal_hook) list -> Conf.t list ->
-                    Id.cid_mutual_group * t list
+val configure_set : Format.formatter -> (t -> unit subgoal_hook) list -> Conf.t Nonempty.t ->
+                    Id.cid_mutual_group * t Nonempty.t
 
 type completeness =
   [ `incomplete

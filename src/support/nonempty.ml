@@ -61,6 +61,11 @@ let rec all_equal ((x, l) : 'a t) : 'a option =
   | x' :: xs when x = x' -> all_equal (x, xs)
   | _ -> None
 
+let traverse f (x, l) =
+  Option.(
+    f x $ fun y ->
+    traverse f l $ fun ys -> Some (y, ys))
+
 let map2 f (h1, t1) (h2, t2) = (f h1 h2, List.map2 f t1 t2)
 
 let of_list l =
