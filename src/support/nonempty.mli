@@ -83,6 +83,10 @@ val for_all : ('a -> bool) -> 'a t -> bool
 
 (** {1 List searching} *)
 
+(** [find_opt p l] is the first element in [l] satisfying the predicate [p].
+    Returns [None] if there is no such element. *)
+val find_opt : ('a -> bool) -> 'a t -> 'a option
+
 (** Finds the leftmost minimal element of the sequence according to the given
     decision procedure for the strict less-than relation on 'a. *)
 val minimum_by : ('a -> 'a -> bool) -> 'a t -> 'a

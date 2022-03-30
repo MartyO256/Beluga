@@ -74,6 +74,8 @@ exception Empty
     list was empty. *)
 let unsafe_of_list (l : 'a list) : 'a t = Option.get' Empty (of_list l)
 
+let find_opt p l = l |> to_list |> List.find_opt p
+
 let minimum_by ( < ) (x, l) =
   List.fold_left (fun min x -> if x < min then x else min) x l
 
