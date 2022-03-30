@@ -41,8 +41,8 @@ val length : 'a t -> int
 
 (** {1 Iterators} *)
 
-(** [iter f (a1, [a2; ...; an])] applies function [f] in turn to [a1; ...; an].
-    It is equivalent to [begin f a1; f a2; ...; f an; () end]. *)
+(** [iter f (a1, \[a2; ...; an\])] applies function [f] in turn to
+    [a1; ...; an]. It is equivalent to [begin f a1; f a2; ...; f an; () end]. *)
 val iter : ('a -> unit) -> 'a t -> unit
 
 (** Maps a function over the nonempty list. *)
@@ -50,19 +50,11 @@ val map : ('a -> 'b) -> 'a t -> 'b t
 
 (** [fold_right sing cons (a1, \[a2; ...; an\])] is
     [cons a1 (cons a2 (... (sing an) ...))]. *)
-val fold_right
-  :  ('a -> 'b)
-  -> ('a -> 'b -> 'b)
-  -> 'a t
-  -> 'b
+val fold_right : ('a -> 'b) -> ('a -> 'b -> 'b) -> 'a t -> 'b
 
 (** [fold_left sing cons (a1, \[a2; ...; an\])] is
     [cons (... (cons (sing a1) a2) ....) an]. *)
-val fold_left
-  :  ('a -> 'b)
-  -> ('b -> 'a -> 'b)
-  -> 'a t
-  -> 'b
+val fold_left : ('a -> 'b) -> ('b -> 'a -> 'b) -> 'a t -> 'b
 
 (** [filter_map f l] applies [f] to every element of [l], filters out the
     [None] elements and returns the list of the arguments of the [Some]
@@ -78,13 +70,13 @@ val all_equal : 'a t -> 'a option
 (** [map2 f (a1, \[a2; ...; an\]) (b1, \[b2; ...; bn\])] is
     [(f a1 b1, \[f a2 b2; ...; f an bn\])].
 
-    @raise Invalid_argument if the two lists are determined to have different
-    lengths. *)
+    @raise Invalid_argument
+      if the two lists are determined to have different lengths. *)
 val map2 : ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'c t
 
 (** {1 List scanning} *)
 
-(** [for_all p (a1, [a2; ...; an])] checks if all elements of the non-empty
+(** [for_all p (a1, \[a2; ...; an\])] checks if all elements of the non-empty
     list satisfy the predicate [p]. That is, it returns
     [(p a1) && (p a2) && ... && (p an)]. *)
 val for_all : ('a -> bool) -> 'a t -> bool
@@ -135,8 +127,8 @@ val combine : 'a t -> 'b t -> ('a * 'b) t
 (** [ap (x1, \[x2; ...; xn\]) (f1, \[f2; ...; fn\])] is
     [(f1 x1, \[f2 x2; ...; fn xn\])].
 
-    @raise Invalid_argument if the two lists are determined to have different
-    lengths. *)
+    @raise Invalid_argument
+      if the two lists are determined to have different lengths. *)
 val ap : 'a t -> ('a -> 'b) t -> 'b t
 
 (** [ap_one x (f1, \[f2; ...; fn\])] is [(f1 x, \[f2 x; ...; fn x\])]. *)
@@ -146,8 +138,8 @@ val ap_one : 'a -> ('a -> 'b) t -> 'b t
 
 (** [pp ?pp_sep pp_v ppf l] prints the items of the non-empty list [l] using
     [pp_v] to print each item and calling [pp_sep] between items. *)
-val pp
-  :  ?pp_sep:(Format.formatter -> unit -> unit)
+val pp :
+     ?pp_sep:(Format.formatter -> unit -> unit)
   -> (Format.formatter -> 'a -> unit)
   -> Format.formatter
   -> 'a t
