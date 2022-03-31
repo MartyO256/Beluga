@@ -21,6 +21,7 @@ module Name = struct
 
   module Set = Set.Make (String)
   module Map = Map.Make (String)
+  module LinkedMap = LinkedMap.Make (String)
 
   type fresh_name_supplier = Set.t -> t
 
@@ -175,6 +176,7 @@ module Id = struct
   module CompConst = BaseId
   module CompDest = BaseId
   module Comp = BaseId
+  module Module = BaseId
 end
 
 module Typ = struct
@@ -672,6 +674,26 @@ module Comp = struct
   let[@inline] mutual_group { mutual_group; _ } = mutual_group
 end
 
+module Module = struct
+  type +'a t =
+    { id : Id.Module.t
+    ; name : Name.t
+    ; location : Location.t
+    ; declarations : 'a Name.LinkedMap.t
+    }
+
+  let make ~id ~location ?(declarations = Name.LinkedMap.empty) name =
+    { id; name; location; declarations }
+
+  let[@inline] id { id; _ } = id
+
+  let[@inline] location { location; _ } = location
+
+  let[@inline] name { name; _ } = name
+
+  let[@inline] declarations { declarations; _ } = declarations
+end
+
 module BelugaDeclaration = struct
   module Typ = struct
     type t = [ `Typ_declaration of Typ.t Declaration.t ]
@@ -700,6 +722,10 @@ module BelugaDeclaration = struct
   module Comp = struct
     type t = [ `Comp_declaration of Comp.t Declaration.t ]
   end
+
+  module Module = struct
+    type 'a t = [ `Module_declaration of 'a Module.t Declaration.t ]
+  end
 end
 
 module type BELUGA_SIGNATURE = sig
@@ -715,6 +741,7 @@ module type BELUGA_SIGNATURE = sig
     | BelugaDeclaration.CompCotyp.t
     | BelugaDeclaration.CompDest.t
     | BelugaDeclaration.Comp.t
+    | declaration BelugaDeclaration.Module.t
     ]
 
   (** {1 Constructors} *)
@@ -746,6 +773,8 @@ module type BELUGA_SIGNATURE = sig
        Result.t
 
   val add_comp : t -> Comp.t -> t
+
+  val add_module : t -> declaration Module.t -> t
 
   (** {1 Lookups} *)
 

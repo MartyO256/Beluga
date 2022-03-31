@@ -19,6 +19,8 @@ module Name : sig
 
   module Map : Map.S with type key = t
 
+  module LinkedMap : LinkedMap.S with type key = t
+
   (** {1 Name Generation} *)
 
   (** The type of supplier for a name that does not appear in a given set of
@@ -142,6 +144,8 @@ module Id : sig
   module CompDest : ID
 
   module Comp : ID
+
+  module Module : ID
 end
 
 (** LF type family declarations. *)
@@ -449,4 +453,27 @@ module Comp : sig
   val program : t -> Comp.value
 
   val mutual_group : t -> Id.Comp.t Nonempty.t Option.t
+end
+
+module Module : sig
+  type +'a t
+
+  (** {1 Constructors} *)
+
+  val make :
+       id:int
+    -> location:Location.t
+    -> ?declarations:'a Name.LinkedMap.t
+    -> Name.t
+    -> 'a t
+
+  (** {1 Destructors} *)
+
+  val id : 'a t -> Id.Comp.t
+
+  val location : 'a t -> Location.t
+
+  val name : 'a t -> Name.t
+
+  val declarations : 'a t -> 'a Name.LinkedMap.t
 end
