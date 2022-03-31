@@ -174,6 +174,7 @@ module Id = struct
   module CompCotyp = BaseId
   module CompConst = BaseId
   module CompDest = BaseId
+  module Comp = BaseId
 end
 
 module Typ = struct
@@ -638,6 +639,39 @@ module CompDest = struct
   let[@inline] return_typ { return_typ; _ } = return_typ
 end
 
+module Comp = struct
+  open Syntax.Int
+
+  type t =
+    { id : Id.Comp.t
+    ; name : Name.t
+    ; location : Location.t
+    ; implicit_arguments : int
+    ; typ : Comp.typ
+    ; mutual_group : Id.Comp.t Nonempty.t Option.t
+    ; program : Comp.value
+    }
+
+  let make ~id ~name ~location ~implicit_arguments ~typ
+      ?(mutual_group = None) program =
+    { id; name; location; implicit_arguments; typ; mutual_group; program }
+
+  let[@inline] id { id; _ } = id
+
+  let[@inline] location { location; _ } = location
+
+  let[@inline] name { name; _ } = name
+
+  let[@inline] implicit_arguments { implicit_arguments; _ } =
+    implicit_arguments
+
+  let[@inline] typ { typ; _ } = typ
+
+  let[@inline] program { program; _ } = program
+
+  let[@inline] mutual_group { mutual_group; _ } = mutual_group
+end
+
 module BelugaDeclaration = struct
   module Typ = struct
     type t = [ `Typ_declaration of Typ.t Declaration.t ]
@@ -662,6 +696,10 @@ module BelugaDeclaration = struct
   module CompDest = struct
     type t = [ `Comp_dest_declaration of CompDest.t Declaration.t ]
   end
+
+  module Comp = struct
+    type t = [ `Comp_declaration of Comp.t Declaration.t ]
+  end
 end
 
 module type BELUGA_SIGNATURE = sig
@@ -676,6 +714,7 @@ module type BELUGA_SIGNATURE = sig
     | BelugaDeclaration.CompConst.t
     | BelugaDeclaration.CompCotyp.t
     | BelugaDeclaration.CompDest.t
+    | BelugaDeclaration.Comp.t
     ]
 
   (** {1 Constructors} *)
@@ -706,6 +745,8 @@ module type BELUGA_SIGNATURE = sig
        , [> `Frozen_comp_cotyp_declaration_error of Id.CompCotyp.t ] )
        Result.t
 
+  val add_comp : t -> Comp.t -> t
+
   (** {1 Lookups} *)
 
   (** [lookup signature name] returns [None] if there is no declaration in
@@ -728,6 +769,8 @@ module type BELUGA_SIGNATURE = sig
 
   val lookup_comp_destructor :
     t -> QualifiedName.t -> (t * CompDest.t) Option.t
+
+  val lookup_comp : t -> QualifiedName.t -> (t * Comp.t) Option.t
 
   (** {1 Iterators} *)
 
