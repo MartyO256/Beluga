@@ -694,6 +694,19 @@ module Module = struct
   let[@inline] declarations { declarations; _ } = declarations
 end
 
+module DocumentationComment = struct
+  type t =
+    { content : string
+    ; location : Location.t
+    }
+
+  let make ~location content = { content; location }
+
+  let[@inline] content { content; _ } = content
+
+  let[@inline] location { location; _ } = location
+end
+
 module BelugaDeclaration = struct
   module Typ = struct
     type t = [ `Typ_declaration of Typ.t Declaration.t ]
@@ -742,6 +755,7 @@ module type BELUGA_SIGNATURE = sig
     | BelugaDeclaration.CompDest.t
     | BelugaDeclaration.Comp.t
     | declaration BelugaDeclaration.Module.t
+    | `Documentation_comment of DocumentationComment.t
     ]
 
   (** {1 Constructors} *)
@@ -775,6 +789,8 @@ module type BELUGA_SIGNATURE = sig
   val add_comp : t -> Comp.t -> t
 
   val add_module : t -> declaration Module.t -> t
+
+  val add_documentation_comment : t -> DocumentationComment.t -> t
 
   (** {1 Lookups} *)
 

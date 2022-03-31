@@ -455,6 +455,7 @@ module Comp : sig
   val mutual_group : t -> Id.Comp.t Nonempty.t Option.t
 end
 
+(** Namespace for declarations. *)
 module Module : sig
   type +'a t
 
@@ -476,4 +477,21 @@ module Module : sig
   val name : 'a t -> Name.t
 
   val declarations : 'a t -> 'a Name.LinkedMap.t
+end
+
+(** Documentation comments.
+
+    These are declared as [%{{ content }}%] in the external syntax. *)
+module DocumentationComment : sig
+  type t
+
+  (** {1 Constructors} *)
+
+  val make : location:Location.t -> string -> t
+
+  (** {1 Destructors} *)
+
+  val content : t -> string
+
+  val location : t -> Location.t
 end
