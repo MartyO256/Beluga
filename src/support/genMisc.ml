@@ -1,3 +1,5 @@
+include Gen
+
 (** Additional helpers for using generator. *)
 
 (** Converts a string into a generator yielding individual characters. *)
