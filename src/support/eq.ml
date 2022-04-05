@@ -2,7 +2,9 @@ module type EQ = sig
   type t
 
   val equal : t -> t -> bool
+
   val ( = ) : t -> t -> bool
+
   val ( <> ) : t -> t -> bool
 end
 
@@ -14,5 +16,6 @@ end) : EQ with type t = T.t = struct
   include T
 
   let ( = ) = equal
+
   let[@inline] ( <> ) x y = not (x = y)
 end

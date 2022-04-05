@@ -1,5 +1,6 @@
 (** Module type for totally ordered types. *)
 module type ORD = sig
+  (** The type of elements to compare. *)
   type t
 
   (** [compare a b] compares [a] and [b] for ordering. It returns
@@ -18,10 +19,6 @@ module type ORD = sig
         then [(compare a b) = 0] *)
   val compare : t -> t -> int
 
-  val ( = ) : t -> t -> bool
-
-  val ( <> ) : t -> t -> bool
-
   val ( < ) : t -> t -> bool
 
   val ( <= ) : t -> t -> bool
@@ -35,13 +32,17 @@ module type ORD = sig
 
   (** [min a b] is [a] if [a <= b] and [b] otherwise. *)
   val min : t -> t -> t
+
+  include Eq.EQ with type t := t
 end
 
 (** Functor building an implementation of {!ORD} given a type with a total
     comparator. *)
 module Make (T : sig
+  (** See {!type:ORD.t} *)
   type t
 
+  (** See {!val:ORD.compare}. *)
   val compare : t -> t -> int
 end) : ORD with type t = T.t
 
