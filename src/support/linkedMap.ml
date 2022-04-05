@@ -30,10 +30,8 @@ module type S = sig
   val find_opt : key -> 'a t -> 'a option
 end
 
-module Make (Key : Ord.ORD) : S with type key = Key.t = struct
-  module Map = Map.Make (Key)
-
-  type key = Key.t
+module Make (Map : Map.S) : S with type key = Map.key = struct
+  type key = Map.key
 
   type +'a t =
     { list : (key * 'a) List.t

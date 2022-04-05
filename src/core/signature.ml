@@ -21,7 +21,7 @@ module Name = struct
 
   module Set = Set.Make (String)
   module Map = Map.Make (String)
-  module LinkedMap = LinkedMap.Make (String)
+  module LinkedMap = LinkedMap.Make (Map)
 
   type fresh_name_supplier = Set.t -> t
 
