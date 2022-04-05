@@ -1,6 +1,7 @@
 module Annotated = Annotated
 module Apply = Apply
 module Debug = Debug
+module DynArray = DynArrayMisc
 module Either = Either
 module Eq = Eq
 module Files = Files
