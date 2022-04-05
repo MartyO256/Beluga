@@ -1,10 +1,9 @@
-open Support.Equality
 (** Substitutions
 
     @author Brigitte Pientka
 *)
 
-
+open Support
 open Syntax.Int.LF
 
 module LF = struct

@@ -1,4 +1,3 @@
-open Support.Equality
 open Support
 open Id
 open Store

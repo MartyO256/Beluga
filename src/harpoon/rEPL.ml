@@ -77,7 +77,7 @@ let process_command_sequence s (c, t, g) cmds =
   with
   | Either.Left f ->
      printf "%a" f ();
-     if HarpoonState.interaction_mode s = `stop then
+     if Stdlib.(HarpoonState.interaction_mode s = `stop) then
        exit 1;
      `error
   | Either.Right b ->
@@ -100,14 +100,14 @@ let rec loop (s : HarpoonState.t) : unit =
         printf "- @[%a@]@,"
           Format.pp_print_text
           "Skipped checking translated proofs because some translations failed.";
-          if HarpoonState.interaction_mode s = `stop then
+          if Stdlib.(HarpoonState.interaction_mode s = `stop) then
             exit 1
      | `check_error e ->
         printf "- @[<v>An error occurred when checking the translated proofs.\
                 @,Please report this as a bug.\
                 @,@[%s@]@]@,"
           (Printexc.to_string e);
-        if HarpoonState.interaction_mode s = `stop then
+        if Stdlib.(HarpoonState.interaction_mode s = `stop) then
           exit 1
      end;
      printf "@,@[<v>Proof complete! (No theorems left.)@,@]";

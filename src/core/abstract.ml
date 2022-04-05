@@ -1,9 +1,8 @@
-open Support.Equality
-open Support
 (**
    @author Renaud Germain
    @author Brigitte Pientka
 *)
+open Support
 open Store
 open Store.Cid
 open Substitution

@@ -188,7 +188,7 @@ module TranscriptRunner = struct
   let rec string_match' i (s1 : char list) (s2 : char list) : string_match =
     match s1, s2 with
     | [], [] -> Equal
-    | c1 :: s1', c2 :: s2' when c1 = c2 -> string_match' (i + 1) s1' s2'
+    | c1 :: s1', c2 :: s2' when Char.equal c1 c2 -> string_match' (i + 1) s1' s2'
     | _, _ -> MismatchAt i
 
   let string_match (s1 : string) (s2 : string) : string_match =

@@ -457,7 +457,7 @@ and shunting_yard' (l : Ext.LF.normal list) : Ext.LF.normal =
       | None -> !Store.OpPragmas.default
     in
     p_p < o_p ||
-      (p_p = o_p && p_a = Ext.Sgn.Left)
+      (p_p = o_p && Stdlib.(p_a = Ext.Sgn.Left))
   (* p.Store.OpPragmas.precedence < o.Store.OpPragmas.precedence ||
    * (p.Store.OpPragmas.precedence = o.Store.OpPragmas.precedence &&
    *    ((o.Store.OpPragmas.assoc = None && !Store.OpPragmas.default = Ext.Sgn.Left) ||
@@ -557,7 +557,7 @@ and shunting_yard' (l : Ext.LF.normal list) : Ext.LF.normal =
     function
     | ([(_, e)], []) -> e
     | (exps, (i, o, loc_o) :: os)
-         when (o.Store.OpPragmas.fix = Ext.Sgn.Prefix) ->
+         when (Stdlib.(o.Store.OpPragmas.fix = Ext.Sgn.Prefix)) ->
        let args_expected =
          let name = o.Store.OpPragmas.name in
          try
@@ -600,7 +600,7 @@ and shunting_yard' (l : Ext.LF.normal list) : Ext.LF.normal =
          throw loc (MisplacedOperator o.Store.OpPragmas.name)
 
     | ((i2, e2) :: (i1, e1) :: es, (i, o, _) :: os)
-         when o.Store.OpPragmas.fix = Ext.Sgn.Infix ->
+         when Stdlib.(o.Store.OpPragmas.fix = Ext.Sgn.Infix) ->
        let loc = Ext.LF.loc_of_normal e1 in
        if i2 > i && i > i1
        then
@@ -618,7 +618,7 @@ and shunting_yard' (l : Ext.LF.normal list) : Ext.LF.normal =
          throw loc (MisplacedOperator o.Store.OpPragmas.name)
 
     | ((i1, e) :: es, (i, o, _) :: os)
-         when o.Store.OpPragmas.fix = Ext.Sgn.Postfix ->
+         when Stdlib.(o.Store.OpPragmas.fix = Ext.Sgn.Postfix) ->
        let loc = Ext.LF.loc_of_normal e in
        if i > i1
        then

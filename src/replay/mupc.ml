@@ -506,7 +506,7 @@ module Make (P : ParserInfo) = struct
 
   (** Matches an item from a given list. *)
   let one_of (cs : item list) : item t =
-    choice (List.map (fun c -> satisfy (fun c' -> c = c')) cs)
+    choice (List.map (fun c -> satisfy (Stdlib.(=) c)) cs)
 
   (** `many_till` repeatedly applies the given parser, testing whether
   `pend` succeeds between applications. Once `pend` succeeds, this
@@ -587,12 +587,12 @@ module StringParser = struct
 
   (** Constructs a parser that matches exactly the given string. *)
   let rec string (str : string) : string t =
-    if str = "" then
+    if String.(str = "") then
       pure ""
     else
       let (c, str') =
         (str.[0], String.sub str 1 (String.length str - 1))
       in
-      label (Printf.sprintf "= %C" c) (satisfy (fun c' -> c = c') $
+      label (Printf.sprintf "= %C" c) (satisfy (Char.equal c) $
         fun _ -> string str')
 end

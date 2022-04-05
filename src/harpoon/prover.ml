@@ -206,7 +206,7 @@ let process_command
              end
     | Holes.LFInfo ->
        let { lfGoal; cPsi; lfSolution } = h.info in
-       assert (lfSolution = None);
+       assert (Stdlib.(lfSolution = None));
        let typ = Whnf.normTyp lfGoal in
        dprintf
          begin fun p ->

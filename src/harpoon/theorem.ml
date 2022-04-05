@@ -166,7 +166,7 @@ let get_cid t = t.cid
 let get_entry t = get_entry' t |> snd
 let get_name t = (get_entry t).CompS.Entry.name
 let has_name_of t name = equals (get_name t) name
-let has_cid_of t cid = t.cid = cid
+let has_cid_of t cid = Stdlib.(t.cid = cid)
 
 let get_statement t = t.initial_state.Comp.goal
 

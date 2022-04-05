@@ -1,4 +1,3 @@
-open Support.Equality
 (* Internal Syntax *)
 open Support
 

@@ -3,7 +3,7 @@
    @author Brigitte Pientka
 *)
 
-open Support.Equality
+open Support
 
 open Syntax
 open Int

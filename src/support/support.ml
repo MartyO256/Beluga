@@ -3,7 +3,6 @@ module Apply = Apply
 module Debug = Debug
 module Either = Either
 module Eq = Eq
-module Equality = Equality
 module Files = Files
 module Fmt = Fmt
 module Fun = Fun
@@ -26,3 +25,5 @@ module Show = Show
 module Stack = Stack
 module State = State
 module String = String
+
+include Equality

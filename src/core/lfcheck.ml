@@ -1,5 +1,4 @@
 open Support
-open Equality
 module P = Pretty.Int.DefaultPrinter
 module R = Store.Cid.DefaultRenderer
 

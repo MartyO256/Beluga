@@ -1,4 +1,3 @@
-open Support.Equality
 (* Checking termination of a function *)
 
 open Support

@@ -1,4 +1,3 @@
-open Support.Equality
 open Support
 module P = Pretty.Int.DefaultPrinter
 

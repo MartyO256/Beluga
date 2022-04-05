@@ -1,4 +1,3 @@
-open Support.Equality
 (**
  * Top level functions invoked by the interactive mode.
  * Each interactive mode command corresponds with a `command` record in this file.

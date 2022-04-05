@@ -1,4 +1,3 @@
-open Support.Equality
 (** Contexts
 
     @author Brigitte Pientka

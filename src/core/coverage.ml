@@ -1,4 +1,3 @@
-open Support.Equality
 (** Coverage checker
 
     @author Brigitte Pientka

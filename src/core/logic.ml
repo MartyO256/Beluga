@@ -1,4 +1,3 @@
-open Support.Equality
 (* module Logic *)
 (* author:
    Costin Badescu

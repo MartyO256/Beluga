@@ -1,5 +1,4 @@
 open Support
-open Equality
 
 (**
    @author Brigitte Pientka
