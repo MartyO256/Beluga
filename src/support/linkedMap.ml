@@ -1,7 +1,7 @@
 module type S = sig
   type key
 
-  type +'a t
+  type 'a t
 
   val empty : 'a t
 
@@ -33,7 +33,7 @@ end
 module Make (Map : Map.S) : S with type key = Map.key = struct
   type key = Map.key
 
-  type +'a t =
+  type 'a t =
     { list : (key * 'a) List.t
     ; map : 'a Map.t
     }
