@@ -19,7 +19,11 @@ module Name : sig
 
   module Map : Map.S with type key = t
 
+  module Hamt : Hamt.S with type key = t
+
   module LinkedMap : LinkedMap.S with type key = t
+
+  module LinkedHamt : LinkedHamt.S with type key = t
 
   (** {1 Name Generation} *)
 
@@ -457,14 +461,14 @@ end
 
 (** Namespace for declarations. *)
 module Module : sig
-  type +'a t
+  type 'a t
 
   (** {1 Constructors} *)
 
   val make :
        id:int
     -> location:Location.t
-    -> ?declarations:'a Name.LinkedMap.t
+    -> ?declarations:'a Name.LinkedHamt.t
     -> Name.t
     -> 'a t
 
@@ -476,7 +480,7 @@ module Module : sig
 
   val name : 'a t -> Name.t
 
-  val declarations : 'a t -> 'a Name.LinkedMap.t
+  val declarations : 'a t -> 'a Name.LinkedHamt.t
 end
 
 (** Documentation comments.

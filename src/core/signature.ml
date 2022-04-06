@@ -22,6 +22,8 @@ module Name = struct
   module Set = Set.Make (String)
   module Map = Map.Make (String)
   module LinkedMap = LinkedMap.Make (Map)
+  module Hamt = Hamt.Make (String)
+  module LinkedHamt = LinkedHamt.Make (Hamt)
 
   type fresh_name_supplier = Set.t -> t
 
@@ -675,14 +677,14 @@ module Comp = struct
 end
 
 module Module = struct
-  type +'a t =
+  type 'a t =
     { id : Id.Module.t
     ; name : Name.t
     ; location : Location.t
-    ; declarations : 'a Name.LinkedMap.t
+    ; declarations : 'a Name.LinkedHamt.t
     }
 
-  let make ~id ~location ?(declarations = Name.LinkedMap.empty) name =
+  let make ~id ~location ?(declarations = Name.LinkedHamt.empty) name =
     { id; name; location; declarations }
 
   let[@inline] id { id; _ } = id
