@@ -15,3 +15,5 @@ let pack cs = concat "" (List.map (make 1) cs)
 let drop n s = sub s n (length s - n)
 
 include (Ord.Make (Stdlib.String) : Ord.ORD with type t := t)
+
+include (Hash.Make (Stdlib.String) : Hash.HASH with type t := t)

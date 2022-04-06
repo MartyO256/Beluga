@@ -13,3 +13,5 @@ val drop : int -> string -> string
 (** {1 Instances} *)
 
 include Ord.ORD with type t := t
+
+include Hash.HASH with type t := t
