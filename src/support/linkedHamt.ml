@@ -35,6 +35,5 @@ module Make (Hamt : HamtMisc.S) : S with type key = Hamt.key = struct
 
   let for_all p { map; _ } = Hamt.for_all p map
 
-  let find_opt key { map; _ } =
-    try Option.some @@ Hamt.find_exn key map with Not_found -> Option.none
+  let find_opt key { map; _ } = Hamt.ExceptionLess.find key map
 end
