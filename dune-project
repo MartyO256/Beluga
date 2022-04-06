@@ -37,4 +37,5 @@
    (>= 4.08))
   sedlex
   (ocamlformat :dev)
-  (ocaml-lsp-server :dev)))
+  (ocaml-lsp-server :dev)
+  hamt))

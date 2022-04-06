@@ -25,6 +25,7 @@ depends: [
   "sedlex"
   "ocamlformat" {dev}
   "ocaml-lsp-server" {dev}
+  "hamt"
   "odoc" {with-doc}
 ]
 build: [

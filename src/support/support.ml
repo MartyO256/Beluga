@@ -9,6 +9,7 @@ module Fmt = Fmt
 module Fun = Fun
 module Functor = Functor
 module Gen = GenMisc
+module Hamt = HamtMisc
 module Hashtbl = Hashtbl
 module History = History
 module LinkedMap = LinkedMap
@@ -26,5 +27,4 @@ module Show = Show
 module Stack = Stack
 module State = State
 module String = String
-
 include Equality
