@@ -4,114 +4,115 @@ open Support
 (* Token Type and Token Functions *)
 (**********************************)
 
-module Token = struct
-  (** Tokens *)
-  type t =
-    (* End of Input, usually the same thing as EOF. *)
-    | EOI
-    | DUMMY
-    (* Symbols *)
-    | LPAREN (* ( *)
-    | RPAREN (* ) *)
-    | LBRACK (* [ *)
-    | RBRACK (* ] *)
-    | LBRACE (* { *)
-    | RBRACE (* } *)
-    | LANGLE (* < *)
-    | RANGLE (* > *)
-    | COMMA (* , *)
-    | DOUBLE_COLON (* :: *)
-    | COLON (* : *)
-    | SEMICOLON (* ; *)
-    | PIPE (* | *)
-    | TURNSTILE (* |- *)
-    | DOTS (* .. *)
-    | ARROW (* -> *)
-    | THICK_ARROW (* => *)
-    | HAT (* ^ *)
-    | DOT (* . *)
-    | LAMBDA (* \ *)
-    | STAR (* * *)
-    | EQUALS (* = *)
-    | SLASH (* / *)
-    | UNDERSCORE (* _ *)
-    | HASH (* # *)
-    | DOLLAR (* $ *)
-    | PLUS (* + *)
-    (* Keywords *)
-    | KW_AND
-    | KW_BLOCK
-    | KW_CASE
-    | KW_IF
-    | KW_THEN
-    | KW_ELSE
-    | KW_IMPOSSIBLE
-    | KW_LET
-    | KW_IN
-    | KW_OF
-    | KW_REC
-    | KW_SCHEMA
-    | KW_SOME
-    | KW_FN
-    | KW_MLAM
-    | KW_MODULE
-    | KW_STRUCT
-    | KW_END
-    | KW_TOTAL
-    | KW_TRUST
-    | KW_TYPE
-    | KW_CTYPE
-    | KW_PROP
-    | KW_INDUCTIVE
-    | KW_COINDUCTIVE
-    | KW_STRATIFIED
-    | KW_LF
-    | KW_FUN
-    | KW_TYPEDEF
-    | KW_PROOF
-    | KW_BY
-    | KW_AS
-    | KW_SUFFICES
-    | KW_TOSHOW
-    (* A string literal *)
-    | STRING of string
-    (* Can mean identifier, operator, etc. *)
-    | IDENT of string
-    (* Two dashes followed by an identifier *)
-    | PRAGMA of string
-    (* A dot followed by an integer; used for projections *)
-    | DOT_NUMBER of int (* .n *)
-    (* A hash followed by an identifier; used for parameter variables. *)
-    | HASH_IDENT of string (* #x *)
-    (* A dollar followed by an identifier; used for substitution
-       variables. *)
-    | DOLLAR_IDENT of string (* $x *)
-    (* A hash followed by an underscore. *)
-    | HASH_BLANK (* #_ *)
-    (* A dollar followed by an underscore. *)
-    | DOLLAR_BLANK (* $_ *)
-    (* A question mark followed by an identifier *)
-    | HOLE of string
-    (* An integer literal. *)
-    | INTLIT of int
-    (* A block comment of the form %{{ ... }}% *)
-    | BLOCK_COMMENT of string
-end
+(** Tokens *)
+type t =
+  (* End of Input, usually the same thing as EOF. *)
+  | EOI
+  | DUMMY
 
-include Eq.Make (struct
-  include Token
+  (* Symbols *)
+  | LPAREN (* ( *)
+  | RPAREN (* ) *)
+  | LBRACK (* [ *)
+  | RBRACK (* ] *)
+  | LBRACE (* { *)
+  | RBRACE (* } *)
+  | LANGLE (* < *)
+  | RANGLE (* > *)
+  | COMMA (* , *)
+  | DOUBLE_COLON (* :: *)
+  | COLON (* : *)
+  | SEMICOLON (* ; *)
+  | PIPE (* | *)
+  | TURNSTILE (* |- *)
+  | DOTS (* .. *)
+  | ARROW (* -> *)
+  | THICK_ARROW (* => *)
+  | HAT (* ^ *)
+  | DOT (* . *)
+  | LAMBDA (* \ *)
+  | STAR (* * *)
+  | EQUALS (* = *)
+  | SLASH (* / *)
+  | UNDERSCORE (* _ *)
+  | HASH (* # *)
+  | DOLLAR (* $ *)
+  | PLUS (* + *)
 
-  let equal t1 t2 = t1 = t2
-end)
+  (* Keywords *)
+  | KW_AND
+  | KW_BLOCK
+  | KW_CASE
+  | KW_IF
+  | KW_THEN
+  | KW_ELSE
+  | KW_IMPOSSIBLE
+  | KW_LET
+  | KW_IN
+  | KW_OF
+  | KW_REC
+  | KW_SCHEMA
+  | KW_SOME
+  | KW_FN
+  | KW_MLAM
+  | KW_MODULE
+  | KW_STRUCT
+  | KW_END
+  | KW_TOTAL
+  | KW_TRUST
+  | KW_TYPE
+  | KW_CTYPE
+  | KW_PROP
+  | KW_INDUCTIVE
+  | KW_COINDUCTIVE
+  | KW_STRATIFIED
+  | KW_LF
+  | KW_FUN
+  | KW_TYPEDEF
+  | KW_PROOF
+  | KW_BY
+  | KW_AS
+  | KW_SUFFICES
+  | KW_TOSHOW
 
-include Show.Make (struct
-  include Token
+  (* A string literal *)
+  | STRING of string
+  (* Can mean identifier, operator, etc. *)
+  | IDENT  of string
+  (* Two dashes followed by an identifier *)
+  | PRAGMA of string
+  (* A dot followed by an integer; used for projections *)
+  | DOT_NUMBER of int (* .n *)
+  (* A hash followed by an identifier; used for parameter variables. *)
+  | HASH_IDENT of string (* #x *)
+  (* A dollar followed by an identifier; used for substitution variables. *)
+  | DOLLAR_IDENT of string (* $x *)
+  (* A hash followed by an underscore. *)
+  | HASH_BLANK (* #_ *)
+  (* A dollar followed by an underscore. *)
+  | DOLLAR_BLANK (* $_ *)
+  (* A question mark followed by an identifier *)
+  | HOLE of string
+  (* An integer literal. *)
+  | INTLIT  of int
+  (* A block comment of the form %{{ ... }}% *)
+  | BLOCK_COMMENT of string
+
+include (Eq.Make (struct
+  type nonrec t = t
+
+  let equal (t1 : t) (t2 : t) : bool = Stdlib.(t1 = t2)
+end) : Eq.EQ with type t := t)
+
+include (Show.Make (struct
+  type nonrec t = t
 
   let pp ppf =
     let p x = Format.fprintf ppf x in
     function
     | EOI -> p "EOI"
     | DUMMY -> p "DUMMY"
+
     | LPAREN -> p "("
     | RPAREN -> p ")"
     | LBRACK -> p "["
@@ -139,6 +140,7 @@ include Show.Make (struct
     | HASH -> p "#"
     | DOLLAR -> p "$"
     | PLUS -> p "+"
+
     | KW_AND -> p "and"
     | KW_BLOCK -> p "block"
     | KW_CASE -> p "case"
@@ -173,6 +175,7 @@ include Show.Make (struct
     | KW_BY -> p "by"
     | KW_SUFFICES -> p "suffices"
     | KW_TOSHOW -> p "toshow"
+
     | STRING s -> p "STRING %S" s
     | BLOCK_COMMENT s -> p "%%{{ %s %%}}" s
     | IDENT s -> p "%s" s
@@ -184,17 +187,18 @@ include Show.Make (struct
     | PRAGMA s -> p "--%s" s
     | HASH_BLANK -> p "#_"
     | DOLLAR_BLANK -> p "$_"
-end)
+end) : Show.SHOW with type t := t)
 
 module Class = struct
-  include Show.Make (struct
-    include Token
+  include (Show.Make (struct
+    type nonrec t = t
 
     let pp ppf =
       let p x = Format.fprintf ppf x in
       function
       | EOI -> p "EOI"
       | DUMMY -> p "DUMMY"
+
       | LPAREN -> p "LPAREN"
       | RPAREN -> p "RPAREN"
       | LBRACK -> p "LBRACK"
@@ -222,6 +226,7 @@ module Class = struct
       | HASH -> p "HASH"
       | DOLLAR -> p "DOLLAR"
       | PLUS -> p "PLUS"
+
       | KW_AND -> p "KW_AND"
       | KW_BLOCK -> p "KW_BLOCK"
       | KW_CASE -> p "KW_CASE"
@@ -256,6 +261,7 @@ module Class = struct
       | KW_BY -> p "KW_BY"
       | KW_SUFFICES -> p "KW_SUFFICES"
       | KW_TOSHOW -> p "KW_TOSHOW"
+
       | STRING _ -> p "STRING"
       | BLOCK_COMMENT _ -> p "BLOCK_COMMENT"
       | IDENT _ -> p "IDENT"
@@ -267,7 +273,5 @@ module Class = struct
       | PRAGMA _ -> p "PRAGMA"
       | HASH_BLANK -> p "HASH_BLANK"
       | DOLLAR_BLANK -> p "DOLLAR_BLANK"
-  end)
+  end) : Show.SHOW with type t := t)
 end
-
-include Token
