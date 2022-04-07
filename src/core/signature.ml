@@ -709,44 +709,6 @@ module DocumentationComment = struct
   let[@inline] location { location; _ } = location
 end
 
-module BelugaDeclaration = struct
-  module Typ = struct
-    type t = [ `Typ_declaration of Typ.t Declaration.t ]
-  end
-
-  module Const = struct
-    type t = [ `Const_declaration of Const.t Declaration.t ]
-  end
-
-  module CompTyp = struct
-    type t = [ `Comp_typ_declaration of CompTyp.t Declaration.t ]
-  end
-
-  module CompConst = struct
-    type t = [ `Comp_const_declaration of CompConst.t Declaration.t ]
-  end
-
-  module CompCotyp = struct
-    type t = [ `Comp_cotyp_declaration of CompCotyp.t Declaration.t ]
-  end
-
-  module CompDest = struct
-    type t = [ `Comp_dest_declaration of CompDest.t Declaration.t ]
-  end
-
-  module Comp = struct
-    type t = [ `Comp_declaration of Comp.t Declaration.t ]
-  end
-
-  module Module = struct
-    type 'a t = [ `Module_declaration of 'a Module.t Declaration.t ]
-  end
-
-  module MutuallyRecursive = struct
-    type 'a t = [ `Mutually_recursive_declaration of 'a ]
-  end
-end
-
 module type BELUGA_SIGNATURE = sig
   (** The type of Beluga signatures. *)
   type t
@@ -766,20 +728,20 @@ module type BELUGA_SIGNATURE = sig
 
   (** The type of declarations in Beluga signatures. *)
   type declaration =
-    [ BelugaDeclaration.Typ.t
-    | BelugaDeclaration.Const.t
-    | BelugaDeclaration.CompTyp.t
-    | BelugaDeclaration.CompConst.t
-    | BelugaDeclaration.CompCotyp.t
-    | BelugaDeclaration.CompDest.t
-    | BelugaDeclaration.Comp.t
-    | declaration BelugaDeclaration.Module.t
+    [ `Typ_declaration of Typ.t Declaration.t
+    | `Const_declaration of Const.t Declaration.t
+    | `Comp_typ_declaration of CompTyp.t Declaration.t
+    | `Comp_const_declaration of CompConst.t Declaration.t
+    | `Comp_cotyp_declaration of CompCotyp.t Declaration.t
+    | `Comp_dest_declaration of CompDest.t Declaration.t
+    | `Comp_declaration of Comp.t Declaration.t
+    | `Module_declaration of declaration Module.t Declaration.t
     | `Documentation_comment of DocumentationComment.t
-    | [ mutually_recursive_typs
+    | `Mutually_recursive_declaration of
+      [ mutually_recursive_typs
       | mutually_recursive_comp_typs
       | mutually_recursive_programs
       ]
-      BelugaDeclaration.MutuallyRecursive.t
     ]
 
   (** {1 Constructors} *)
