@@ -741,11 +741,28 @@ module BelugaDeclaration = struct
   module Module = struct
     type 'a t = [ `Module_declaration of 'a Module.t Declaration.t ]
   end
+
+  module MutuallyRecursive = struct
+    type 'a t = [ `Mutually_recursive_declaration of 'a ]
+  end
 end
 
 module type BELUGA_SIGNATURE = sig
   (** The type of Beluga signatures. *)
   type t
+
+  type mutually_recursive_typs =
+    [ `Typs of (Typ.t * Const.t Name.Map.t) Nonempty.t ]
+
+  type mutually_recursive_comp_typs =
+    [ `Comp_typs of
+      [ `Comp_typ of CompTyp.t * CompConst.t Name.Map.t
+      | `Comp_cotyp of CompCotyp.t * CompDest.t Name.Map.t
+      ]
+      Nonempty.t
+    ]
+
+  type mutually_recursive_programs = [ `Programs of Comp.t Nonempty.t ]
 
   (** The type of declarations in Beluga signatures. *)
   type declaration =
@@ -758,6 +775,11 @@ module type BELUGA_SIGNATURE = sig
     | BelugaDeclaration.Comp.t
     | declaration BelugaDeclaration.Module.t
     | `Documentation_comment of DocumentationComment.t
+    | [ mutually_recursive_typs
+      | mutually_recursive_comp_typs
+      | mutually_recursive_programs
+      ]
+      BelugaDeclaration.MutuallyRecursive.t
     ]
 
   (** {1 Constructors} *)
