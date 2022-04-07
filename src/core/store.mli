@@ -88,6 +88,7 @@ module Cid : sig
     val gen_mvar_name : LF.typ -> (unit -> string) option
     val get : cid_typ -> entry
     val index_of_name : name -> cid_typ
+    val index_of_name_opt : name -> cid_typ option
     val addConstructor : Syntax.Loc.t -> cid_typ -> cid_term -> LF.typ -> unit
     val clear : unit -> unit
     val args_of_name : name -> int

@@ -1224,9 +1224,7 @@ let recSgnDecls decls =
          (fun p ->
            p.fmt "[RecSgn Checking] Pragma at %a"
              Syntax.Loc.print_short loc);
-       begin match
-         try Some (Typ.index_of_name typ_name)
-         with Not_found -> None
+       begin match Typ.index_of_name_opt typ_name
        with
        | Some cid ->
           let m = Some (Gensym.MVarData.name_gensym m_name) in

@@ -1233,8 +1233,8 @@ let rec index_comptyp (tau : Ext.Comp.typ) cvars : Apx.Comp.typ fvar_state =
                  let ms', fvars = index_meta_spine cvars fvars ms in
                  fvars, Apx.Comp.TypDef (loc, a', ms')))
       ]
+    |> Lazy.map @@ Option.get_or_else (fun () -> throw loc (UnboundName a))
     |> Lazy.force
-    |> Option.get_or_else (fun () -> throw loc (UnboundName a))
 
   | Ext.Comp.TypBox (loc, (loc', mU)) ->
      let (fvars, mU') = index_cltyp loc cvars fvars mU in
@@ -1361,9 +1361,7 @@ and index_exp' cvars vars fcvars =
   function
   | Ext.Comp.Name (loc, x) ->
      disambiguate loc x [ d_var vars; d_const; d_dataconst ]
-     |> Option.eliminate
-          (fun _ -> throw loc (UnboundCompName x))
-          (fun x -> x)
+     |> Option.get_or_else (fun () -> throw loc (UnboundCompName x))
 
   (* Since observations are syntactically indistinguishable from
      function applications, they get parsed as applications in the
@@ -1392,7 +1390,7 @@ and index_exp' cvars vars fcvars =
        ; d_codataobs
        ]
      |> Option.eliminate
-          (fun _ ->
+          (fun () ->
             let hint =
               Option.(trying_index (fun _ -> CVar.index_of_name cvars c) &> some `needs_box)
             in
@@ -1439,7 +1437,7 @@ and index_pattern cvars fcvars fvars =
         First see if it's a defined constructor.
         Otherwise, it's a variable.
       *)
-     begin match trying_index (fun _ -> CompConst.index_of_name c) with
+     begin match trying_index (fun () -> CompConst.index_of_name c) with
      | Some k ->
         dprintf
           begin fun p ->
