@@ -261,15 +261,10 @@ let recSgnDecls decls =
             | Ext.Sgn.Infix -> 2
           in
           let actual =
-            try
-              Some (Typ.args_of_name name)
-            with
-            | _ ->
-               try
-                 Some (Term.args_of_name name)
-               with
-               | _ -> None
-          in
+            Option.lazy_alt
+              (lazy (Typ.args_of_name_opt name))
+              (lazy (Term.args_of_name_opt name))
+            |> Lazy.force in
           match actual with
           | None -> ()
           | Some actual ->

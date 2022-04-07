@@ -399,6 +399,9 @@ module Cid = struct
       let entry = get (index_of_name n) in
       args entry.kind - entry.implicit_arguments
 
+    let args_of_name_opt n =
+      try Some (args_of_name n) with _ -> None
+
     let freeze a =
       (get a).frozen := true
 
@@ -630,6 +633,9 @@ module Cid = struct
     let args_of_name n =
       let e = get (index_of_name n) in
       args e.typ - e.implicit_arguments
+
+    let args_of_name_opt n =
+      try Some (args_of_name n) with _ -> None
 
     let get_implicit_arguments c = (get c).implicit_arguments
   end

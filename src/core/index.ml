@@ -434,16 +434,11 @@ and shunting_yard' (l : Ext.LF.normal list) : Ext.LF.normal =
     | Ext.LF.Root (_, Ext.LF.Name (_, name, _), Ext.LF.Nil)
       | Ext.LF.Root (_, Ext.LF.PVar (_, name, _), Ext.LF.Nil) ->
        let args_expected =
-         try
-           Typ.args_of_name name
-         with
-         | _ ->
-            begin
-              try
-                Term.args_of_name name
-              with
-              | _ -> -1
-            end
+         Option.lazy_alt
+           (lazy (Typ.args_of_name_opt name))
+           (lazy (Term.args_of_name_opt name))
+         |> Lazy.map @@ Option.get_default (-1)
+         |> Lazy.force
        in
        Store.OpPragmas.pragmaExists name && args_expected > 0
     | _ -> false
@@ -493,18 +488,14 @@ and shunting_yard' (l : Ext.LF.normal list) : Ext.LF.normal =
        then
          begin match o.Store.OpPragmas.fix with
          | Ext.Sgn.Prefix ->
-            let args_expected =
-              try
-                Typ.args_of_name o.Store.OpPragmas.name
-              with
-              | _ ->
-                 begin
-                   try
-                     Term.args_of_name o.Store.OpPragmas.name
-                   with
-                   | _ ->
-                      throw loc (UnboundOperator o.Store.OpPragmas.name)
-                 end
+          let name = o.Store.OpPragmas.name in
+          let args_expected =
+              Option.lazy_alt
+                (lazy (Typ.args_of_name_opt name))
+                (lazy (Term.args_of_name_opt name))
+              |> Lazy.map @@ Option.get_or_else
+                (fun () -> throw loc (UnboundOperator name))
+              |> Lazy.force
             in
             let (ops, es) = take args_expected exps in
             let loc = loc_o in
@@ -512,7 +503,7 @@ and shunting_yard' (l : Ext.LF.normal list) : Ext.LF.normal =
             let e' =
               Ext.LF.Root
                 ( loc
-                , Ext.LF.Name (loc, o.Store.OpPragmas.name, None)
+                , Ext.LF.Name (loc, name, None)
                 , normalListToSpine ops
                 )
             in
@@ -560,17 +551,12 @@ and shunting_yard' (l : Ext.LF.normal list) : Ext.LF.normal =
          when (Stdlib.(o.Store.OpPragmas.fix = Ext.Sgn.Prefix)) ->
        let args_expected =
          let name = o.Store.OpPragmas.name in
-         try
-           Typ.args_of_name name
-         with
-         | _ ->
-            begin
-              try
-                Term.args_of_name name
-              with
-              | _ ->
-                 throw loc_o (UnboundOperator name)
-            end
+         Option.lazy_alt
+           (lazy (Typ.args_of_name_opt name))
+           (lazy (Term.args_of_name_opt name))
+         |> Lazy.map @@ Option.get_or_else
+           (fun () -> throw loc_o (UnboundOperator name))
+         |> Lazy.force
        in
        let (ops, es) = take args_expected exps in
        let loc =
