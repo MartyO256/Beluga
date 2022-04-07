@@ -251,15 +251,14 @@ let recSgnDecls decls =
        Int.Sgn.Pragma { pragma=Int.LF.DefaultAssocPrag a' }
     | Ext.Sgn.Pragma { location=loc; pragma=Ext.Sgn.FixPrag (name, fix, precedence, assoc) } ->
        dprint (fun () -> "Pragma found for " ^ (Id.render_name name));
-       begin match fix with
-       | Ext.Sgn.Prefix ->
-          OpPragmas.addPragma name fix (Some precedence) assoc
-       | _ ->
-          let args_expected =
-            match fix with
-            | Ext.Sgn.Postfix -> 1
-            | Ext.Sgn.Infix -> 2
-          in
+       let args_expected = begin match fix with
+       | Ext.Sgn.Prefix -> None
+       | Ext.Sgn.Postfix -> Some 1
+       | Ext.Sgn.Infix -> Some 2
+       end in
+       begin match args_expected with
+       | None -> OpPragmas.addPragma name fix (Some precedence) assoc
+       | Some args_expected ->
           let actual =
             Option.lazy_alt
               (lazy (Typ.args_of_name_opt name))
@@ -268,11 +267,11 @@ let recSgnDecls decls =
           match actual with
           | None -> ()
           | Some actual ->
-             if args_expected = actual
-             then
-               OpPragmas.addPragma name fix (Some precedence) assoc
-             else
-               raise (Error (loc, IllegalOperatorPrag (name, fix, actual)))
+            if args_expected = actual
+            then
+              OpPragmas.addPragma name fix (Some precedence) assoc
+            else
+              raise (Error (loc, IllegalOperatorPrag (name, fix, actual)))
        end;
        let assoc' = assoc |>
          Option.map
