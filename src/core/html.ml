@@ -81,8 +81,6 @@ let generatePage orig =
 let append innerHtml =
   Buffer.add_string page ("<br><pre><code>" ^ innerHtml ^ "</code></pre>")
 
-let (|>) x f = f x
-
 let appendAsComment innerHtml =
   let from_markdown s =
     (* H3 Header -- needs to be before H2 and H1*)
