@@ -1,9 +1,10 @@
 (library
-  (name beluga)
-  (modules :standard)
-  (libraries gen camlp-streams sedlex extlib support unix str)
-  (preprocess
-    (pps sedlex.ppx)))
+ (name beluga)
+ (modules :standard)
+ (libraries gen camlp-streams sedlex extlib support unix str)
+ (preprocess
+  (pps sedlex.ppx)))
+
 (env
  (dev
   (flags

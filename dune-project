@@ -32,6 +32,7 @@
   dune-build-info
   extlib
   gen
+  camlp-streams
   linenoise
   (ocaml
    (>= 4.08))
