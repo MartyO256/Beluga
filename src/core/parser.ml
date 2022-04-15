@@ -385,18 +385,6 @@ let _ =
       | _ -> None
     end
 
-(***** Syntax mangling helpers *****)
-
-type typ_or_ctx =
-  [ `Typ of LF.typ
-  | `Ctx of LF.dctx
-  ]
-
-type kind_or_typ =
-  [ `Kind of LF.kind
-  | `Typ of LF.typ
-  ]
-
 (***** Parser type definition *****)
 
 (** Gets the location of the next item in the input stream *)
@@ -1211,7 +1199,7 @@ and lf_typ_decl () =
     kind could appear, use this and then match on the `typ_or_kind`
     returned. This is more efficient than backtracking the parser.
  *)
-and lf_kind_or_typ : kind_or_typ parser =
+and lf_kind_or_typ : [ `Kind of LF.kind | `Typ of LF.typ ] parser =
   { run =
       fun s ->
       let pi =
@@ -1794,7 +1782,7 @@ let contextual_variable_decl
     (name <& token T.COLON)
     (box (contextual p))
 
-let cltyp : (LF.dctx * typ_or_ctx) parser =
+let cltyp : (LF.dctx * [ `Typ of LF.typ | `Ctx of LF.dctx ]) parser =
   labelled "boxed type"
     begin
       let typ =
