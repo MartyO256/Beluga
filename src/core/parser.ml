@@ -428,7 +428,7 @@ type 'a parser =
 
 (** Run a parser.
     In other words, extracts the parsing function from a parser. *)
-let run p = p.run
+let[@inline] run { run; _ } = run
 
 (** Eliminator for parse results. *)
 let handle catch f = Either.eliminate catch f
@@ -453,7 +453,7 @@ type 'a t = 'a parser
     and is used to implement "low-level" parser transformations.
  *)
 let catch (p : 'a parser) (handler : state * 'a result -> state * 'b result) : 'b parser =
-  { run = fun s -> p.run s |> handler }
+  { run = fun s -> run p s |> handler }
 
   (*
 (** Runs p. If it fails, its error path is transformed by the given
@@ -511,7 +511,7 @@ let trying p =
   { run =
       fun s ->
       let open Either in
-      match p.run s with
+      match run p s with
       | (s, Left e) -> ({ s with backtrack=true }, Left e)
       | x -> x
   }
@@ -525,8 +525,8 @@ let seq : type a b. a parser -> (a -> b parser) -> b parser =
   { run =
       fun s ->
         let open Either in
-        match p.run s with
-        | (s, Right x) -> (k x).run s
+        match run p s with
+        | (s, Right x) -> run (k x) s
         | (s, Left e) -> (s, Left e)
   }
 
@@ -588,7 +588,7 @@ let span p =
         seq3 next_loc p prev_loc
         $> fun (l1, x, l2) -> (Location.join l1 l2, x)
       in
-      p.run s
+      run p s
   }
 
 (** Runs the parser, and if it fails, runs the given function to
@@ -659,7 +659,7 @@ let not_followed_by (p : 'a parser) : unit parser =
       (function
        | s', Either.Left _ ->
           (* if `p` fails, we restore the original state *)
-          (put_state s).run s'
+          run (put_state s) s'
        | _, Either.Right _ ->
           (* if `p` succeeds, then we need to fail *)
           s, Either.Left { error=NotFollowedBy; path=[]; location }
@@ -711,11 +711,11 @@ let alt (p1 : 'a parser) (p2 : 'a parser) : 'a parser =
   let open Either in
   { run =
       fun s ->
-      match p1.run s with
+      match run p1 s with
       | (s', Left e) ->
          let consumed_input = LinkStream.position s.input < LinkStream.position s'.input in
          if not consumed_input || s'.backtrack
-         then p2.run s
+         then run p2 s
          else (s', Left e)
       | x -> x
   }
@@ -732,11 +732,11 @@ let choice (ps : 'a parser list) : 'a parser =
               | (s', Either.Left e) ->
                  let consumed_input = LinkStream.position s.input < LinkStream.position s'.input in
                  if not consumed_input || s'.backtrack
-                 then (go (e :: es) ps').run s
+                 then run (go (e :: es) ps') s
                  else (s', Either.Left e)
               | x -> x)
       in
-      (go [] ps).run s
+      run (go [] ps) s
   }
 
 (** Succeeds only if the stream has reached the end of the input. *)
@@ -787,16 +787,12 @@ let maybe_default (p : 'a parser) (x : 'a) : 'a parser =
 
 (** Internal implementation of `many` that doesn't label. *)
 let rec many' (p : 'a parser) : 'a list parser =
-  { run =
-      fun s ->
-      (alt (some' p) (pure [])).run s
+  { run = run @@ alt (some' p) (pure [])
   }
 
 (** Internal implementation of `some` that doesn't label. *)
 and some' (p : 'a parser) : 'a list parser =
-  { run =
-      fun s ->
-      (p $ fun x -> many' p $ fun xs -> pure (x :: xs)).run s
+  { run = run (p $ fun x -> many' p $ fun xs -> pure (x :: xs))
   }
 
 (** `many p` repeats the parser `p` zero or more times and collects
@@ -828,7 +824,7 @@ let sep_by0 (p : 'a parser) (sep : unit parser) : 'a list parser =
                 many' (sep &> p)
                 $ fun xs -> pure (x :: xs))
         in
-        q.run s
+        run q s
     }
 
 (** `sep_by1 p sep` parses one or more occurrences of `p` separated by
@@ -844,7 +840,7 @@ let sep_by1 (p : 'a parser) (sep : unit parser) : 'a Nonempty.t parser =
           seq2 p (many' (sep &> p))
           $> fun (x, xs) -> Nonempty.from x xs
         in
-        q.run s
+        run q s
     }
 
 (***** Unmixing & other checks *****)
@@ -1147,7 +1143,7 @@ let rec lf_kind =
           ]
         |> labelled "LF kind"
       in
-      p.run s
+      run p s
   }
 
 and lf_term =
@@ -1157,7 +1153,7 @@ and lf_term =
         span (some lf_term_lam) $> (fun (loc, ms) -> LF.TList (loc, ms))
         |> labelled "LF term sequence"
       in
-      p.run s
+      run p s
   }
 
 and lf_term_lam =
@@ -1188,13 +1184,13 @@ and lf_term_lam =
       let head =
         span lf_head $> fun (loc, h) -> LF.Root (loc, h, LF.Nil)
       in
-      (choice
+      run (choice
          [ lam
          ; head
          ; atomic
          ]
        |> labelled "LF term"
-      ).run s
+      ) s
   }
 
 and lf_head =
@@ -1249,7 +1245,7 @@ and lf_kind_or_typ : kind_or_typ parser =
           ]
         |> labelled "LF kind or type"
       in
-      p.run s
+      run p s
   }
 
 and lf_typ : LF.typ parser =
@@ -1275,7 +1271,7 @@ and lf_typ : LF.typ parser =
           ]
         |> labelled "LF type"
       in
-      p.run s
+      run p s
   }
 
 and lf_typ_atomic =
@@ -1294,7 +1290,7 @@ and lf_typ_atomic =
           (parens lf_typ)
         |> labelled "atomic LF type"
       in
-      p.run s
+      run p s
   }
 
   (*
@@ -1420,7 +1416,7 @@ and clf_term_app =
           ]
         |> labelled "contextual LF application"
       in
-      p.run s
+      run p s
   }
 
 and clf_typ_atomic =
@@ -1458,7 +1454,7 @@ and clf_typ_atomic =
           ]
         |> labelled "atomic contextual LF type"
       in
-      p.run s
+      run p s
   }
 
 and clf_typ_pure =
@@ -1470,7 +1466,7 @@ and clf_typ_pure =
           (clf_typ_pure_atomic)
         |> labelled "pure contextual LF type"
       in
-      p.run s
+      run p s
   }
 
 and clf_typ_pure_atomic =
@@ -1493,7 +1489,7 @@ and clf_typ_pure_atomic =
           ]
         |> labelled "atomic pure contextual LF type"
       in
-      p.run s
+      run p s
   }
 
 and clf_typ_rec_elem =
@@ -1503,7 +1499,7 @@ and clf_typ_rec_elem =
         seq2 (name <& token T.COLON) clf_typ_pure
         |> labelled "contextual LF block element"
       in
-      p.run s
+      run p s
   }
 
 and clf_typ_rec_block =
@@ -1513,7 +1509,7 @@ and clf_typ_rec_block =
         rec_block clf_typ_rec_elem
         |> labelled "contextual LF block"
       in
-      p.run s
+      run p s
   }
 
 and clf_typ =
@@ -1543,10 +1539,12 @@ and clf_typ =
            | None -> a
            | Some b -> LF.ArrTyp (loc, a, b)
       in
-      (choice
-         [ pi; arrow_or_atomic ]
-       |> labelled "contextual LF type"
-      ).run s
+      run
+        (choice
+          [ pi; arrow_or_atomic ]
+        |> labelled "contextual LF type"
+        )
+        s
   }
 
 and clf_sub_term =
@@ -1564,7 +1562,7 @@ and clf_sub_term =
           ]
         |> labelled "contextual LF substitution term"
       in
-      p.run s
+      run p s
   }
 
 and clf_sub_new =
@@ -1593,7 +1591,7 @@ and clf_sub_new =
         alt nonemptysub emptysub
         |> labelled "contextual LF substitution"
       in
-      p.run s
+      run p s
   }
 
 and clf_head =
@@ -1620,7 +1618,7 @@ and clf_head =
         $> fun (loc, _) -> LF.Hole loc
       in
       let p = choice [hole ; var] in
-      p.run s
+      run p s
   }
 
 and clf_normal =
@@ -1679,7 +1677,7 @@ and clf_normal =
           ]
         |> labelled "contextual LF normal term"
       in
-      p.run s
+      run p s
   }
 
 (** Parses an LF context, commonly referred to by cPsi.
@@ -1744,7 +1742,7 @@ and clf_dctx : LF.dctx parser =
           ]
         |> labelled "contextual LF context"
       in
-      p.run s
+      run p s
   }
 
 (** Parses
@@ -1776,7 +1774,7 @@ let meta_obj =
         |> bracks
         |> labelled "meta object"
       in
-      p.run s
+      run p s
   }
 
 (** Parses the `ctype` kind, the kind of computation types. *)
@@ -1886,7 +1884,7 @@ let clf_ctyp_decl_bare : type a. a name_parser -> (a -> Depend.t * Id.name) -> L
                       (Location.join loc1 loc2, (x, d)))
           ]
       in
-      q.run s
+      run q s
   }
 
 (* parses `name : name` *)
@@ -1970,7 +1968,7 @@ let clf_ctyp_decl =
         labelled "contextual type declaration"
           (alt (parens ctx_variable) q)
       in
-      p.run s
+      run p s
   }
 
 let mctx ?(sep = token T.COMMA) p =
@@ -2021,7 +2019,7 @@ let rec cmp_typ =
           ]
         |> labelled "computation type"
       in
-      p.run s
+      run p s
   }
 
 and cmp_typ_cross =
@@ -2038,7 +2036,7 @@ and cmp_typ_cross =
            | None -> tau
            | Some tau' -> Comp.TypCross (loc, tau, tau')
       in
-      p.run s
+      run p s
   }
 
 and cmp_typ_atomic : Comp.typ parser =
@@ -2105,7 +2103,7 @@ and cmp_typ_atomic : Comp.typ parser =
           ]
         |> labelled "atomic computation type"
       in
-      p.run s
+      run p s
   }
 
 let rec cmp_kind =
@@ -2159,7 +2157,7 @@ let rec cmp_kind =
           ]
         |> labelled "computation kind"
       in
-      p.run s
+      run p s
   }
 
 (** Parses a sequence of `p` separated by commas, in parentheses.
@@ -2201,7 +2199,7 @@ let rec cmp_exp_chk =
             $> fun (loc, i) -> Comp.Syn (loc, i)
           ]
       in
-      p.run s
+      run p s
   }
 
 and cmp_branch =
@@ -2217,7 +2215,7 @@ and cmp_branch =
         $> fun (loc, (ctyp_decls, pat, rhs)) ->
            Comp.Branch (loc, ctyp_decls, pat, rhs)
       in
-      p.run s
+      run p s
   }
 
 and cmp_pattern =
@@ -2252,7 +2250,7 @@ and cmp_pattern =
            | None -> p
            | Some tau -> Comp.PatAnn (loc, p, tau)
       in
-      p.run s
+      run p s
   }
 
 and cmp_pattern_atomic =
@@ -2284,7 +2282,7 @@ and cmp_pattern_atomic =
           ]
         |> labelled "bare pattern"
       in
-      p.run s
+      run p s
   }
 
 (** Parses a pure checkable computation term,
@@ -2401,7 +2399,7 @@ and cmp_exp_chk' =
           ; lets (* let expressions: true let and pattern let *)
           ]
       in
-      p.run s
+      run p s
   }
 
 and cmp_copat_spine =
@@ -2421,7 +2419,7 @@ and cmp_copat_spine =
             ; span (pure ()) $> fun (loc, _) -> Comp.PatNil loc
             ]
         in
-        p.run s
+        run p s
     }
   in
   { run =
@@ -2432,7 +2430,7 @@ and cmp_copat_spine =
           cmp_exp_chk
         |> shifted "copattern spine"
       in
-      p.run s
+      run p s
   }
 
 (** Parses a synthesizable expression *)
@@ -2454,7 +2452,7 @@ and cmp_exp_syn =
            in
            fold i es
       in
-      p.run s
+      run p s
   }
 
 (** Parses a purely checkable expression or an atomic
@@ -2469,7 +2467,7 @@ and cmp_exp_chk'' =
           ; span cmp_exp_syn' $> fun (loc, i) -> Comp.Syn (loc, i)
           ]
       in
-      p.run s
+      run p s
   }
 
 (** Parses a synthesizable expression except applications. *)
@@ -2502,7 +2500,7 @@ and cmp_exp_syn' =
           ; nested
           ]
       in
-      p.run s
+      run p s
   }
 
 let call_arg =
@@ -2950,7 +2948,7 @@ let rec harpoon_proof : Comp.proof parser =
           ]
         |> labelled "Harpoon proof"
       in
-      p.run s
+      run p s
   }
 
 and harpoon_directive : Comp.directive parser =
@@ -2990,7 +2988,7 @@ and harpoon_directive : Comp.directive parser =
           ]
         |> shifted "Harpoon directive"
       in
-      p.run s
+      run p s
   }
 
 and harpoon_hypothetical : Comp.hypothetical parser =
@@ -3013,7 +3011,7 @@ and harpoon_hypothetical : Comp.hypothetical parser =
         $> fun (hypothetical_loc, (hypotheses, proof)) ->
            { hypotheses; proof; hypothetical_loc }
       in
-      p.run s
+      run p s
   }
 
 and harpoon_split_branch : Comp.split_branch parser =
@@ -3030,7 +3028,7 @@ and harpoon_split_branch : Comp.split_branch parser =
            let open Comp in
            { case_label; branch_body; split_branch_loc }
       in
-      p.run s
+      run p s
   }
 
 let thm p =
@@ -3093,7 +3091,7 @@ let rec sgn_decl : Sgn.decl parser =
           ]
         |> labelled "top-level declaration"
       in
-      p.run s
+      run p s
   }
 
 and sgn_module_decl : Sgn.decl parser =
@@ -3109,7 +3107,7 @@ and sgn_module_decl : Sgn.decl parser =
         $> fun (location, (identifier, declarations)) ->
            Sgn.Module { location; identifier; declarations }
       in
-      p.run s
+      run p s
   }
 
 let sgn =
