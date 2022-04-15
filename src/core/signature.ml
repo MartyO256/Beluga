@@ -23,6 +23,7 @@ module Name = struct
   module Map = Map.Make (String)
   module LinkedMap = LinkedMap.Make (Map)
   module Hamt = Hamt.Make (String)
+  module LinkedHamt1 = LinkedHamt.Make1 (Hamt)
   module LinkedHamt = LinkedHamt.Make (Hamt)
 
   type fresh_name_supplier = Set.t -> t
@@ -714,17 +715,18 @@ module type BELUGA_SIGNATURE = sig
   type t
 
   type mutually_recursive_typs =
-    [ `Typs of (Typ.t * Const.t Name.Map.t) Nonempty.t ]
+    [ `Typs of (Typ.t * Const.t Name.LinkedHamt1.t) Nonempty.t ]
 
   type mutually_recursive_comp_typs =
     [ `Comp_typs of
-      [ `Comp_typ of CompTyp.t * CompConst.t Name.Map.t
-      | `Comp_cotyp of CompCotyp.t * CompDest.t Name.Map.t
+      [ `Comp_typ of CompTyp.t * CompConst.t Name.LinkedHamt1.t
+      | `Comp_cotyp of CompCotyp.t * CompDest.t Name.LinkedHamt1.t
       ]
       Nonempty.t
     ]
 
-  type mutually_recursive_programs = [ `Programs of Comp.t Nonempty.t ]
+  type mutually_recursive_programs =
+    [ `Programs of Comp.t Name.LinkedHamt1.t ]
 
   (** The type of declarations in Beluga signatures. *)
   type declaration =
