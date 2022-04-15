@@ -715,12 +715,12 @@ module type BELUGA_SIGNATURE = sig
   type t
 
   type mutually_recursive_typs =
-    [ `Typs of (Typ.t * Const.t Name.LinkedHamt1.t) Nonempty.t ]
+    [ `Typs of (Typ.t * Const.t Name.LinkedHamt.t) Nonempty.t ]
 
   type mutually_recursive_comp_typs =
     [ `Comp_typs of
-      [ `Comp_typ of CompTyp.t * CompConst.t Name.LinkedHamt1.t
-      | `Comp_cotyp of CompCotyp.t * CompDest.t Name.LinkedHamt1.t
+      [ `Comp_typ of CompTyp.t * CompConst.t Name.LinkedHamt.t
+      | `Comp_cotyp of CompCotyp.t * CompDest.t Name.LinkedHamt.t
       ]
       Nonempty.t
     ]
@@ -780,7 +780,7 @@ module type BELUGA_SIGNATURE = sig
 
   val add_documentation_comment : t -> DocumentationComment.t -> t
 
-  (** {1 Lookups} *)
+  (** {1 Lookups by Qualified Name} *)
 
   (** [lookup signature name] returns [None] if there is no declaration in
       [signature] having name [name], and otherwise returns
@@ -805,6 +805,13 @@ module type BELUGA_SIGNATURE = sig
 
   val lookup_comp : t -> QualifiedName.t -> (t * Comp.t) Option.t
 
+  (** {1 Lookups by ID} *)
+
+  (** {1 Scanning} *)
+
+  (* TODO: find_all_queries *)
+  (* TODO: find_all_mqueries *)
+
   (** {1 Iterators} *)
 
   (** [iter f signature] applies function [f] in turn on the declarations of
@@ -816,3 +823,11 @@ module type BELUGA_SIGNATURE = sig
       appear in the source files, starting with accumulator [init]. *)
   val fold : ('a -> t -> declaration -> 'a) -> 'a -> t -> 'a
 end
+
+(* let[@inline] fold group ~typs ~comp_typs ~programs = match group with |
+   `Typs ts -> typs ts | `Comp_typs (typs, cotyps) -> comp_typs typs cotyps |
+   `Programs ps -> programs ps
+
+   let[@inline] fold' group ~typs ~comp_typs ~programs return = match group
+   with | `Typs ts -> typs ts return | `Comp_typs (typs, cotyps) -> comp_typs
+   typs cotyps return | `Programs ps -> programs ps return *)
