@@ -3,6 +3,7 @@
     @author Marc-Antoine Ouimet *)
 
 open Support
+open Id
 
 (** Bound variable names.
 
@@ -150,6 +151,10 @@ module Id : sig
   module Comp : ID
 
   module Module : ID
+
+  module Query : ID
+
+  module MQuery : ID
 end
 
 (** LF type family declarations. *)
@@ -210,12 +215,12 @@ module Typ : sig
   val fresh_mvar_name :
     t -> ?default_base_name:string -> Name.fresh_name_supplier
 
-  val set_var_naming_convention : Name.t option -> t -> t
+  val set_var_naming_convention : Name.t Option.t -> t -> t
 
-  val set_mvar_naming_convention : Name.t option -> t -> t
+  val set_mvar_naming_convention : Name.t Option.t -> t -> t
 
   val set_naming_conventions :
-    var:Name.t option -> mvar:Name.t option -> t -> t
+    var:Name.t Option.t -> mvar:Name.t Option.t -> t -> t
 
   (** {1 Subordination} *)
 
@@ -438,7 +443,7 @@ module Comp : sig
     -> location:Location.t
     -> implicit_arguments:int
     -> typ:Comp.typ
-    -> ?mutual_group:Id.Comp.t Nonempty.t option
+    -> ?mutual_group:Id.Comp.t Nonempty.t Option.t
     -> Comp.value
     -> t
 
@@ -498,4 +503,90 @@ module DocumentationComment : sig
   val content : t -> string
 
   val location : t -> Location.t
+end
+
+(** Logic programming query declarations on LF type. *)
+module Query : sig
+  open Syntax.Int
+
+  type t
+
+  type search_parameters =
+    { expected_solutions : int Option.t
+    ; maximum_tries : int Option.t
+    ; search_depth : int Option.t
+    }
+
+  (** {1 Constructors} *)
+
+  val make_search_parameters :
+       ?expected_solutions:int Option.t
+    -> ?maximum_tries:int Option.t
+    -> ?search_depth:int Option.t
+    -> unit
+    -> search_parameters
+
+  val make :
+       id:Id.Query.t
+    -> location:Location.t
+    -> ?name:string Option.t
+    -> search_parameters:search_parameters
+    -> LF.mctx * (LF.typ * offset)
+    -> t
+
+  (** {1 Destructors} *)
+
+  val id : t -> Id.Query.t
+
+  val location : t -> Location.t
+
+  val name : t -> Name.t Option.t
+
+  val query : t -> LF.mctx * (LF.typ * offset)
+
+  val search_parameters : t -> search_parameters
+end
+
+(** Logic programming query declarations on computational types. *)
+module MQuery : sig
+  open Syntax.Int
+
+  type t
+
+  type search_parameters =
+    { expected_solutions : int Option.t
+    ; search_tries : int Option.t
+    ; search_depth : int Option.t
+    ; split_index : int Option.t
+    }
+
+  (** {1 Constructors} *)
+
+  val make_search_parameters :
+       ?expected_solutions:int Option.t
+    -> ?search_tries:int Option.t
+    -> ?search_depth:int Option.t
+    -> ?split_index:int Option.t
+    -> unit
+    -> search_parameters
+
+  val make :
+       id:Id.MQuery.t
+    -> location:Location.t
+    -> ?name:string Option.t
+    -> search_parameters:search_parameters
+    -> Synint.Comp.typ * offset
+    -> t
+
+  (** {1 Destructors} *)
+
+  val id : t -> Id.Query.t
+
+  val location : t -> Location.t
+
+  val name : t -> Name.t Option.t
+
+  val query : t -> Comp.typ * offset
+
+  val search_parameters : t -> search_parameters
 end

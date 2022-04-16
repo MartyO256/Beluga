@@ -3,6 +3,7 @@
     @author Marc-Antoine Ouimet *)
 
 open Support
+open Id
 
 module Name = struct
   type t = string
@@ -23,8 +24,8 @@ module Name = struct
   module Map = Map.Make (String)
   module LinkedMap = LinkedMap.Make (Map)
   module Hamt = Hamt.Make (String)
-  module LinkedHamt1 = LinkedHamt.Make1 (Hamt)
-  module LinkedHamt = LinkedHamt.Make (Hamt)
+  module LinkedHamt = Support.LinkedHamt.Make (Hamt)
+  module LinkedHamt1 = Support.LinkedHamt.Make1 (Hamt)
 
   type fresh_name_supplier = Set.t -> t
 
@@ -180,6 +181,8 @@ module Id = struct
   module CompDest = BaseId
   module Comp = BaseId
   module Module = BaseId
+  module Query = BaseId
+  module MQuery = BaseId
 end
 
 module Typ = struct
@@ -710,6 +713,78 @@ module DocumentationComment = struct
   let[@inline] location { location; _ } = location
 end
 
+module Query = struct
+  open Syntax.Int
+
+  type search_parameters =
+    { expected_solutions : int Option.t
+    ; maximum_tries : int Option.t
+    ; search_depth : int Option.t
+    }
+
+  let make_search_parameters ?(expected_solutions = Option.none)
+      ?(maximum_tries = Option.none) ?(search_depth = Option.none) () =
+    { expected_solutions; maximum_tries; search_depth }
+
+  type t =
+    { id : Id.Query.t
+    ; location : Location.t
+    ; name : Name.t Option.t
+    ; query : LF.mctx * (LF.typ * offset)
+    ; search_parameters : search_parameters
+    }
+
+  let make ~id ~location ?(name = Option.none) ~search_parameters query =
+    { id; location; name; search_parameters; query }
+
+  let[@inline] id { id; _ } = id
+
+  let[@inline] location { location; _ } = location
+
+  let[@inline] name { name; _ } = name
+
+  let[@inline] query { query; _ } = query
+
+  let[@inline] search_parameters { search_parameters; _ } = search_parameters
+end
+
+module MQuery = struct
+  open Syntax.Int
+
+  type search_parameters =
+    { expected_solutions : int Option.t
+    ; search_tries : int Option.t
+    ; search_depth : int Option.t
+    ; split_index : int Option.t
+    }
+
+  let make_search_parameters ?(expected_solutions = Option.none)
+      ?(search_tries = Option.none) ?(search_depth = Option.none)
+      ?(split_index = Option.none) () =
+    { expected_solutions; search_tries; search_depth; split_index }
+
+  type t =
+    { id : Id.MQuery.t
+    ; location : Location.t
+    ; name : Name.t Option.t
+    ; query : Comp.typ * offset
+    ; search_parameters : search_parameters
+    }
+
+  let make ~id ~location ?(name = Option.none) ~search_parameters query =
+    { id; location; name; search_parameters; query }
+
+  let[@inline] id { id; _ } = id
+
+  let[@inline] location { location; _ } = location
+
+  let[@inline] name { name; _ } = name
+
+  let[@inline] query { query; _ } = query
+
+  let[@inline] search_parameters { search_parameters; _ } = search_parameters
+end
+
 module type BELUGA_SIGNATURE = sig
   (** The type of Beluga signatures. *)
   type t
@@ -744,6 +819,8 @@ module type BELUGA_SIGNATURE = sig
       | mutually_recursive_comp_typs
       | mutually_recursive_programs
       ]
+    | `Query_declaration of Query.t Declaration.t
+    | `MQuery_declaration of MQuery.t Declaration.t
     ]
 
   (** {1 Constructors} *)
@@ -804,6 +881,16 @@ module type BELUGA_SIGNATURE = sig
     t -> QualifiedName.t -> (t * CompDest.t) Option.t
 
   val lookup_comp : t -> QualifiedName.t -> (t * Comp.t) Option.t
+
+  val lookup_query : t -> QualifiedName.t -> (t * Query.t) Option.t
+
+  val lookup_mquery : t -> QualifiedName.t -> (t * MQuery.t) Option.t
+
+  (** {1 Scanning} *)
+
+  val find_all_queries : t -> (t * Query.t) List.t
+
+  val find_all_mqueries : t -> (t * MQuery.t) List.t
 
   (** {1 Iterators} *)
 
