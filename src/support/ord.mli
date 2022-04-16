@@ -49,3 +49,34 @@ end) : ORD with type t = T.t
 (** Functor building an implementation of {!ORD} whose ordering is the
     reverse of the given totally ordered type. *)
 module Reverse (Ord : ORD) : ORD with type t = Ord.t
+
+(** If [val f : 't -> 's], then [contramap ord f] is a total ordering of
+    values having type ['t] by the ordering [ord] of values of type ['s].
+
+    For instance, the following module defines the type of persons totally
+    ordered by string ids.
+
+    {[
+      module Person : sig
+        type t
+
+        val id : t -> string
+
+        include Ord.ORD with type t := t
+      end = struct
+        type t =
+          { id : string
+          ; age : int
+          }
+
+        let id { id; _ } = id
+
+        module OrdById = (val Ord.contramap (module String) id)
+
+        include (OrdById : Ord.ORD with type t := t)
+      end
+    ]} *)
+val contramap :
+     (module ORD with type t = 's)
+  -> ('t -> 's)
+  -> (module ORD with type t = 't)
