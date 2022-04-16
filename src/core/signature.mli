@@ -24,7 +24,9 @@ module Name : sig
 
   module LinkedMap : LinkedMap.S with type key = t
 
-  module LinkedHamt : LinkedHamt.S with type key = t
+  module LinkedHamt : Support.LinkedHamt.S with type key = t
+
+  module LinkedHamt1 : Support.LinkedHamt.S1 with type key = t
 
   (** {1 Name Generation} *)
 
@@ -545,6 +547,14 @@ module Query : sig
   val query : t -> LF.mctx * (LF.typ * offset)
 
   val search_parameters : t -> search_parameters
+
+  (** {1 Collections} *)
+
+  module Set : Set.S with type elt = t
+
+  (** {1 Instances} *)
+
+  include Ord.ORD with type t := t
 end
 
 (** Logic programming query declarations on computational types. *)
@@ -589,4 +599,12 @@ module MQuery : sig
   val query : t -> Comp.typ * offset
 
   val search_parameters : t -> search_parameters
+
+  (** {1 Collections} *)
+
+  module Set : Set.S with type elt = t
+
+  (** {1 Instances} *)
+
+  include Ord.ORD with type t := t
 end
