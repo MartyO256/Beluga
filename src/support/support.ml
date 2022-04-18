@@ -23,6 +23,7 @@ module Option = Option
 module Ord = Ord
 module Pair = Pair
 module PureStack = PureStack
+module Result = Result
 module Seq = Seq
 module Show = Show
 module Stack = Stack
