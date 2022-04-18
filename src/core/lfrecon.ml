@@ -2677,7 +2677,7 @@ and elSpine loc recT cD cPsi spine sA =
     in typLength tB 0
   in
 
-  let length_whnf_sA = typLength (fst (Whnf.whnfTyp sA)) in
+  let length_whnf_sA = typLength (Pair.fst (Whnf.whnfTyp sA)) in
   let length_spine = spineLength spine in
 
   (* Check first that we didn't supply too many arguments. *)
@@ -2745,12 +2745,12 @@ and elKSpine loc recT cD cPsi spine sK =
     | Int.LF.PiKind (_, tK) -> 1 + kindLength tK in
 
   (* Check first that we didn't supply too many arguments. *)
-  if kindLength (fst sK) < spineLength spine
+  if kindLength (Pair.fst sK) < spineLength spine
   then
     raise
       (Check.LF.Error
          ( loc
-         , Check.LF.SpineIllTyped (kindLength (fst sK), spineLength spine)
+         , Check.LF.SpineIllTyped (kindLength (Pair.fst sK), spineLength spine)
          )
       );
 

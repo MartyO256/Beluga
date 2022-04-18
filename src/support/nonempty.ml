@@ -11,9 +11,9 @@ let cons element (h, l) = (element, h :: l)
 
 let uncons : 'a t -> 'a * 'a list = Fun.id
 
-let head = fst
+let head = Pair.fst
 
-let tail = snd
+let tail = Pair.snd
 
 let unsnoc l =
   let rec unsnoc (h, t) return =

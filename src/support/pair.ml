@@ -1,5 +1,9 @@
 type ('a, 'b) t = 'a * 'b
 
+let fst = fst
+
+let snd = snd
+
 let rmap f (x, a) = (x, f a)
 
 let lmap f (a, x) = (f a, x)

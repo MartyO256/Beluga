@@ -233,7 +233,7 @@ let rec checkOccurrence loc p =
   | I.Dec (cQ', CtxV _) -> No
 
 (* length cPsi = |cPsi| *)
-let length cPsi = snd (Context.dctxToHat cPsi)
+let length cPsi = Pair.snd (Context.dctxToHat cPsi)
 
 let rec lengthCollection =
   function

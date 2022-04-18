@@ -99,9 +99,9 @@ let recover_sessions ppf hooks (gs : Comp.open_subgoal list) =
      - construct a session for each mutual group
    *)
   Nonempty.(
-    group_by fst gs
-    |> List.map (Pair.rmap (map snd))
-    |> group_by F.(CompS.mutual_group ++ fst)
+    group_by Pair.fst gs
+    |> List.map (Pair.rmap (map Pair.snd))
+    |> group_by F.(CompS.mutual_group ++ Pair.fst)
   )
   |> List.map (recover_session ppf hooks)
 
@@ -216,7 +216,7 @@ let next_triple (s : t) =
     To preserve focus, combine this with `keeping_focus`. *)
 let reset s : unit =
   let _ = Load.load (IO.formatter s.io) s.sig_path in
-  let gs = Holes.get_harpoon_subgoals () |> List.map snd in
+  let gs = Holes.get_harpoon_subgoals () |> List.map Pair.snd in
   let hooks = [run_automation s.automation_state] in
   let cs =
     recover_sessions (IO.formatter s.io) hooks gs

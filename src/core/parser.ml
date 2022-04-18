@@ -150,13 +150,13 @@ type state =
   (*
 (** Peeks at the next token in the input stream in the given state. *)
 let peek_at (s : state) : T.t locd option =
-  Option.(LinkStream.observe s.input $> fst)
+  Option.(LinkStream.observe s.input $> Pair.fst)
    *)
 
   (*
 (** Like `peek_at` but forgets the location. *)
 let next_token s =
-  Option.(peek_at s $> snd |> get_default T.EOI)
+  Option.(peek_at s $> Pair.snd |> get_default T.EOI)
    *)
 
 (***** ERROR HANDLING *****)
@@ -2251,7 +2251,7 @@ and cmp_pattern_atomic =
       in
       let nested =
         nested cmp_pattern
-          snd
+          Pair.snd
           (fun (l1, p1) (l2, p2) ->
             Comp.PatPair (Location.join l1 l2, p1, p2))
         |> labelled "nested/pair pattern"
@@ -2362,7 +2362,7 @@ and cmp_exp_chk' =
       in
       let nested =
         nested cmp_exp_chk
-          snd
+          Pair.snd
           (fun (l1, e1) (l2, e2) ->
             Comp.Pair (Location.join l1 l2, e1, e2))
       in
@@ -2470,7 +2470,7 @@ and cmp_exp_syn' =
       in
       let nested =
         nested cmp_exp_syn
-          snd
+          Pair.snd
           (fun (l1, i1) (l2, i2) ->
             Comp.PairVal (Location.join l1 l2, i1, i2))
         |> labelled "nested synthesizable expression or pair"
