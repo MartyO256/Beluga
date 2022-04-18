@@ -330,6 +330,7 @@ module CompConst : sig
     -> name:Name.t
     -> location:Location.t
     -> implicit_arguments:int
+    -> kind:Id.CompTyp.t
     -> Comp.typ
     -> t
 
@@ -344,6 +345,8 @@ module CompConst : sig
   val implicit_arguments : t -> int
 
   val typ : t -> Comp.typ
+
+  val kind : t -> Id.CompTyp.t
 end
 
 (** Computation-level codata type constant declarations. *)
@@ -415,6 +418,7 @@ module CompDest : sig
     -> mctx:LF.mctx
     -> observation_typ:Comp.typ
     -> return_typ:Comp.typ
+    -> kind:Id.CompCotyp.t
     -> t
 
   (** {1 Destructors}*)
@@ -432,6 +436,8 @@ module CompDest : sig
   val observation_typ : t -> Comp.typ
 
   val return_typ : t -> Comp.typ
+
+  val kind : t -> Id.CompCotyp.t
 end
 
 (** Computation declarations. *)

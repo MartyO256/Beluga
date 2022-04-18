@@ -507,10 +507,11 @@ module CompConst = struct
     ; location : Location.t
     ; implicit_arguments : int
     ; typ : Comp.typ
+    ; kind : Id.CompTyp.t
     }
 
-  let make ~id ~name ~location ~implicit_arguments typ =
-    { id; name; location; implicit_arguments; typ }
+  let make ~id ~name ~location ~implicit_arguments ~kind typ =
+    { id; name; location; implicit_arguments; typ; kind }
 
   let[@inline] id { id; _ } = id
 
@@ -522,6 +523,8 @@ module CompConst = struct
     implicit_arguments
 
   let[@inline] typ { typ; _ } = typ
+
+  let[@inline] kind { kind; _ } = kind
 end
 
 module CompCotyp = struct
@@ -621,10 +624,11 @@ module CompDest = struct
     ; mctx : LF.mctx
     ; observation_typ : Comp.typ
     ; return_typ : Comp.typ
+    ; kind : Id.CompCotyp.t
     }
 
   let make ~id ~name ~location ~implicit_arguments ~mctx ~observation_typ
-      ~return_typ =
+      ~return_typ ~kind =
     { id
     ; name
     ; location
@@ -632,6 +636,7 @@ module CompDest = struct
     ; mctx
     ; observation_typ
     ; return_typ
+    ; kind
     }
 
   let[@inline] id { id; _ } = id
@@ -648,6 +653,8 @@ module CompDest = struct
   let[@inline] observation_typ { observation_typ; _ } = observation_typ
 
   let[@inline] return_typ { return_typ; _ } = return_typ
+
+  let[@inline] kind { kind; _ } = kind
 end
 
 module Comp = struct
