@@ -20,6 +20,9 @@ val of_bool : bool -> unit option
 
 val ( $ ) : 'a option -> ('a -> 'b option) -> 'b option
 
+(** [( >>= )] is an infix synonym of {!bind}. *)
+val ( >>= ) : 'a option -> ('a -> 'b option) -> 'b option
+
 (** Named, flipped version of ($). *)
 val flat_map : ('a -> 'b option) -> 'a option -> 'b option
 

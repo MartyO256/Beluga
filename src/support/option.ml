@@ -18,6 +18,9 @@ let of_bool = function
   | false -> None
 
 let ( $ ) = bind
+
+let ( >>= ) = bind
+
 let flat_map k o = o $ k
 
 (** Prioritized choice between options. *)
