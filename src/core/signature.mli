@@ -497,6 +497,10 @@ module Module : sig
   val name : 'a t -> Name.t
 
   val declarations : 'a t -> 'a Name.LinkedHamt.t
+
+  (** {1 Lookups} *)
+
+  val lookup : 'a t -> Name.t -> 'a Option.t
 end
 
 (** Documentation comments.

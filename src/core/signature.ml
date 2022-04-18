@@ -708,6 +708,8 @@ module Module = struct
   let[@inline] name { name; _ } = name
 
   let[@inline] declarations { declarations; _ } = declarations
+
+  let lookup m name = m |> declarations |> Name.LinkedHamt.find_opt name
 end
 
 module DocumentationComment = struct
