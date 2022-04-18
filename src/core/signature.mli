@@ -250,6 +250,7 @@ module Const : sig
     -> name:string
     -> location:Location.t
     -> implicit_arguments:int
+    -> kind:Id.Typ.t
     -> LF.typ
     -> t
 
@@ -262,6 +263,8 @@ module Const : sig
   val name : t -> Name.t
 
   val typ : t -> LF.typ
+
+  val kind : t -> Id.Typ.t
 end
 
 (** Computation-level data type constant declarations. *)

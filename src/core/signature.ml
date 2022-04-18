@@ -371,10 +371,11 @@ module Const = struct
     ; location : Location.t
     ; implicit_arguments : int
     ; typ : LF.typ
+    ; kind : Id.Typ.t
     }
 
-  let make ~id ~name ~location ~implicit_arguments typ =
-    { id; name; location; implicit_arguments; typ }
+  let make ~id ~name ~location ~implicit_arguments ~kind typ =
+    { id; name; location; implicit_arguments; typ; kind }
 
   let[@inline] id { id; _ } = id
 
@@ -383,6 +384,8 @@ module Const = struct
   let[@inline] name { name; _ } = name
 
   let[@inline] typ { typ; _ } = typ
+
+  let[@inline] kind { kind; _ } = kind
 end
 
 module CompTyp = struct
