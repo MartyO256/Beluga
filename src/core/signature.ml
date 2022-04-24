@@ -183,6 +183,7 @@ module Id = struct
   module Module = BaseId
   module Query = BaseId
   module MQuery = BaseId
+  module Schema = BaseId
 end
 
 module Typ = struct
@@ -710,6 +711,27 @@ module Module = struct
   let[@inline] declarations { declarations; _ } = declarations
 
   let lookup m name = m |> declarations |> Name.LinkedHamt.find_opt name
+end
+
+module Schema = struct
+  open Syntax.Int
+
+  type t =
+    { id : Id.Schema.t
+    ; name : Name.t
+    ; location : Location.t
+    ; schema : LF.schema
+    }
+
+  let make ~id ~name ~location schema = { id; name; location; schema }
+
+  let[@inline] id { id; _ } = id
+
+  let[@inline] name { name; _ } = name
+
+  let[@inline] location { location; _ } = location
+
+  let[@inline] schema { schema; _ } = schema
 end
 
 module DocumentationComment = struct

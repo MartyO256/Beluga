@@ -157,6 +157,8 @@ module Id : sig
   module Query : ID
 
   module MQuery : ID
+
+  module Schema : ID
 end
 
 (** LF type family declarations. *)
@@ -473,6 +475,24 @@ module Comp : sig
   val program : t -> Comp.value
 
   val mutual_group : t -> Id.Comp.t Nonempty.t Option.t
+end
+
+(** Specifications for sets of contexts. *)
+module Schema : sig
+  open Syntax.Int
+
+  type t
+
+  val make :
+    id:Id.Schema.t -> name:Name.t -> location:Location.t -> LF.schema -> t
+
+  val id : t -> Id.Schema.t
+
+  val name : t -> Name.t
+
+  val location : t -> Location.t
+
+  val schema : t -> LF.schema
 end
 
 (** Namespace for declarations. *)
