@@ -59,7 +59,7 @@ module QualifiedName : sig
 
   (** [make ms n] is the qualified name with name [n] when successively
       opening the modules named [ms]. *)
-  val make : ?modules:name List.t -> Name.t -> t
+  val make : ?modules:Name.t List.t -> Name.t -> t
 
   (** {1 Destructors} *)
 
@@ -91,21 +91,16 @@ module Declaration : sig
       entries. *)
   type +'entry t
 
-  (** The type of bound variable names for a declaration.
-
-      This is the domain of signature declarations. *)
-  type name
-
   (** {1 Constructors} *)
 
   (** [make name entry] is the declaration having name [name] and entry
       [entry]. *)
-  val make : name:name -> entry:'entry -> 'entry t
+  val make : name:Name.t -> entry:'entry -> 'entry t
 
   (** {1 Destructors} *)
 
   (** [name declaration] is the variable name bound by [declaration]. *)
-  val name : 'entry t -> name
+  val name : 'entry t -> Name.t
 
   (** [entry declaration] is the entry referred to by [declaration]. *)
   val entry : 'entry t -> 'entry

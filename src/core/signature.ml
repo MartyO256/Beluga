@@ -61,11 +61,9 @@ module Name = struct
 end
 
 module QualifiedName = struct
-  type name = Name.t
-
   type t =
-    { name : name
-    ; modules : name List.t
+    { name : Name.t
+    ; modules : Name.t List.t
     }
 
   let make ?(modules = []) name = { name; modules }
@@ -116,10 +114,8 @@ module QualifiedName = struct
 end
 
 module Declaration = struct
-  type name = Name.t
-
   type 'entry t =
-    { name : name
+    { name : Name.t
     ; entry : 'entry
     }
 
