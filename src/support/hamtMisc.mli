@@ -2,6 +2,12 @@
 
 include module type of Hamt
 
+module type S = sig
+  include S
+
+  val find_opt : key -> 'a t -> 'a option
+end
+
 (** Totally ordered and hashable types. *)
 module type HASH_TYPE = sig
   (** The type of totally ordered and hashable types. *)

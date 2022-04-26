@@ -73,8 +73,14 @@ module Make (Map : Map.S) : S with type key = Map.key = struct
 
   let mem key { map; _ } = Map.mem key map
 
-  let add key value { list; map } =
-    { list = (key, value) :: list; map = Map.add key value map }
+  let find_opt key { map; _ } = Map.find_opt key map
+
+  let add key value ({ list; map } as lmap) =
+    find_opt key lmap
+    |> Option.eliminate
+         (fun () ->
+           { list = (key, value) :: list; map = Map.add key value map })
+         (Fun.const lmap)
 
   let singleton key value = add key value empty
 
@@ -93,8 +99,6 @@ module Make (Map : Map.S) : S with type key = Map.key = struct
   let exists p { map; _ } = Map.exists p map
 
   let for_all p { map; _ } = Map.for_all p map
-
-  let find_opt key { map; _ } = Map.find_opt key map
 end
 
 module Make1 (Map : Map.S) : S1 with type key = Map.key = struct
@@ -107,8 +111,16 @@ module Make1 (Map : Map.S) : S1 with type key = Map.key = struct
 
   let mem key { map; _ } = Map.mem key map
 
-  let add key value { list; map } =
-    { list = Nonempty.cons (key, value) list; map = Map.add key value map }
+  let find_opt key { map; _ } = Map.find_opt key map
+
+  let add key value ({ list; map } as lmap) =
+    find_opt key lmap
+    |> Option.eliminate
+         (fun () ->
+           { list = Nonempty.cons (key, value) list
+           ; map = Map.add key value map
+           })
+         (Fun.const lmap)
 
   let singleton key value =
     { list = Nonempty.singleton (key, value); map = Map.singleton key value }
@@ -137,6 +149,4 @@ module Make1 (Map : Map.S) : S1 with type key = Map.key = struct
   let exists p { map; _ } = Map.exists p map
 
   let for_all p { map; _ } = Map.for_all p map
-
-  let find_opt key { map; _ } = Map.find_opt key map
 end

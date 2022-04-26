@@ -14,8 +14,14 @@ module Make (Hamt : HamtMisc.S) : S with type key = Hamt.key = struct
 
   let mem key { map; _ } = Hamt.mem key map
 
-  let add key value { list; map } =
-    { list = (key, value) :: list; map = Hamt.add key value map }
+  let find_opt key { map; _ } = Hamt.find_opt key map
+
+  let add key value ({ list; map } as lmap) =
+    find_opt key lmap
+    |> Option.eliminate
+         (fun () ->
+           { list = (key, value) :: list; map = Hamt.add key value map })
+         (Fun.const lmap)
 
   let singleton key value = add key value empty
 
@@ -34,8 +40,6 @@ module Make (Hamt : HamtMisc.S) : S with type key = Hamt.key = struct
   let exists p { map; _ } = Hamt.exists p map
 
   let for_all p { map; _ } = Hamt.for_all p map
-
-  let find_opt key { map; _ } = Hamt.ExceptionLess.find key map
 end
 
 module type S1 = LinkedMap.S1
@@ -50,8 +54,16 @@ module Make1 (Hamt : HamtMisc.S) : S1 with type key = Hamt.key = struct
 
   let mem key { map; _ } = Hamt.mem key map
 
-  let add key value { list; map } =
-    { list = Nonempty.cons (key, value) list; map = Hamt.add key value map }
+  let find_opt key { map; _ } = Hamt.find_opt key map
+
+  let add key value ({ list; map } as lmap) =
+    find_opt key lmap
+    |> Option.eliminate
+         (fun () ->
+           { list = Nonempty.cons (key, value) list
+           ; map = Hamt.add key value map
+           })
+         (Fun.const lmap)
 
   let singleton key value =
     { list = Nonempty.singleton (key, value)
@@ -82,6 +94,4 @@ module Make1 (Hamt : HamtMisc.S) : S1 with type key = Hamt.key = struct
   let exists p { map; _ } = Hamt.exists p map
 
   let for_all p { map; _ } = Hamt.for_all p map
-
-  let find_opt key { map; _ } = Hamt.ExceptionLess.find key map
 end

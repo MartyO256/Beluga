@@ -1,7 +1,7 @@
 (** Linked association tables over ordered types.
 
-    These are finite maps that keep track the sequence of bindings added to
-    it. This allows for tracing of the additions to the map. *)
+    These are finite maps that keep track the sequence of unique bindings
+    added to it. This allows for tracing of the additions to the map. *)
 module type S = sig
   (** The type of the map keys. *)
   type key
@@ -16,9 +16,7 @@ module type S = sig
 
   (** [add key data m] returns a linked map containing the same bindings as
       [m], plus a binding of [key] to [data]. If [key] was already bound in
-      [m] to a value, then the previous binding of [key] in [m] disappears,
-      except from the trace of additions. This addition is also recorded as
-      part of the trace of binding additions to the linked map. *)
+      [m] to a value, then [m] is returned. *)
   val add : key -> 'a -> 'a t -> 'a t
 
   (** [singleton key data] returns the one-element map that contains a
@@ -106,9 +104,7 @@ module type S1 = sig
 
   (** [add key data m] returns a linked map containing the same bindings as
       [m], plus a binding of [key] to [data]. If [key] was already bound in
-      [m] to a value, then the previous binding of [key] in [m] disappears,
-      except from the trace of additions. This addition is also recorded as
-      part of the trace of binding additions to the linked map. *)
+      [m] to a value, then [m] is returned. *)
   val add : key -> 'a -> 'a t -> 'a t
 
   (** {1 Predicates} *)
