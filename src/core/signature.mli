@@ -707,3 +707,28 @@ val lookup_schema : t -> QualifiedName.t -> (t * Schema.t) Option.t
 val lookup_query : t -> QualifiedName.t -> (t * Query.t) Option.t
 
 val lookup_mquery : t -> QualifiedName.t -> (t * MQuery.t) Option.t
+
+(** {1 Lookups by ID} *)
+
+val lookup_lf_family_by_id : t -> Id.Typ.t -> (t * Typ.t) Option.t
+
+val lookup_lf_constant_by_id : t -> Id.Const.t -> (t * Const.t) Option.t
+
+val lookup_comp_typ_by_id : t -> Id.CompTyp.t -> (t * CompTyp.t) Option.t
+
+val lookup_comp_constructor_by_id :
+  t -> Id.CompConst.t -> (t * CompConst.t) Option.t
+
+val lookup_comp_cotyp_by_id :
+  t -> Id.CompCotyp.t -> (t * CompCotyp.t) Option.t
+
+val lookup_comp_destructor_by_id :
+  t -> Id.CompDest.t -> (t * CompDest.t) Option.t
+
+val lookup_comp_by_id : t -> Id.Comp.t -> (t * Comp.t) Option.t
+
+val lookup_schema_by_id : t -> Id.Schema.t -> (t * Schema.t) Option.t
+
+val lookup_query_by_id : t -> Id.Query.t -> (t * Query.t) Option.t
+
+val lookup_mquery_by_id : t -> Id.MQuery.t -> (t * MQuery.t) Option.t

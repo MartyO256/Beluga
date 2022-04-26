@@ -1018,3 +1018,37 @@ let lookup_query = guarded_lookup guard_query_declaration
 
 let lookup_mquery = guarded_lookup guard_mquery_declaration
 
+(** [lookup signature id] returns [None] if there is no declaration in
+    [signature] having ID [id], and otherwise returns
+    [Some (signature', declaration)] where [signature'] is the signature up
+    to and including [declaration]. Declarations looked up by ID may not be
+    in scope. *)
+let lookup_by_id sgn id = sgn |> declarations_by_id |> BaseId.Map.find_opt id
+
+let guarded_lookup_by_id guard sgn id =
+  let open Option in
+  lookup_by_id sgn id >>= extract_declaration guard
+
+let lookup_lf_family_by_id = guarded_lookup_by_id guard_typ_declaration
+
+let lookup_lf_constant_by_id = guarded_lookup_by_id guard_const_declaration
+
+let lookup_comp_typ_by_id = guarded_lookup_by_id guard_comp_typ_declaration
+
+let lookup_comp_constructor_by_id =
+  guarded_lookup_by_id guard_comp_const_declaration
+
+let lookup_comp_cotyp_by_id =
+  guarded_lookup_by_id guard_comp_cotyp_declaration
+
+let lookup_comp_destructor_by_id =
+  guarded_lookup_by_id guard_comp_dest_declaration
+
+let lookup_comp_by_id = guarded_lookup_by_id guard_comp_declaration
+
+let lookup_schema_by_id = guarded_lookup_by_id guard_schema_declaration
+
+let lookup_query_by_id = guarded_lookup_by_id guard_query_declaration
+
+let lookup_mquery_by_id = guarded_lookup_by_id guard_mquery_declaration
+
