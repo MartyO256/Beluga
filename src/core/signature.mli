@@ -154,6 +154,8 @@ module Id : sig
 
   module Module : ID
 
+  module DocumentationComment : ID
+
   module Query : ID
 
   module MQuery : ID
@@ -531,9 +533,12 @@ module DocumentationComment : sig
 
   (** {1 Constructors} *)
 
-  val make : location:Location.t -> string -> t
+  val make :
+    id:Id.DocumentationComment.t -> location:Location.t -> string -> t
 
   (** {1 Destructors} *)
+
+  val id : t -> Id.DocumentationComment.t
 
   val content : t -> string
 
