@@ -708,6 +708,17 @@ module Module = struct
   let[@inline] declarations { declarations; _ } = declarations
 
   let lookup m name = m |> declarations |> Name.LinkedHamt.find_opt name
+
+  let rec deep_lookup :
+      ('a -> 'a t Option.t) -> 'a t -> Name.t List.t -> Name.t -> 'a Option.t
+      =
+   fun extract current_module module_names base_name ->
+    match module_names with
+    | [] -> lookup current_module base_name
+    | head_module_name :: tail_module_names ->
+      let open Option in
+      lookup current_module head_module_name >>= extract >>= fun m' ->
+      deep_lookup extract m' tail_module_names base_name
 end
 
 module Schema = struct
@@ -980,19 +991,16 @@ let lookup signature qualified_name =
     lookup_name signature base_name
   | head_module_name :: tail_module_names ->
     (* Lookup recursively in modules *)
-    let rec lookup_in_module tail_module_names current_module =
-      match tail_module_names with
-      | [] -> Module.lookup current_module base_name
-      | head_module_name :: tail_module_names ->
-        Module.lookup current_module head_module_name
-        |> extract tail_module_names
-    and extract tail_module_names current_module_opt =
-      let open Option in
-      current_module_opt $> Pair.snd >>= guard_module_declaration
-      $> Declaration.entry
-      >>= lookup_in_module tail_module_names
-    in
-    lookup_name signature head_module_name |> extract tail_module_names
+    let open Option in
+    lookup_name signature head_module_name
+    $> Pair.snd >>= guard_module_declaration
+    >>= fun top_module ->
+    Module.deep_lookup
+      (fun looked_up_module ->
+        looked_up_module |> Pair.snd |> guard_module_declaration
+        $> Declaration.entry)
+      (top_module |> Declaration.entry)
+      tail_module_names base_name
 
 let guarded_lookup guard signature qualified_name =
   let open Option in
