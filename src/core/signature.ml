@@ -902,3 +902,119 @@ let[@inline] queries { queries; _ } = queries
 
 let[@inline] mqueries { mqueries; _ } = mqueries
 
+let guard_typ_declaration : declaration -> Typ.t Declaration.t Option.t =
+  function
+  | `Typ_declaration decl -> Option.some decl
+  | _ -> Option.none
+
+let guard_const_declaration : declaration -> Const.t Declaration.t Option.t =
+  function
+  | `Const_declaration decl -> Option.some decl
+  | _ -> Option.none
+
+let guard_comp_typ_declaration :
+    declaration -> CompTyp.t Declaration.t Option.t = function
+  | `Comp_typ_declaration decl -> Option.some decl
+  | _ -> Option.none
+
+let guard_comp_const_declaration :
+    declaration -> CompConst.t Declaration.t Option.t = function
+  | `Comp_const_declaration decl -> Option.some decl
+  | _ -> Option.none
+
+let guard_comp_cotyp_declaration :
+    declaration -> CompCotyp.t Declaration.t Option.t = function
+  | `Comp_cotyp_declaration decl -> Option.some decl
+  | _ -> Option.none
+
+let guard_comp_dest_declaration :
+    declaration -> CompDest.t Declaration.t Option.t = function
+  | `Comp_dest_declaration decl -> Option.some decl
+  | _ -> Option.none
+
+let guard_comp_declaration : declaration -> Comp.t Declaration.t Option.t =
+  function
+  | `Comp_declaration decl -> Option.some decl
+  | _ -> Option.none
+
+let guard_schema_declaration : declaration -> Schema.t Declaration.t Option.t
+    = function
+  | `Schema_declaration decl -> Option.some decl
+  | _ -> Option.none
+
+let guard_module_declaration :
+    declaration -> (t * declaration) Module.t Declaration.t Option.t =
+  function
+  | `Module_declaration decl -> Option.some decl
+  | _ -> Option.none
+
+let guard_documentation_comment :
+    declaration -> DocumentationComment.t Option.t = function
+  | `Documentation_comment decl -> Option.some decl
+  | _ -> Option.none
+
+let guard_query_declaration : declaration -> Query.t Declaration.t Option.t =
+  function
+  | `Query_declaration decl -> Option.some decl
+  | _ -> Option.none
+
+let guard_mquery_declaration : declaration -> MQuery.t Declaration.t Option.t
+    = function
+  | `MQuery_declaration decl -> Option.some decl
+  | _ -> Option.none
+
+let extract_declaration guard (signature, declaration_opt) =
+  let open Option in
+  declaration_opt |> guard $> fun declaration ->
+  (signature, declaration |> Declaration.entry)
+
+let lookup_name : t -> Name.t -> (t * declaration) Option.t =
+ fun signature name ->
+  signature |> declarations_by_name |> Name.Hamt.ExceptionLess.find name
+
+let lookup signature qualified_name =
+  let base_name = QualifiedName.name qualified_name in
+  match QualifiedName.modules qualified_name with
+  | [] ->
+    (* Lookup top-level declaration in signature *)
+    lookup_name signature base_name
+  | head_module_name :: tail_module_names ->
+    (* Lookup recursively in modules *)
+    let rec lookup_in_module tail_module_names current_module =
+      match tail_module_names with
+      | [] -> Module.lookup current_module base_name
+      | head_module_name :: tail_module_names ->
+        Module.lookup current_module head_module_name
+        |> extract tail_module_names
+    and extract tail_module_names current_module_opt =
+      let open Option in
+      current_module_opt $> Pair.snd >>= guard_module_declaration
+      $> Declaration.entry
+      >>= lookup_in_module tail_module_names
+    in
+    lookup_name signature head_module_name |> extract tail_module_names
+
+let guarded_lookup guard signature qualified_name =
+  let open Option in
+  lookup signature qualified_name >>= extract_declaration guard
+
+let lookup_lf_family = guarded_lookup guard_typ_declaration
+
+let lookup_lf_constant = guarded_lookup guard_const_declaration
+
+let lookup_comp_typ = guarded_lookup guard_comp_typ_declaration
+
+let lookup_comp_constructor = guarded_lookup guard_comp_const_declaration
+
+let lookup_comp_cotyp = guarded_lookup guard_comp_cotyp_declaration
+
+let lookup_comp_destructor = guarded_lookup guard_comp_dest_declaration
+
+let lookup_comp = guarded_lookup guard_comp_declaration
+
+let lookup_schema = guarded_lookup guard_schema_declaration
+
+let lookup_query = guarded_lookup guard_query_declaration
+
+let lookup_mquery = guarded_lookup guard_mquery_declaration
+

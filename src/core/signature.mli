@@ -675,3 +675,35 @@ type declaration =
   | `Query_declaration of Query.t Declaration.t
   | `MQuery_declaration of MQuery.t Declaration.t
   ]
+
+(** {1 Lookups by Qualified Name} *)
+
+(** [lookup signature name] returns [None] if there is no declaration in
+    [signature] having name [name], and otherwise returns
+    [Some (signature',
+   declaration)] where [signature'] is the signature
+    up to and including [declaration] and [declaration] is the latest
+    declaration in [signature] having name [name]. *)
+val lookup : t -> QualifiedName.t -> (t * declaration) Option.t
+
+val lookup_lf_family : t -> QualifiedName.t -> (t * Typ.t) Option.t
+
+val lookup_lf_constant : t -> QualifiedName.t -> (t * Const.t) Option.t
+
+val lookup_comp_typ : t -> QualifiedName.t -> (t * CompTyp.t) Option.t
+
+val lookup_comp_constructor :
+  t -> QualifiedName.t -> (t * CompConst.t) Option.t
+
+val lookup_comp_cotyp : t -> QualifiedName.t -> (t * CompCotyp.t) Option.t
+
+val lookup_comp_destructor :
+  t -> QualifiedName.t -> (t * CompDest.t) Option.t
+
+val lookup_comp : t -> QualifiedName.t -> (t * Comp.t) Option.t
+
+val lookup_schema : t -> QualifiedName.t -> (t * Schema.t) Option.t
+
+val lookup_query : t -> QualifiedName.t -> (t * Query.t) Option.t
+
+val lookup_mquery : t -> QualifiedName.t -> (t * MQuery.t) Option.t
