@@ -638,3 +638,40 @@ module MQuery : sig
 
   include Ord.ORD with type t := t
 end
+
+(** The type of Beluga signatures. *)
+type t
+
+type mutually_recursive_typs =
+  [ `Typs of (Typ.t * Const.t Name.LinkedHamt.t) Nonempty.t ]
+
+type mutually_recursive_comp_typs =
+  [ `Comp_typs of
+    [ `Comp_typ of CompTyp.t * CompConst.t Name.LinkedHamt.t
+    | `Comp_cotyp of CompCotyp.t * CompDest.t Name.LinkedHamt.t
+    ]
+    Nonempty.t
+  ]
+
+type mutually_recursive_programs = [ `Programs of Comp.t Name.LinkedHamt1.t ]
+
+(** The type of declarations in Beluga signatures. *)
+type declaration =
+  [ `Typ_declaration of Typ.t Declaration.t
+  | `Const_declaration of Const.t Declaration.t
+  | `Comp_typ_declaration of CompTyp.t Declaration.t
+  | `Comp_const_declaration of CompConst.t Declaration.t
+  | `Comp_cotyp_declaration of CompCotyp.t Declaration.t
+  | `Comp_dest_declaration of CompDest.t Declaration.t
+  | `Comp_declaration of Comp.t Declaration.t
+  | `Schema_declaration of Schema.t Declaration.t
+  | `Module_declaration of (t * declaration) Module.t Declaration.t
+  | `Documentation_comment of DocumentationComment.t
+  | `Mutually_recursive_declaration of
+    [ mutually_recursive_typs
+    | mutually_recursive_comp_typs
+    | mutually_recursive_programs
+    ]
+  | `Query_declaration of Query.t Declaration.t
+  | `MQuery_declaration of MQuery.t Declaration.t
+  ]

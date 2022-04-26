@@ -832,3 +832,73 @@ module MQuery = struct
 
   include (Ord : Support.Ord.ORD with type t := t)
 end
+
+type mutually_recursive_typs =
+  [ `Typs of (Typ.t * Const.t Name.LinkedHamt.t) Nonempty.t ]
+
+type mutually_recursive_comp_typs =
+  [ `Comp_typs of
+    [ `Comp_typ of CompTyp.t * CompConst.t Name.LinkedHamt.t
+    | `Comp_cotyp of CompCotyp.t * CompDest.t Name.LinkedHamt.t
+    ]
+    Nonempty.t
+  ]
+
+type mutually_recursive_programs = [ `Programs of Comp.t Name.LinkedHamt1.t ]
+
+type declaration =
+  [ `Typ_declaration of Typ.t Declaration.t
+  | `Const_declaration of Const.t Declaration.t
+  | `Comp_typ_declaration of CompTyp.t Declaration.t
+  | `Comp_const_declaration of CompConst.t Declaration.t
+  | `Comp_cotyp_declaration of CompCotyp.t Declaration.t
+  | `Comp_dest_declaration of CompDest.t Declaration.t
+  | `Comp_declaration of Comp.t Declaration.t
+  | `Schema_declaration of Schema.t Declaration.t
+  | `Module_declaration of (t * declaration) Module.t Declaration.t
+  | `Documentation_comment of DocumentationComment.t
+  | `Mutually_recursive_declaration of
+    [ mutually_recursive_typs
+    | mutually_recursive_comp_typs
+    | mutually_recursive_programs
+    ]
+  | `Query_declaration of Query.t Declaration.t
+  | `MQuery_declaration of MQuery.t Declaration.t
+  ]
+
+and t =
+  { declarations : declaration List.t
+        (** The sequence of entry IDs in the order they are declared in the
+            signature. This allows for in-order traversal of the signature
+            for pretty-printing. *)
+  ; declarations_by_name : (t * declaration) Name.Hamt.t Lazy.t
+        (** The bindings of entries by name currently in scope. Each entry is
+            also associated with the signature up to and including that
+            entry. This allows for entry lookups that respects scoping. *)
+  ; declarations_by_id : (t * declaration) BaseId.Map.t Lazy.t
+        (** An index of the entries mapped by ID. Each entry is also
+            associated with the signature up to and including that entry.
+            This allows for looking up shadowed declarations. *)
+  ; queries : Id.Query.Set.t
+        (** The set of logic programming queries on LF types. *)
+  ; mqueries : Id.MQuery.Set.t
+        (** The set of logic programming queries on Comp types. *)
+  ; unfrozen : BaseId.Set.t
+        (** The set of entry IDs for currently unfrozen entries. This allows
+            for shadowed declarations to be frozen. *)
+  }
+
+let[@inline] declarations { declarations; _ } = declarations
+
+let[@inline] declarations_by_name { declarations_by_name; _ } =
+  declarations_by_name |> Lazy.force
+
+let[@inline] declarations_by_id { declarations_by_id; _ } =
+  declarations_by_id |> Lazy.force
+
+let[@inline] unfrozen_entries { unfrozen; _ } = unfrozen
+
+let[@inline] queries { queries; _ } = queries
+
+let[@inline] mqueries { mqueries; _ } = mqueries
+
