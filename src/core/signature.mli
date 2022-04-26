@@ -55,23 +55,20 @@ module QualifiedName : sig
       different module. *)
   type t
 
-  (** The type of names for modules and declarations. *)
-  type name
-
   (** {1 Constructors} *)
 
   (** [make ms n] is the qualified name with name [n] when successively
       opening the modules named [ms]. *)
-  val make : ?modules:name List.t -> name -> t
+  val make : ?modules:name List.t -> Name.t -> t
 
   (** {1 Destructors} *)
 
   (** [name n] is the declaration name referred to by [n]. *)
-  val name : t -> name
+  val name : t -> Name.t
 
   (** [modules n] is the list of module names for modules to open to refer to
       [n] in the module opening order. *)
-  val modules : t -> name List.t
+  val modules : t -> Name.t List.t
 
   (** {1 Instances} *)
 
