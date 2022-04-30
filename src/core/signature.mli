@@ -121,11 +121,15 @@ module type ID = sig
 
   include Ord.ORD with type t := t
 
+  include Hash.HASH with type t := t
+
   (** {1 Collections} *)
 
-  module Set : Set.S with type elt := t
+  module Set : Set.S with type elt = t
 
-  module Map : Map.S with type key := t
+  module Map : Map.S with type key = t
+
+  module Hamt : Hamt.S with type key = t
 end
 
 (** Beluga declaration identifiers. *)
@@ -680,9 +684,8 @@ type declaration =
 
 (** [lookup signature name] returns [None] if there is no declaration in
     [signature] having name [name], and otherwise returns
-    [Some (signature',
-   declaration)] where [signature'] is the signature
-    up to and including [declaration] and [declaration] is the latest
+    [Some (signature', declaration)] where [signature'] is the signature up
+    to and including [declaration] and [declaration] is the latest
     declaration in [signature] having name [name]. *)
 val lookup : t -> QualifiedName.t -> (t * declaration) Option.t
 

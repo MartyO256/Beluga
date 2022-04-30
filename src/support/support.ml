@@ -10,6 +10,7 @@ module Fun = Fun
 module Functor = Functor
 module Gen = GenMisc
 module Hamt = HamtMisc
+module Hash = Hash
 module Hashtbl = Hashtbl
 module History = History
 module LinkedMap = LinkedMap

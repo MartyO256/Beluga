@@ -141,11 +141,15 @@ module type ID = sig
 
   include Ord.ORD with type t := t
 
+  include Hash.HASH with type t := t
+
   (** {1 Collections} *)
 
-  module Set : Set.S with type elt := t
+  module Set : Set.S with type elt = t
 
-  module Map : Map.S with type key := t
+  module Map : Map.S with type key = t
+
+  module Hamt : Hamt.S with type key = t
 end
 
 (** Base implementation for IDs as integers. *)
@@ -161,9 +165,29 @@ module BaseId : sig
   val make : int -> t
 end = struct
   include Int
-  include Ord.Make (Int)
-  module Set = Set.Make (Int)
-  module Map = Map.Make (Int)
+
+  module Ord : Ord.ORD with type t = t = Ord.Make (Int)
+
+  include Ord
+
+  module Hash : Hash.HASH with type t = t = struct
+    type nonrec t = t
+
+    let hash x = x
+  end
+
+  include (Hash : Support.Hash.HASH with type t := t)
+
+  module Set = Set.Make (Ord)
+  module Map = Map.Make (Ord)
+
+  module Hamt = Hamt.Make (struct
+    type nonrec t = t
+
+    include (Ord : Support.Ord.ORD with type t := t)
+
+    include (Hash : Support.Hash.HASH with type t := t)
+  end)
 
   let make = Fun.id
 end
@@ -886,7 +910,7 @@ and t =
         (** The bindings of entries by name currently in scope. Each entry is
             also associated with the signature up to and including that
             entry. This allows for entry lookups that respects scoping. *)
-  ; declarations_by_id : (t * declaration) BaseId.Map.t Lazy.t
+  ; declarations_by_id : (t * declaration) BaseId.Hamt.t Lazy.t
         (** An index of the entries mapped by ID. Each entry is also
             associated with the signature up to and including that entry.
             This allows for looking up shadowed declarations. *)
@@ -1031,7 +1055,8 @@ let lookup_mquery = guarded_lookup guard_mquery_declaration
     [Some (signature', declaration)] where [signature'] is the signature up
     to and including [declaration]. Declarations looked up by ID may not be
     in scope. *)
-let lookup_by_id sgn id = sgn |> declarations_by_id |> BaseId.Map.find_opt id
+let lookup_by_id sgn id =
+  sgn |> declarations_by_id |> BaseId.Hamt.find_opt id
 
 let guarded_lookup_by_id guard sgn id =
   let open Option in
