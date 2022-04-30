@@ -803,7 +803,8 @@ module Query = struct
     ; search_parameters : search_parameters
     }
 
-  let make ~id ~location ?(name = Option.none) ~search_parameters query =
+  let make ~id ~location ?(name = Option.none)
+      ?(search_parameters = make_search_parameters ()) query =
     { id; location; name; search_parameters; query }
 
   let[@inline] id { id; _ } = id
@@ -847,7 +848,8 @@ module MQuery = struct
     ; search_parameters : search_parameters
     }
 
-  let make ~id ~location ?(name = Option.none) ~search_parameters query =
+  let make ~id ~location ?(name = Option.none)
+      ?(search_parameters = make_search_parameters ()) query =
     { id; location; name; search_parameters; query }
 
   let[@inline] id { id; _ } = id

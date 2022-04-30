@@ -566,7 +566,7 @@ module Query : sig
        id:Id.Query.t
     -> location:Location.t
     -> ?name:string Option.t
-    -> search_parameters:search_parameters
+    -> ?search_parameters:search_parameters
     -> LF.mctx * (LF.typ * offset)
     -> t
 
@@ -618,7 +618,7 @@ module MQuery : sig
        id:Id.MQuery.t
     -> location:Location.t
     -> ?name:string Option.t
-    -> search_parameters:search_parameters
+    -> ?search_parameters:search_parameters
     -> Synint.Comp.typ * offset
     -> t
 
