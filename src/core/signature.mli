@@ -168,7 +168,7 @@ module Typ : sig
   (** {1 Constructors} *)
 
   val make_initial_entry :
-       id:int
+       id:Id.Typ.t
     -> name:Name.t
     -> location:Location.t
     -> implicit_arguments:int
@@ -246,7 +246,7 @@ module Const : sig
   (** {1 Constructors} *)
 
   val make :
-       id:int
+       id:Id.Const.t
     -> name:string
     -> location:Location.t
     -> implicit_arguments:int
@@ -276,7 +276,7 @@ module CompTyp : sig
   (** {1 Constructors} *)
 
   val make_initial_entry :
-       id:int
+       id:Id.CompTyp.t
     -> name:Name.t
     -> location:Location.t
     -> implicit_arguments:int
@@ -326,7 +326,7 @@ module CompConst : sig
   (** {1 Constructors} *)
 
   val make :
-       id:int
+       id:Id.CompConst.t
     -> name:Name.t
     -> location:Location.t
     -> implicit_arguments:int
@@ -358,7 +358,7 @@ module CompCotyp : sig
   (** {1 Constructors} *)
 
   val make_initial_entry :
-       id:int
+       id:Id.CompCotyp.t
     -> name:Name.t
     -> location:Location.t
     -> implicit_arguments:int
@@ -411,7 +411,7 @@ module CompDest : sig
   (** {1 Constructors} *)
 
   val make :
-       id:int
+       id:Id.CompDest.t
     -> name:Name.t
     -> location:Location.t
     -> implicit_arguments:int
@@ -449,7 +449,7 @@ module Comp : sig
   (** {1 Constructors} *)
 
   val make :
-       id:int
+       id:Id.Comp.t
     -> name:string
     -> location:Location.t
     -> implicit_arguments:int
@@ -500,7 +500,7 @@ module Module : sig
   (** {1 Constructors} *)
 
   val make :
-       id:int
+       id:Id.Module.t
     -> location:Location.t
     -> ?declarations:'a Name.LinkedHamt.t
     -> Name.t
