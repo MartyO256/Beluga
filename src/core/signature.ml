@@ -230,20 +230,6 @@ module Id = struct
       end) :
         State.STATE with type state := state)
 
-    type choice =
-      [ `Typ
-      | `Const
-      | `Comp_typ
-      | `Comp_const
-      | `Comp_cotyp
-      | `Comp_dest
-      | `Comp
-      | `Module
-      | `Query
-      | `MQuery
-      | `Schema
-      ]
-
     let initial_state = { previous_id = 0 }
 
     let next_id =
@@ -275,29 +261,6 @@ module Id = struct
     let next_mquery_id = next_id $> MQuery.make
 
     let next_schema_id = next_id $> Schema.make
-
-    let next_chosen_id = function
-      | `Typ -> next_typ_id $> fun id -> `Typ_id id
-      | `Const -> next_const_id $> fun id -> `Const_id id
-      | `Comp_typ -> next_comp_typ_id $> fun id -> `Comp_typ_id id
-      | `Comp_const -> next_comp_const_id $> fun id -> `Comp_const_id id
-      | `Comp_cotyp -> next_comp_cotyp_id $> fun id -> `Comp_cotyp_id id
-      | `Comp_dest -> next_comp_dest_id $> fun id -> `Comp_dest_id id
-      | `Comp -> next_comp_id $> fun id -> `Comp_id id
-      | `Module -> next_module_id $> fun id -> `Module_id id
-      | `Query -> next_query_id $> fun id -> `Query_id id
-      | `MQuery -> next_mquery_id $> fun id -> `MQuery_id id
-      | `Schema -> next_schema_id $> fun id -> `Schema_id id
-
-    let next_chosen_ids choices =
-      (fun state ->
-        choices
-        |> List.fold_left
-             (fun (state, ids) choice ->
-               run ~init:state
-                 (next_chosen_id choice $> fun id -> List.cons id ids))
-             (state, []))
-      $> List.rev
   end
 end
 

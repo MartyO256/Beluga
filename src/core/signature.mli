@@ -226,31 +226,6 @@ module Id : sig
 
     (** [next_schema_id] is an ID allocator whose next ID is a schema ID. *)
     val next_schema_id : Schema.t t
-
-    (** {1 Dynamic Choice ID Builders} *)
-
-    (** The type of choice for the kind of ID to allocate. *)
-    type choice =
-      [ `Typ
-      | `Const
-      | `Comp_typ
-      | `Comp_const
-      | `Comp_cotyp
-      | `Comp_dest
-      | `Comp
-      | `Module
-      | `Query
-      | `MQuery
-      | `Schema
-      ]
-
-    (** [next_chosen_id choice] is an ID allocator whose next ID is of kind
-        [choice]. *)
-    val next_chosen_id : [< choice ] -> [> id ] t
-
-    (** [next_chosen_ids \[c1; c2; ...; cn\]] is an ID allocator whose next
-        IDs are sequentially of kinds [c1], [c2], ..., [cn]. *)
-    val next_chosen_ids : [< choice ] List.t -> [> id ] List.t t
   end
 end
 
