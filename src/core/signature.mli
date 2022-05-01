@@ -676,8 +676,8 @@ type declaration =
     | mutually_recursive_comp_typs
     | mutually_recursive_programs
     ]
-  | `Query_declaration of Query.t Declaration.t
-  | `MQuery_declaration of MQuery.t Declaration.t
+  | `Query_declaration of Query.t
+  | `MQuery_declaration of MQuery.t
   ]
 
 (** {1 Lookups by Qualified Name} *)
