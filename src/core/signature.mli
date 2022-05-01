@@ -112,7 +112,8 @@ end
     However, since declarations may be elaborated in steps, derived
     declarations share the same ID.
 
-    IDs are generated when initial entries are introduced to a signature. *)
+    IDs are generated sequentially using an allocator during signature
+    reconstruction. *)
 module type ID = sig
   (** The type of identifiers for signature declarations. *)
   type t
@@ -132,7 +133,7 @@ module type ID = sig
   module Hamt : Hamt.S with type key = t
 end
 
-(** Beluga declaration identifiers. *)
+(** Beluga declaration identifiers (IDs). *)
 module Id : sig
   module Typ : ID
 
@@ -155,6 +156,102 @@ module Id : sig
   module MQuery : ID
 
   module Schema : ID
+
+  (** The tagged union type of Beluga IDs. *)
+  type t =
+    [ `Typ_id of Typ.t
+    | `Const_id of Const.t
+    | `Comp_typ_id of CompTyp.t
+    | `Comp_cotyp_id of CompCotyp.t
+    | `Comp_const_id of CompConst.t
+    | `Comp_dest_id of CompDest.t
+    | `Comp_id of Comp.t
+    | `Module_id of Module.t
+    | `Query_id of Query.t
+    | `MQuery_id of MQuery.t
+    | `Schema_id of Schema.t
+    ]
+
+  (** Stateful builder pattern for sequentially making distinct IDs. *)
+  module Allocator : sig
+    type id = t
+
+    (** Instance of the state monad for the integer value of the latest
+        allocated ID. *)
+    include State.STATE
+
+    (** [initial_state] is the allocator state with [0] as the latest
+        allocated ID. *)
+    val initial_state : state
+
+    (** {1 ID Builders} *)
+
+    (** [next_typ_id] is an ID allocator whose next ID is an LF type family
+        ID. *)
+    val next_typ_id : Typ.t t
+
+    (** [next_const_id] is an ID allocator whose next ID is an LF type
+        constant ID. *)
+    val next_const_id : Const.t t
+
+    (** [next_comp_typ_id] is an ID allocator whose next ID is a
+        computation-level data type constant ID. *)
+    val next_comp_typ_id : CompTyp.t t
+
+    (** [next_comp_const_id] is an ID allocator whose next ID is a
+        computation-level type constructor ID. *)
+    val next_comp_const_id : CompConst.t t
+
+    (** [next_comp_cotyp_id] is an ID allocator whose next ID is a
+        computation-level codata type constant ID. *)
+    val next_comp_cotyp_id : CompCotyp.t t
+
+    (** [next_comp_dest_id] is an ID allocator whose next ID is a
+        computation-level type destructor. *)
+    val next_comp_dest_id : CompDest.t t
+
+    (** [next_comp_id] is an ID allocator whose next ID is a computation ID. *)
+    val next_comp_id : Comp.t t
+
+    (** [next_module_id] is an ID allocator whose next ID is a module ID. *)
+    val next_module_id : Module.t t
+
+    (** [next_query_id] is an ID allocator whose next ID is an ID for a logic
+        programming query on LF types. *)
+    val next_query_id : Query.t t
+
+    (** [next_mquery_id] is an ID allocator whose next ID is an ID for a
+        logic programming query on computational types. *)
+    val next_mquery_id : MQuery.t t
+
+    (** [next_schema_id] is an ID allocator whose next ID is a schema ID. *)
+    val next_schema_id : Schema.t t
+
+    (** {1 Dynamic Choice ID Builders} *)
+
+    (** The type of choice for the kind of ID to allocate. *)
+    type choice =
+      [ `Typ
+      | `Const
+      | `Comp_typ
+      | `Comp_const
+      | `Comp_cotyp
+      | `Comp_dest
+      | `Comp
+      | `Module
+      | `Query
+      | `MQuery
+      | `Schema
+      ]
+
+    (** [next_chosen_id choice] is an ID allocator whose next ID is of kind
+        [choice]. *)
+    val next_chosen_id : [< choice ] -> [> id ] t
+
+    (** [next_chosen_ids \[c1; c2; ...; cn\]] is an ID allocator whose next
+        IDs are sequentially of kinds [c1], [c2], ..., [cn]. *)
+    val next_chosen_ids : [< choice ] List.t -> [> id ] List.t t
+  end
 end
 
 (** LF type family declarations. *)

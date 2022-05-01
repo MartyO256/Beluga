@@ -204,6 +204,101 @@ module Id = struct
   module Query = BaseId
   module MQuery = BaseId
   module Schema = BaseId
+
+  type t =
+    [ `Typ_id of Typ.t
+    | `Const_id of Const.t
+    | `Comp_typ_id of CompTyp.t
+    | `Comp_cotyp_id of CompCotyp.t
+    | `Comp_const_id of CompConst.t
+    | `Comp_dest_id of CompDest.t
+    | `Comp_id of Comp.t
+    | `Module_id of Module.t
+    | `Query_id of Query.t
+    | `MQuery_id of MQuery.t
+    | `Schema_id of Schema.t
+    ]
+
+  module Allocator = struct
+    type id = t
+
+    type state = { previous_id : int }
+
+    include (
+      State.Make (struct
+        type t = state
+      end) :
+        State.STATE with type state := state)
+
+    type choice =
+      [ `Typ
+      | `Const
+      | `Comp_typ
+      | `Comp_const
+      | `Comp_cotyp
+      | `Comp_dest
+      | `Comp
+      | `Module
+      | `Query
+      | `MQuery
+      | `Schema
+      ]
+
+    let initial_state = { previous_id = 0 }
+
+    let next_id =
+      get >>= fun { previous_id; _ } ->
+      if previous_id = Int.max_int then
+        raise @@ Invalid_argument "Exhausted sequence of fresh IDs"
+      else
+        let next = previous_id + 1 in
+        put { previous_id = next } $> Fun.const next
+
+    let next_typ_id = next_id $> Typ.make
+
+    let next_const_id = next_id $> Const.make
+
+    let next_comp_typ_id = next_id $> CompTyp.make
+
+    let next_comp_const_id = next_id $> CompConst.make
+
+    let next_comp_cotyp_id = next_id $> CompCotyp.make
+
+    let next_comp_dest_id = next_id $> CompDest.make
+
+    let next_comp_id = next_id $> Comp.make
+
+    let next_module_id = next_id $> Module.make
+
+    let next_query_id = next_id $> Query.make
+
+    let next_mquery_id = next_id $> MQuery.make
+
+    let next_schema_id = next_id $> Schema.make
+
+    let next_chosen_id = function
+      | `Typ -> next_typ_id $> fun id -> `Typ_id id
+      | `Const -> next_const_id $> fun id -> `Const_id id
+      | `Comp_typ -> next_comp_typ_id $> fun id -> `Comp_typ_id id
+      | `Comp_const -> next_comp_const_id $> fun id -> `Comp_const_id id
+      | `Comp_cotyp -> next_comp_cotyp_id $> fun id -> `Comp_cotyp_id id
+      | `Comp_dest -> next_comp_dest_id $> fun id -> `Comp_dest_id id
+      | `Comp -> next_comp_id $> fun id -> `Comp_id id
+      | `Module -> next_module_id $> fun id -> `Module_id id
+      | `Query -> next_query_id $> fun id -> `Query_id id
+      | `MQuery -> next_mquery_id $> fun id -> `MQuery_id id
+      | `Schema -> next_schema_id $> fun id -> `Schema_id id
+
+    let next_chosen_ids choices =
+      (fun state ->
+        choices
+        |> List.fold_left
+             (fun (state, ids) choice ->
+               run ~init:state
+                 (next_chosen_id choice $> fun id -> List.cons id ids))
+             (state, []))
+      $> List.rev
+  end
 end
 
 module Typ = struct
