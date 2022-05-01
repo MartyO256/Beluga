@@ -20,22 +20,22 @@ end) : STATE with type state = S.t = struct
   module State = struct
     type state = S.t
 
+    let run m ~init = m init
+
     include Monad.Make (struct
       (** The type of state transformers. *)
       type 'a t = state -> state * 'a
 
-      let return a s = (s, a)
+      let return a state = (state, a)
 
-      let bind f v s =
-        let s', a = v s in
-        f a s'
+      let bind f v state =
+        let state', a = run ~init:state v in
+        f a state'
     end)
 
-    let get s = (s, s)
+    let get state = (state, state)
 
-    let put s' _ = (s', ())
-
-    let run m ~init = m init
+    let put state' _ = (state', ())
   end
 
   include State

@@ -53,6 +53,11 @@ module type APPLY = sig
     -> 'a4 t
     -> 'a5 t
     -> ('a1 * 'a2 * 'a3 * 'a4 * 'a5) t
+
+  (** [seq_repeat n a] sequentially runs [n] times [a].
+
+      @raise Invalid_argument If [n < 0]. *)
+  val seq_repeat : int -> 'a t -> 'a list t
 end
 
 (** Functor building an implementation of {!APPLY} over a monad. *)

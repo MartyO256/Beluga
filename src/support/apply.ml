@@ -26,6 +26,8 @@ module type APPLY = sig
     -> 'a4 t
     -> 'a5 t
     -> ('a1 * 'a2 * 'a3 * 'a4 * 'a5) t
+
+  val seq_repeat : int -> 'a t -> 'a list t
 end
 
 module Make (M : Monad.MONAD) : APPLY with type 'a t = 'a M.t = struct
@@ -66,4 +68,14 @@ module Make (M : Monad.MONAD) : APPLY with type 'a t = 'a M.t = struct
     m3 >>= fun x3 ->
     m4 >>= fun x4 ->
     m5 >>= fun x5 -> return (x1, x2, x3, x4, x5)
+
+  let seq_repeat =
+    let rec seq_repeat n a =
+      if n = 0 then return []
+      else
+        a >>= fun x ->
+        seq_repeat (n - 1) a >>= fun xs -> return (List.cons x xs)
+    in
+    fun n ->
+      if n < 0 then raise @@ Invalid_argument "seq_list" else seq_repeat n
 end
