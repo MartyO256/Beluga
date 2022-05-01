@@ -201,7 +201,6 @@ module Id = struct
   module CompDest = BaseId
   module Comp = BaseId
   module Module = BaseId
-  module DocumentationComment = BaseId
   module Query = BaseId
   module MQuery = BaseId
   module Schema = BaseId
@@ -768,14 +767,11 @@ end
 
 module DocumentationComment = struct
   type t =
-    { id : Id.DocumentationComment.t
-    ; content : string
+    { content : string
     ; location : Location.t
     }
 
-  let make ~id ~location content = { id; content; location }
-
-  let[@inline] id { id; _ } = id
+  let make ~location content = { content; location }
 
   let[@inline] content { content; _ } = content
 
