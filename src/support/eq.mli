@@ -1,3 +1,5 @@
+(** Types having an equality operator. *)
+
 (** Module type for types with an equality predicate and operators. *)
 module type EQ = sig
   (** The type of elements to check for equality. *)
@@ -28,3 +30,8 @@ module Make (T : sig
   (** See {!val:EQ.equal}. *)
   val equal : t -> t -> bool
 end) : EQ with type t = T.t
+
+(** If [val f : 't -> 's], then [contramap eq f] is an instance of {!EQ} for
+    values of type ['t] by the {!EQ} instance [eq] for values of type ['s]. *)
+val contramap :
+  (module EQ with type t = 's) -> ('t -> 's) -> (module EQ with type t = 't)
