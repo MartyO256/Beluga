@@ -90,8 +90,9 @@ module QualifiedName = struct
       type nonrec t = t
 
       let equal x y =
-        List.equal Name.equal (modules x) (modules y)
-        && Name.equal (name x) (name y)
+        if Name.equal (name x) (name y) then
+          List.equal Name.equal (modules x) (modules y)
+        else false
     end) :
       Eq.EQ with type t := t)
 
