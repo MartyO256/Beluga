@@ -8,8 +8,6 @@ open Id
 module Name = struct
   type t = string
 
-  include (Eq.Make (String) : Eq.EQ with type t := t)
-
   include (Ord.Make (String) : Ord.ORD with type t := t)
 
   include (
@@ -241,10 +239,6 @@ module Id = struct
     | `MQuery_id id
     | `Schema_id id -> id
 
-  module EqByBaseId = (val Eq.contramap (module BaseId) to_base_id)
-
-  include (EqByBaseId : Eq.EQ with type t := t)
-
   module OrdByBaseId = (val Ord.contramap (module BaseId) to_base_id)
 
   include (OrdByBaseId : Ord.ORD with type t := t)
@@ -257,7 +251,7 @@ module Id = struct
   module Map = Map.Make (OrdByBaseId)
 
   module Hamt = Hamt.Make (struct
-    include EqByBaseId
+    include OrdByBaseId
     include HashByBaseId
   end)
 
