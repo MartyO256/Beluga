@@ -980,10 +980,11 @@ type declaration =
   ]
 
 and t =
-  { declarations : declaration List.t
-        (** The sequence of entry IDs in the order they are declared in the
-            signature. This allows for in-order traversal of the signature
-            for pretty-printing. *)
+  { declarations : (t * declaration) List.t Lazy.t
+        (** The sequence of declarations as they appear in the signature.
+            Each entry is also associated with the signature up to and
+            including that entry. This allows for in-order traversal of the
+            signature for pretty-printing. *)
   ; declarations_by_name : (t * declaration) Name.Hamt.t Lazy.t
         (** The bindings of entries by name currently in scope. Each entry is
             also associated with the signature up to and including that
@@ -996,7 +997,7 @@ and t =
         (** The set of logic programming queries on LF types. *)
   ; mqueries : Id.MQuery.Set.t
         (** The set of logic programming queries on Comp types. *)
-  ; unfrozen : BaseId.Set.t
+  ; unfrozen : Id.Set.t
         (** The set of entry IDs for currently unfrozen entries. This allows
             for shadowed declarations to be frozen. *)
   }
