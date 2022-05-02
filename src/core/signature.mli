@@ -670,14 +670,6 @@ module Query : sig
   val query : t -> LF.mctx * (LF.typ * offset)
 
   val search_parameters : t -> search_parameters
-
-  (** {1 Collections} *)
-
-  module Set : Set.S with type elt = t
-
-  (** {1 Instances} *)
-
-  include Ord.ORD with type t := t
 end
 
 (** Logic programming query declarations on computational types. *)
@@ -722,14 +714,6 @@ module MQuery : sig
   val query : t -> Comp.typ * offset
 
   val search_parameters : t -> search_parameters
-
-  (** {1 Collections} *)
-
-  module Set : Set.S with type elt = t
-
-  (** {1 Instances} *)
-
-  include Ord.ORD with type t := t
 end
 
 (** The type of Beluga signatures. *)

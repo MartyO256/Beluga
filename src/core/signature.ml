@@ -911,13 +911,6 @@ module Query = struct
   let[@inline] query { query; _ } = query
 
   let[@inline] search_parameters { search_parameters; _ } = search_parameters
-
-  module Ord : Support.Ord.ORD with type t = t =
-    (val Ord.contramap (module Id.Query) id)
-
-  module Set = Set.Make (Ord)
-
-  include (Ord : Support.Ord.ORD with type t := t)
 end
 
 module MQuery = struct
@@ -956,13 +949,6 @@ module MQuery = struct
   let[@inline] query { query; _ } = query
 
   let[@inline] search_parameters { search_parameters; _ } = search_parameters
-
-  module Ord : Support.Ord.ORD with type t = t =
-    (val Ord.contramap (module Id.MQuery) id)
-
-  module Set = Set.Make (Ord)
-
-  include (Ord : Support.Ord.ORD with type t := t)
 end
 
 type mutually_recursive_typs =
