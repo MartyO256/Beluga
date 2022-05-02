@@ -162,7 +162,11 @@ module BaseId : sig
 
   (** {1 Constructors} *)
 
-  val make : int -> t
+  val min_value : t
+
+  val max_value : t
+
+  val next : t -> t
 end = struct
   include Int
 
@@ -189,7 +193,11 @@ end = struct
     include (Hash : Support.Hash.HASH with type t := t)
   end)
 
-  let make = Fun.id
+  let min_value = 0
+
+  let max_value = Int.max_int
+
+  let[@inline] next x = x + 1
 end
 
 module Id = struct
@@ -219,10 +227,43 @@ module Id = struct
     | `Schema_id of Schema.t
     ]
 
+  let to_base_id : t -> BaseId.t = function
+    | `Typ_id id
+    | `Const_id id
+    | `Comp_typ_id id
+    | `Comp_cotyp_id id
+    | `Comp_const_id id
+    | `Comp_dest_id id
+    | `Comp_id id
+    | `Module_id id
+    | `Query_id id
+    | `MQuery_id id
+    | `Schema_id id -> id
+
+  module EqByBaseId = (val Eq.contramap (module BaseId) to_base_id)
+
+  include (EqByBaseId : Eq.EQ with type t := t)
+
+  module OrdByBaseId = (val Ord.contramap (module BaseId) to_base_id)
+
+  include (OrdByBaseId : Ord.ORD with type t := t)
+
+  module HashByBaseId = (val Hash.contramap (module BaseId) to_base_id)
+
+  include (HashByBaseId : Hash.HASH with type t := t)
+
+  module Set = Set.Make (OrdByBaseId)
+  module Map = Map.Make (OrdByBaseId)
+
+  module Hamt = Hamt.Make (struct
+    include EqByBaseId
+    include HashByBaseId
+  end)
+
   module Allocator = struct
     type id = t
 
-    type state = { previous_id : int }
+    type state = { previous_id : BaseId.t }
 
     include (
       State.Make (struct
@@ -230,37 +271,37 @@ module Id = struct
       end) :
         State.STATE with type state := state)
 
-    let initial_state = { previous_id = 0 }
+    let initial_state = { previous_id = BaseId.min_value }
 
     let next_id =
       get >>= fun { previous_id; _ } ->
-      if previous_id = Int.max_int then
+      if BaseId.(previous_id = max_value) then
         raise @@ Invalid_argument "Exhausted sequence of fresh IDs"
       else
-        let next = previous_id + 1 in
+        let next = BaseId.next previous_id in
         put { previous_id = next } $> Fun.const next
 
-    let next_typ_id = next_id $> Typ.make
+    let next_typ_id = next_id
 
-    let next_const_id = next_id $> Const.make
+    let next_const_id = next_id
 
-    let next_comp_typ_id = next_id $> CompTyp.make
+    let next_comp_typ_id = next_id
 
-    let next_comp_const_id = next_id $> CompConst.make
+    let next_comp_const_id = next_id
 
-    let next_comp_cotyp_id = next_id $> CompCotyp.make
+    let next_comp_cotyp_id = next_id
 
-    let next_comp_dest_id = next_id $> CompDest.make
+    let next_comp_dest_id = next_id
 
-    let next_comp_id = next_id $> Comp.make
+    let next_comp_id = next_id
 
-    let next_module_id = next_id $> Module.make
+    let next_module_id = next_id
 
-    let next_query_id = next_id $> Query.make
+    let next_query_id = next_id
 
-    let next_mquery_id = next_id $> MQuery.make
+    let next_mquery_id = next_id
 
-    let next_schema_id = next_id $> Schema.make
+    let next_schema_id = next_id
   end
 end
 

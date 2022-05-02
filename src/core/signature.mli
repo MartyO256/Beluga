@@ -106,7 +106,7 @@ module Declaration : sig
   val entry : 'entry t -> 'entry
 end
 
-(** Unique identifiers for declarations in a signature.
+(** Unique identifiers (IDs) for declarations in a signature.
 
     An ID uniquely refers to a signature declaration in a source file.
     However, since declarations may be elaborated in steps, derived
@@ -119,6 +119,8 @@ module type ID = sig
   type t
 
   (** {1 Instances} *)
+
+  include Eq.EQ with type t := t
 
   include Ord.ORD with type t := t
 
@@ -135,6 +137,8 @@ end
 
 (** Beluga declaration identifiers (IDs). *)
 module Id : sig
+  (** {1 ID Classes} *)
+
   module Typ : ID
 
   module Const : ID
@@ -171,6 +175,8 @@ module Id : sig
     | `MQuery_id of MQuery.t
     | `Schema_id of Schema.t
     ]
+
+  (** {1 Constructors} *)
 
   (** Stateful builder pattern for sequentially making distinct IDs. *)
   module Allocator : sig
@@ -227,6 +233,22 @@ module Id : sig
     (** [next_schema_id] is an ID allocator whose next ID is a schema ID. *)
     val next_schema_id : Schema.t t
   end
+
+  (** {1 Instances} *)
+
+  include Eq.EQ with type t := t
+
+  include Ord.ORD with type t := t
+
+  include Hash.HASH with type t := t
+
+  (** {1 Collections} *)
+
+  module Set : Set.S with type elt = t
+
+  module Map : Map.S with type key = t
+
+  module Hamt : Hamt.S with type key = t
 end
 
 (** LF type family declarations. *)
