@@ -832,11 +832,35 @@ module Module = struct
     { id : Id.Module.t
     ; name : Name.t
     ; location : Location.t
-    ; declarations : 'a Name.LinkedHamt.t
+    ; declarations : 'a List.t
+    ; declarations_by_name : 'a Nonempty.t Name.Hamt.t
     }
 
-  let make ~id ~location ?(declarations = Name.LinkedHamt.empty) name =
-    { id; name; location; declarations }
+  let make_empty ~id ~location name =
+    { id
+    ; name
+    ; location
+    ; declarations = []
+    ; declarations_by_name = Name.Hamt.empty
+    }
+
+  let add_declaration ({ declarations; _ } as m) declaration =
+    { m with declarations = List.cons declaration declarations }
+
+  let add_named_declaration ({ declarations; declarations_by_name; _ } as m)
+      name declaration =
+    { m with
+      declarations = declarations |> List.cons declaration
+    ; declarations_by_name =
+        declarations_by_name
+        |> Name.Hamt.alter name (fun bindings ->
+               bindings
+               |> Option.eliminate
+                    (fun () -> Nonempty.from declaration [])
+                    (fun declarations ->
+                      Nonempty.cons declaration declarations)
+               |> Option.some)
+    }
 
   let[@inline] id { id; _ } = id
 
@@ -846,7 +870,12 @@ module Module = struct
 
   let[@inline] declarations { declarations; _ } = declarations
 
-  let lookup m name = m |> declarations |> Name.LinkedHamt.find_opt name
+  let[@inline] declarations_by_name { declarations_by_name; _ } =
+    declarations_by_name
+
+  let lookup m name =
+    let open Option in
+    m |> declarations_by_name |> Name.Hamt.find_opt name $> Nonempty.head
 
   let rec deep_lookup :
       ('a -> 'a t Option.t) -> 'a t -> Name.t List.t -> Name.t -> 'a Option.t
@@ -1007,10 +1036,11 @@ and t =
             Each entry is also associated with the signature up to and
             including that entry. This allows for in-order traversal of the
             signature for pretty-printing. *)
-  ; declarations_by_name : (t * declaration) Name.Hamt.t Lazy.t
-        (** The bindings of entries by name currently in scope. Each entry is
-            also associated with the signature up to and including that
-            entry. This allows for entry lookups that respects scoping. *)
+  ; declarations_by_name : (t * declaration) Nonempty.t Name.Hamt.t Lazy.t
+        (** The bindings of entries by name. For a given name, only the head
+            element is currently in scope. Each entry is also associated with
+            the signature up to and including that entry. This allows for
+            entry lookups that respects scoping. *)
   ; declarations_by_id : (t * declaration) Id.Hamt.t Lazy.t
         (** An index of the entries mapped by ID. Each entry is also
             associated with the signature up to and including that entry.
@@ -1104,7 +1134,9 @@ let extract_declaration guard (signature, declaration_opt) =
 
 let lookup_name : t -> Name.t -> (t * declaration) Option.t =
  fun signature name ->
+  let open Option in
   signature |> declarations_by_name |> Name.Hamt.find_opt name
+  $> Nonempty.head
 
 let lookup signature qualified_name =
   let base_name = QualifiedName.name qualified_name in

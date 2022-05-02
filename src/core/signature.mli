@@ -613,12 +613,11 @@ module Module : sig
 
   (** {1 Constructors} *)
 
-  val make :
-       id:Id.Module.t
-    -> location:Location.t
-    -> ?declarations:'a Name.LinkedHamt.t
-    -> Name.t
-    -> 'a t
+  val make_empty : id:Id.Module.t -> location:Location.t -> Name.t -> 'a t
+
+  val add_declaration : 'a t -> 'a -> 'a t
+
+  val add_named_declaration : 'a t -> Name.t -> 'a -> 'a t
 
   (** {1 Destructors} *)
 
@@ -628,7 +627,7 @@ module Module : sig
 
   val name : 'a t -> Name.t
 
-  val declarations : 'a t -> 'a Name.LinkedHamt.t
+  val declarations : 'a t -> 'a List.t
 
   (** {1 Lookups} *)
 
