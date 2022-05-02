@@ -1,3 +1,5 @@
+(** Totally ordered types. *)
+
 (** Module type for totally ordered types. *)
 module type ORD = sig
   (** The type of elements to compare. *)
@@ -50,32 +52,9 @@ end) : ORD with type t = T.t
     reverse of the given totally ordered type. *)
 module Reverse (Ord : ORD) : ORD with type t = Ord.t
 
-(** If [val f : 't -> 's], then [contramap ord f] is a total ordering of
-    values having type ['t] by the ordering [ord] of values of type ['s].
-
-    For instance, the following module defines the type of persons totally
-    ordered by string ids.
-
-    {[
-      module Person : sig
-        type t
-
-        val id : t -> string
-
-        include Ord.ORD with type t := t
-      end = struct
-        type t =
-          { id : string
-          ; age : int
-          }
-
-        let id { id; _ } = id
-
-        module OrdById = (val Ord.contramap (module String) id)
-
-        include (OrdById : Ord.ORD with type t := t)
-      end
-    ]} *)
+(** If [val f : 't -> 's], then [contramap ord f] is an instance of {!ORD}
+    for values of type ['t] by the {!HASH} insance [ord] for values of type
+    ['s]. *)
 val contramap :
      (module ORD with type t = 's)
   -> ('t -> 's)
