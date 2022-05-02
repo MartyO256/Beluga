@@ -234,6 +234,28 @@ module Id : sig
     val next_schema_id : Schema.t t
   end
 
+  val lift_typ_id : Typ.t -> t
+
+  val lift_const_id : Const.t -> t
+
+  val lift_comp_typ_id : CompTyp.t -> t
+
+  val lift_comp_const_id : CompConst.t -> t
+
+  val lift_comp_cotyp_id : CompCotyp.t -> t
+
+  val lift_comp_dest_id : CompDest.t -> t
+
+  val lift_comp_id : Comp.t -> t
+
+  val lift_module_id : Module.t -> t
+
+  val lift_query_id : Query.t -> t
+
+  val lift_mquery_id : MQuery.t -> t
+
+  val lift_schema_id : Schema.t -> t
+
   (** {1 Instances} *)
 
   include Eq.EQ with type t := t

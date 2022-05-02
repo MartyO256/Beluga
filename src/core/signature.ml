@@ -226,6 +226,28 @@ module Id = struct
     | `Schema_id of Schema.t
     ]
 
+  let lift_typ_id id = `Typ_id id
+
+  let lift_const_id id = `Const_id id
+
+  let lift_comp_typ_id id = `Comp_typ_id id
+
+  let lift_comp_const_id id = `Comp_const_id id
+
+  let lift_comp_cotyp_id id = `Comp_cotyp_id id
+
+  let lift_comp_dest_id id = `Comp_dest_id id
+
+  let lift_comp_id id = `Comp_id id
+
+  let lift_module_id id = `Module_id id
+
+  let lift_query_id id = `Query_id id
+
+  let lift_mquery_id id = `MQuery_id id
+
+  let lift_schema_id id = `Schema_id id
+
   let to_base_id : t -> BaseId.t = function
     | `Typ_id id
     | `Const_id id
@@ -989,7 +1011,7 @@ and t =
         (** The bindings of entries by name currently in scope. Each entry is
             also associated with the signature up to and including that
             entry. This allows for entry lookups that respects scoping. *)
-  ; declarations_by_id : (t * declaration) BaseId.Hamt.t Lazy.t
+  ; declarations_by_id : (t * declaration) Id.Hamt.t Lazy.t
         (** An index of the entries mapped by ID. Each entry is also
             associated with the signature up to and including that entry.
             This allows for looking up shadowed declarations. *)
@@ -1142,37 +1164,44 @@ let lookup_mquery signature qualified_name =
     to and including [declaration]. Declarations looked up by ID may not be
     in scope. *)
 let lookup_by_id signature id =
-  signature |> declarations_by_id |> BaseId.Hamt.find_opt id
+  signature |> declarations_by_id |> Id.Hamt.find_opt id
 
-let guarded_lookup_by_id guard signature id =
+let guarded_lookup_by_id guard lift signature id =
   let open Option in
-  lookup_by_id signature id >>= extract_declaration guard
+  id |> lift |> lookup_by_id signature >>= extract_declaration guard
 
-let lookup_lf_family_by_id = guarded_lookup_by_id guard_typ_declaration
+let lookup_lf_family_by_id =
+  guarded_lookup_by_id guard_typ_declaration Id.lift_typ_id
 
-let lookup_lf_constant_by_id = guarded_lookup_by_id guard_const_declaration
+let lookup_lf_constant_by_id =
+  guarded_lookup_by_id guard_const_declaration Id.lift_const_id
 
-let lookup_comp_typ_by_id = guarded_lookup_by_id guard_comp_typ_declaration
+let lookup_comp_typ_by_id =
+  guarded_lookup_by_id guard_comp_typ_declaration Id.lift_comp_typ_id
 
 let lookup_comp_constructor_by_id =
-  guarded_lookup_by_id guard_comp_const_declaration
+  guarded_lookup_by_id guard_comp_const_declaration Id.lift_comp_const_id
 
 let lookup_comp_cotyp_by_id =
-  guarded_lookup_by_id guard_comp_cotyp_declaration
+  guarded_lookup_by_id guard_comp_cotyp_declaration Id.lift_comp_cotyp_id
 
 let lookup_comp_destructor_by_id =
-  guarded_lookup_by_id guard_comp_dest_declaration
+  guarded_lookup_by_id guard_comp_dest_declaration Id.lift_comp_dest_id
 
-let lookup_comp_by_id = guarded_lookup_by_id guard_comp_declaration
+let lookup_comp_by_id =
+  guarded_lookup_by_id guard_comp_declaration Id.lift_comp_id
 
-let lookup_schema_by_id = guarded_lookup_by_id guard_schema_declaration
+let lookup_schema_by_id =
+  guarded_lookup_by_id guard_schema_declaration Id.lift_schema_id
 
 let lookup_query_by_id signature id =
   let open Option in
-  lookup_by_id signature id >>= fun (signature, declaration) ->
+  id |> Id.lift_query_id |> lookup_by_id signature
+  >>= fun (signature, declaration) ->
   declaration |> guard_query_declaration $> fun query -> (signature, query)
 
 let lookup_mquery_by_id signature id =
   let open Option in
-  lookup_by_id signature id >>= fun (signature, declaration) ->
+  id |> Id.lift_mquery_id |> lookup_by_id signature
+  >>= fun (signature, declaration) ->
   declaration |> guard_mquery_declaration $> fun mquery -> (signature, mquery)
