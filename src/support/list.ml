@@ -1,13 +1,14 @@
 include Stdlib.List
 
-let rec last l = match l with
+let rec last l =
+  match l with
   | [] -> raise (Invalid_argument "List.last")
-  | [x] -> x
+  | [ x ] -> x
   | _ :: xs -> last xs
 
 let rec pairs l =
   match l with
-  | [] | [_] -> []
+  | [] | [ _ ] -> []
   | x1 :: x2 :: xs -> (x1, x2) :: pairs (x2 :: xs)
 
 let null = function
@@ -47,28 +48,23 @@ let index_of p l =
   go 0 l
 
 let find_index p =
-  let rec find_index i =
-    function
+  let rec find_index i = function
     | [] -> raise Not_found
-    | x :: xs ->
-      if p x then i, x
-      else find_index (i + 1) xs
+    | x :: xs -> if p x then (i, x) else find_index (i + 1) xs
   in
   find_index 0
 
 let find_index_opt p =
-  let rec find_index_opt i =
-    function
+  let rec find_index_opt i = function
     | [] -> None
-    | x :: xs ->
-      if p x then Some (i, x)
-      else find_index_opt (i + 1) xs
+    | x :: xs -> if p x then Some (i, x) else find_index_opt (i + 1) xs
   in
   find_index_opt 0
 
-let rec equal eq l1 l2 = match l1, l2 with
+let rec equal eq l1 l2 =
+  match (l1, l2) with
   | [], [] -> true
-  | x :: xs, y :: ys -> if eq x y then equal eq xs ys else false
+  | x :: xs, y :: ys when eq x y -> equal eq xs ys
   | _ -> false
 
 let hd_opt = function
@@ -80,13 +76,15 @@ let iter_rev f l =
     match l with
     | [] -> continue ()
     | x :: xs ->
-      iter_rev xs (fun () -> f x; continue ())
+      iter_rev xs (fun () ->
+          f x;
+          continue ())
   in
   iter_rev l (fun () -> ())
 
 let index l = mapi (fun i x -> (i, x)) l
 
-let map f l =
+let map f =
   let rec map l return =
     match l with
     | [] -> return []
@@ -94,17 +92,17 @@ let map f l =
       let y = f x in
       map xs (fun ys -> return (y :: ys))
   in
-  map l Fun.id
+  fun l -> map l Fun.id
 
-let mapi2 f l1 l2 =
+let mapi2 f =
   let rec mapi2 index l1 l2 return =
-    match l1, l2 with
+    match (l1, l2) with
     | [], [] -> return []
     | x :: xs, y :: ys ->
       mapi2 (index + 1) xs ys (fun tl -> return (f index x y :: tl))
     | _ -> raise (Invalid_argument "List.mapi2")
   in
-  mapi2 0 l1 l2 Fun.id
+  fun l1 l2 -> mapi2 0 l1 l2 Fun.id
 
 let rec drop n = function
   | l when n <= 0 -> l
@@ -115,23 +113,23 @@ let ap xs = map2 (fun x f -> f x) xs
 
 let ap_one x = map (fun f -> f x)
 
-let split l =
+let split =
   let rec split l return =
     match l with
     | [] -> return ([], [])
     | (x, y) :: l -> split l (fun (xs, ys) -> return (x :: xs, y :: ys))
   in
-  split l Fun.id
+  fun l -> split l Fun.id
 
-let combine l1 l2 =
+let combine =
   let rec combine l1 l2 return =
-    match l1, l2 with
+    match (l1, l2) with
     | [], [] -> return []
     | a1 :: l1, a2 :: l2 ->
       combine l1 l2 (fun rest -> return ((a1, a2) :: rest))
     | _ -> raise (Invalid_argument "List.combine")
   in
-  combine l1 l2 Fun.id
+  fun l1 l2 -> combine l1 l2 Fun.id
 
 let partitioni p l =
   let rec partitioni i yes no = function
@@ -146,9 +144,9 @@ let fold_right f l acc =
   let rec fold_right l acc return =
     match l with
     | [] -> return acc
-    | a :: l ->
-      fold_right l acc (fun b -> return (f a b))
-  in fold_right l acc Fun.id
+    | a :: l -> fold_right l acc (fun b -> return (f a b))
+  in
+  fold_right l acc Fun.id
 
 let partition_take k l =
   let rec partition_take k l taken =
@@ -158,20 +156,19 @@ let partition_take k l =
   in
   partition_take k l []
 
-module MakeOrd (O: Ord.ORD) : Ord.ORD with type t = O.t list = Ord.Make (struct
+module MakeOrd (O : Ord.ORD) : Ord.ORD with type t = O.t list =
+Ord.Make (struct
   type t = O.t list
 
   let compare x y =
     let rec compare x y =
-      match x, y with
+      match (x, y) with
       | [], [] -> 0
       | [], _ :: _ -> 1
       | _ :: _, [] -> -1
       | x :: xs, y :: ys ->
         let comparison = O.compare x y in
-        if comparison = 0
-        then compare xs ys
-        else comparison
+        if comparison = 0 then compare xs ys else comparison
     in
     compare x y
 end)
