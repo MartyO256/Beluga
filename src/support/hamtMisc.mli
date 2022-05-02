@@ -15,7 +15,7 @@ module type HASH_TYPE = sig
 
   (** {1 Instances} *)
 
-  include Ord.ORD with type t := t
+  include Eq.EQ with type t := t
 
   include Hash.HASH with type t := t
 end
