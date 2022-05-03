@@ -12,7 +12,7 @@ module Name = struct
 
   include (
     struct
-      let pp ppf name = Format.fprintf ppf "%s" name
+      let pp = Format.pp_print_string
 
       let show = Fun.id
     end :
