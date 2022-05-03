@@ -326,7 +326,7 @@ module Typ = struct
 
     let make ~id ~name ~location ~implicit_arguments
         ?(var_name_base = Option.none) ?(mvar_name_base = Option.none)
-        ?(constructors = Name.Map.empty) kind =
+        ?(constructors = Name.Hamt.empty) kind =
       { id
       ; name
       ; location
@@ -534,11 +534,11 @@ module CompTyp = struct
       ; implicit_arguments : int
       ; kind : Comp.kind
       ; positivity : Sgn.positivity_flag
-      ; constructors : Id.CompConst.t Name.Map.t
+      ; constructors : Id.CompConst.t Name.Hamt.t
       }
 
     let make ~id ~name ~location ~implicit_arguments ~positivity
-        ?(constructors = Name.Map.empty) kind =
+        ?(constructors = Name.Hamt.empty) kind =
       { id
       ; name
       ; location
@@ -549,7 +549,7 @@ module CompTyp = struct
       }
 
     let add_constructor ({ constructors; _ } as entry) name const =
-      { entry with constructors = Name.Map.add name const constructors }
+      { entry with constructors = Name.Hamt.add name const constructors }
   end
 
   module Frozen = struct
@@ -560,7 +560,7 @@ module CompTyp = struct
       ; implicit_arguments : int
       ; kind : Comp.kind
       ; positivity : Sgn.positivity_flag
-      ; constructors : Id.CompConst.t Name.Map.t
+      ; constructors : Id.CompConst.t Name.Hamt.t
       }
   end
 
@@ -610,7 +610,7 @@ module CompTyp = struct
     if_unfrozen (fun x -> Unfrozen (Unfrozen.add_constructor x name const))
 
   let has_constructor_with_name name entry =
-    entry |> constructors |> Name.Map.mem name
+    entry |> constructors |> Name.Hamt.mem name
 
   let frozen
       { Unfrozen.id
@@ -672,15 +672,15 @@ module CompCotyp = struct
       ; location : Location.t
       ; implicit_arguments : int
       ; kind : Comp.kind
-      ; destructors : Id.CompDest.t Name.Map.t
+      ; destructors : Id.CompDest.t Name.Hamt.t
       }
 
     let make ~id ~name ~location ~implicit_arguments
-        ?(destructors = Name.Map.empty) kind =
+        ?(destructors = Name.Hamt.empty) kind =
       { id; name; location; implicit_arguments; kind; destructors }
 
     let add_destructor ({ destructors; _ } as entry) name dest =
-      { entry with destructors = Name.Map.add name dest destructors }
+      { entry with destructors = Name.Hamt.add name dest destructors }
   end
 
   module Frozen = struct
@@ -690,7 +690,7 @@ module CompCotyp = struct
       ; location : Location.t
       ; implicit_arguments : int
       ; kind : Comp.kind
-      ; destructors : Id.CompDest.t Name.Map.t
+      ; destructors : Id.CompDest.t Name.Hamt.t
       }
   end
 
@@ -738,7 +738,7 @@ module CompCotyp = struct
     if_unfrozen (fun x -> Unfrozen (Unfrozen.add_destructor x name dest))
 
   let has_destructor_with_name name entry =
-    entry |> destructors |> Name.Map.mem name
+    entry |> destructors |> Name.Hamt.mem name
 
   let frozen
       { Unfrozen.id; name; location; implicit_arguments; kind; destructors }

@@ -410,7 +410,7 @@ module CompTyp : sig
     -> t
     -> (t, [> `Frozen_comp_typ_declaration_error of Id.CompTyp.t ]) result
 
-  val constructors : t -> Id.CompConst.t Name.Map.t
+  val constructors : t -> Id.CompConst.t Name.Hamt.t
 
   val has_constructor_with_name : Name.t -> t -> bool
 end
@@ -495,7 +495,7 @@ module CompCotyp : sig
        , [> `Frozen_comp_cotyp_declaration_error of Id.CompCotyp.t ] )
        result
 
-  val destructors : t -> Id.CompDest.t Name.Map.t
+  val destructors : t -> Id.CompDest.t Name.Hamt.t
 
   val has_destructor_with_name : Name.t -> t -> bool
 end
