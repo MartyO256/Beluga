@@ -112,19 +112,6 @@ module QualifiedName = struct
   module Map = Map.Make (Ord')
 end
 
-module Declaration = struct
-  type 'entry t =
-    { name : Name.t
-    ; entry : 'entry
-    }
-
-  let[@inline] make ~name ~entry = { name; entry }
-
-  let[@inline] name { name; _ } = name
-
-  let[@inline] entry { entry; _ } = entry
-end
-
 (** Unique identifiers for declarations in a signature.
 
     An ID uniquely refers to a signature declaration in a source file.
@@ -1011,15 +998,15 @@ type mutually_recursive_comp_typs =
 type mutually_recursive_programs = [ `Programs of Comp.t Name.LinkedHamt1.t ]
 
 type declaration =
-  [ `Typ_declaration of Typ.t Declaration.t
-  | `Const_declaration of Const.t Declaration.t
-  | `Comp_typ_declaration of CompTyp.t Declaration.t
-  | `Comp_const_declaration of CompConst.t Declaration.t
-  | `Comp_cotyp_declaration of CompCotyp.t Declaration.t
-  | `Comp_dest_declaration of CompDest.t Declaration.t
-  | `Comp_declaration of Comp.t Declaration.t
-  | `Schema_declaration of Schema.t Declaration.t
-  | `Module_declaration of (t * declaration) Module.t Declaration.t
+  [ `Typ_declaration of Typ.t
+  | `Const_declaration of Const.t
+  | `Comp_typ_declaration of CompTyp.t
+  | `Comp_const_declaration of CompConst.t
+  | `Comp_cotyp_declaration of CompCotyp.t
+  | `Comp_dest_declaration of CompDest.t
+  | `Comp_declaration of Comp.t
+  | `Schema_declaration of Schema.t
+  | `Module_declaration of (t * declaration) Module.t
   | `Documentation_comment of DocumentationComment.t
   | `Mutually_recursive_declaration of
     [ mutually_recursive_typs
@@ -1068,49 +1055,43 @@ let[@inline] queries { queries; _ } = queries
 
 let[@inline] mqueries { mqueries; _ } = mqueries
 
-let guard_typ_declaration : declaration -> Typ.t Declaration.t Option.t =
-  function
+let guard_typ_declaration : declaration -> Typ.t Option.t = function
   | `Typ_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
-let guard_const_declaration : declaration -> Const.t Declaration.t Option.t =
-  function
+let guard_const_declaration : declaration -> Const.t Option.t = function
   | `Const_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
-let guard_comp_typ_declaration :
-    declaration -> CompTyp.t Declaration.t Option.t = function
+let guard_comp_typ_declaration : declaration -> CompTyp.t Option.t = function
   | `Comp_typ_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
-let guard_comp_const_declaration :
-    declaration -> CompConst.t Declaration.t Option.t = function
+let guard_comp_const_declaration : declaration -> CompConst.t Option.t =
+  function
   | `Comp_const_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
-let guard_comp_cotyp_declaration :
-    declaration -> CompCotyp.t Declaration.t Option.t = function
+let guard_comp_cotyp_declaration : declaration -> CompCotyp.t Option.t =
+  function
   | `Comp_cotyp_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
-let guard_comp_dest_declaration :
-    declaration -> CompDest.t Declaration.t Option.t = function
+let guard_comp_dest_declaration : declaration -> CompDest.t Option.t =
+  function
   | `Comp_dest_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
-let guard_comp_declaration : declaration -> Comp.t Declaration.t Option.t =
-  function
+let guard_comp_declaration : declaration -> Comp.t Option.t = function
   | `Comp_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
-let guard_schema_declaration : declaration -> Schema.t Declaration.t Option.t
-    = function
+let guard_schema_declaration : declaration -> Schema.t Option.t = function
   | `Schema_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
 let guard_module_declaration :
-    declaration -> (t * declaration) Module.t Declaration.t Option.t =
-  function
+    declaration -> (t * declaration) Module.t Option.t = function
   | `Module_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
@@ -1129,8 +1110,7 @@ let guard_mquery_declaration : declaration -> MQuery.t Option.t = function
 
 let extract_declaration guard (signature, declaration_opt) =
   let open Option in
-  declaration_opt |> guard $> fun declaration ->
-  (signature, declaration |> Declaration.entry)
+  declaration_opt |> guard $> Pair.left signature
 
 let lookup_name : t -> Name.t -> (t * declaration) Option.t =
  fun signature name ->
@@ -1152,10 +1132,8 @@ let lookup signature qualified_name =
     >>= fun top_module ->
     Module.deep_lookup
       (fun looked_up_module ->
-        looked_up_module |> Pair.snd |> guard_module_declaration
-        $> Declaration.entry)
-      (top_module |> Declaration.entry)
-      tail_module_names base_name
+        looked_up_module |> Pair.snd |> guard_module_declaration)
+      top_module tail_module_names base_name
 
 let guarded_declaration_lookup guard signature qualified_name =
   let open Option in
@@ -1180,15 +1158,11 @@ let lookup_comp = guarded_declaration_lookup guard_comp_declaration
 
 let lookup_schema = guarded_declaration_lookup guard_schema_declaration
 
-let lookup_query signature qualified_name =
-  let open Option in
-  lookup signature qualified_name >>= fun (signature, declaration) ->
-  declaration |> guard_query_declaration $> fun query -> (signature, query)
+let lookup_module = guarded_declaration_lookup guard_module_declaration
 
-let lookup_mquery signature qualified_name =
-  let open Option in
-  lookup signature qualified_name >>= fun (signature, declaration) ->
-  declaration |> guard_mquery_declaration $> fun mquery -> (signature, mquery)
+let lookup_query = guarded_declaration_lookup guard_query_declaration
+
+let lookup_mquery = guarded_declaration_lookup guard_mquery_declaration
 
 (** [lookup signature id] returns [None] if there is no declaration in
     [signature] having ID [id], and otherwise returns
@@ -1198,42 +1172,39 @@ let lookup_mquery signature qualified_name =
 let lookup_by_id signature id =
   signature |> declarations_by_id |> Id.Hamt.find_opt id
 
-let guarded_lookup_by_id guard lift signature id =
+let guarded_lookup_by_id lift_id guard signature id =
   let open Option in
-  id |> lift |> lookup_by_id signature >>= extract_declaration guard
+  id |> lift_id |> lookup_by_id signature >>= extract_declaration guard
 
 let lookup_lf_family_by_id =
-  guarded_lookup_by_id guard_typ_declaration Id.lift_typ_id
+  guarded_lookup_by_id Id.lift_typ_id guard_typ_declaration
 
 let lookup_lf_constant_by_id =
-  guarded_lookup_by_id guard_const_declaration Id.lift_const_id
+  guarded_lookup_by_id Id.lift_const_id guard_const_declaration
 
 let lookup_comp_typ_by_id =
-  guarded_lookup_by_id guard_comp_typ_declaration Id.lift_comp_typ_id
+  guarded_lookup_by_id Id.lift_comp_typ_id guard_comp_typ_declaration
 
 let lookup_comp_constructor_by_id =
-  guarded_lookup_by_id guard_comp_const_declaration Id.lift_comp_const_id
+  guarded_lookup_by_id Id.lift_comp_const_id guard_comp_const_declaration
 
 let lookup_comp_cotyp_by_id =
-  guarded_lookup_by_id guard_comp_cotyp_declaration Id.lift_comp_cotyp_id
+  guarded_lookup_by_id Id.lift_comp_cotyp_id guard_comp_cotyp_declaration
 
 let lookup_comp_destructor_by_id =
-  guarded_lookup_by_id guard_comp_dest_declaration Id.lift_comp_dest_id
+  guarded_lookup_by_id Id.lift_comp_dest_id guard_comp_dest_declaration
 
 let lookup_comp_by_id =
-  guarded_lookup_by_id guard_comp_declaration Id.lift_comp_id
+  guarded_lookup_by_id Id.lift_comp_id guard_comp_declaration
 
 let lookup_schema_by_id =
-  guarded_lookup_by_id guard_schema_declaration Id.lift_schema_id
+  guarded_lookup_by_id Id.lift_schema_id guard_schema_declaration
 
-let lookup_query_by_id signature id =
-  let open Option in
-  id |> Id.lift_query_id |> lookup_by_id signature
-  >>= fun (signature, declaration) ->
-  declaration |> guard_query_declaration $> fun query -> (signature, query)
+let lookup_module_by_id =
+  guarded_lookup_by_id Id.lift_module_id guard_module_declaration
 
-let lookup_mquery_by_id signature id =
-  let open Option in
-  id |> Id.lift_mquery_id |> lookup_by_id signature
-  >>= fun (signature, declaration) ->
-  declaration |> guard_mquery_declaration $> fun mquery -> (signature, mquery)
+let lookup_query_by_id =
+  guarded_lookup_by_id Id.lift_query_id guard_query_declaration
+
+let lookup_mquery_by_id =
+  guarded_lookup_by_id Id.lift_mquery_id guard_mquery_declaration

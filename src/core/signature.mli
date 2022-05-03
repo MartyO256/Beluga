@@ -85,27 +85,6 @@ module QualifiedName : sig
   module Map : Map.S with type key = t
 end
 
-(** Bindings of entries to names. *)
-module Declaration : sig
-  (** The type of declarations for bound variables referring to signature
-      entries. *)
-  type +'entry t
-
-  (** {1 Constructors} *)
-
-  (** [make name entry] is the declaration having name [name] and entry
-      [entry]. *)
-  val make : name:Name.t -> entry:'entry -> 'entry t
-
-  (** {1 Destructors} *)
-
-  (** [name declaration] is the variable name bound by [declaration]. *)
-  val name : 'entry t -> Name.t
-
-  (** [entry declaration] is the entry referred to by [declaration]. *)
-  val entry : 'entry t -> 'entry
-end
-
 (** Unique identifiers (IDs) for declarations in a signature.
 
     An ID uniquely refers to a signature declaration in a source file.
@@ -755,15 +734,15 @@ type mutually_recursive_programs = [ `Programs of Comp.t Name.LinkedHamt1.t ]
 
 (** The type of declarations in Beluga signatures. *)
 type declaration =
-  [ `Typ_declaration of Typ.t Declaration.t
-  | `Const_declaration of Const.t Declaration.t
-  | `Comp_typ_declaration of CompTyp.t Declaration.t
-  | `Comp_const_declaration of CompConst.t Declaration.t
-  | `Comp_cotyp_declaration of CompCotyp.t Declaration.t
-  | `Comp_dest_declaration of CompDest.t Declaration.t
-  | `Comp_declaration of Comp.t Declaration.t
-  | `Schema_declaration of Schema.t Declaration.t
-  | `Module_declaration of (t * declaration) Module.t Declaration.t
+  [ `Typ_declaration of Typ.t
+  | `Const_declaration of Const.t
+  | `Comp_typ_declaration of CompTyp.t
+  | `Comp_const_declaration of CompConst.t
+  | `Comp_cotyp_declaration of CompCotyp.t
+  | `Comp_dest_declaration of CompDest.t
+  | `Comp_declaration of Comp.t
+  | `Schema_declaration of Schema.t
+  | `Module_declaration of (t * declaration) Module.t
   | `Documentation_comment of DocumentationComment.t
   | `Mutually_recursive_declaration of
     [ mutually_recursive_typs
@@ -801,6 +780,9 @@ val lookup_comp : t -> QualifiedName.t -> (t * Comp.t) Option.t
 
 val lookup_schema : t -> QualifiedName.t -> (t * Schema.t) Option.t
 
+val lookup_module :
+  t -> QualifiedName.t -> (t * (t * declaration) Module.t) Option.t
+
 val lookup_query : t -> QualifiedName.t -> (t * Query.t) Option.t
 
 val lookup_mquery : t -> QualifiedName.t -> (t * MQuery.t) Option.t
@@ -825,6 +807,9 @@ val lookup_comp_destructor_by_id :
 val lookup_comp_by_id : t -> Id.Comp.t -> (t * Comp.t) Option.t
 
 val lookup_schema_by_id : t -> Id.Schema.t -> (t * Schema.t) Option.t
+
+val lookup_module_by_id :
+  t -> Id.Module.t -> (t * (t * declaration) Module.t) Option.t
 
 val lookup_query_by_id : t -> Id.Query.t -> (t * Query.t) Option.t
 
