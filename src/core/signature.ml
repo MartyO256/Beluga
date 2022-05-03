@@ -1017,6 +1017,20 @@ type declaration =
   | `MQuery_declaration of MQuery.t
   ]
 
+and declaration_with_id =
+  [ `Typ_declaration of Typ.t
+  | `Const_declaration of Const.t
+  | `Comp_typ_declaration of CompTyp.t
+  | `Comp_const_declaration of CompConst.t
+  | `Comp_cotyp_declaration of CompCotyp.t
+  | `Comp_dest_declaration of CompDest.t
+  | `Comp_declaration of Comp.t
+  | `Schema_declaration of Schema.t
+  | `Module_declaration of (t * declaration) Module.t
+  | `Query_declaration of Query.t
+  | `MQuery_declaration of MQuery.t
+  ]
+
 and t =
   { declarations : (t * declaration) List.t Lazy.t
         (** The sequence of declarations as they appear in the signature.
@@ -1041,7 +1055,7 @@ and t =
             for shadowed declarations to be frozen. *)
   }
 
-let[@inline] declarations { declarations; _ } = declarations
+let[@inline] declarations { declarations; _ } = declarations |> Lazy.force
 
 let[@inline] declarations_by_name { declarations_by_name; _ } =
   declarations_by_name |> Lazy.force
@@ -1208,3 +1222,85 @@ let lookup_query_by_id =
 
 let lookup_mquery_by_id =
   guarded_lookup_by_id Id.lift_mquery_id guard_mquery_declaration
+
+let id_of_declaration_with_id : [< declaration_with_id ] -> Id.t = function
+  | `Typ_declaration declaration -> `Typ_id (declaration |> Typ.id)
+  | `Const_declaration declaration -> `Const_id (declaration |> Const.id)
+  | `Comp_typ_declaration declaration ->
+    `Comp_typ_id (declaration |> CompTyp.id)
+  | `Comp_cotyp_declaration declaration ->
+    `Comp_cotyp_id (declaration |> CompCotyp.id)
+  | `Comp_const_declaration declaration ->
+    `Comp_const_id (declaration |> CompConst.id)
+  | `Comp_dest_declaration declaration ->
+    `Comp_dest_id (declaration |> CompDest.id)
+  | `Comp_declaration declaration -> `Comp_id (declaration |> Comp.id)
+  | `Module_declaration m -> `Module_id (m |> Module.id)
+  | `Query_declaration query -> `Query_id (query |> Query.id)
+  | `MQuery_declaration mquery -> `MQuery_id (mquery |> MQuery.id)
+  | `Schema_declaration schema -> `Schema_id (schema |> Schema.id)
+
+let id_of_declaration : [< declaration ] -> Id.t = function
+  | #declaration_with_id as declaration ->
+    id_of_declaration_with_id declaration
+  | _ -> raise @@ Invalid_argument "Unsupported declaration"
+
+exception UnboundId of Id.t * t
+
+type id_kind_mismatch =
+  { bound : Id.t
+  ; expected : Id.t
+  ; signature : t
+  }
+
+exception IdKindMismatch of id_kind_mismatch
+
+let lookup_by_id_exn lift_id guard signature id =
+  let lifted_id = lift_id id in
+  lookup_by_id signature lifted_id
+  |> Option.get_or_else (fun () -> raise @@ UnboundId (lifted_id, signature))
+  |> fun (signature, declaration) ->
+  declaration |> guard
+  |> Option.eliminate
+       (fun () ->
+         raise
+         @@ IdKindMismatch
+              { bound = id_of_declaration declaration
+              ; expected = lifted_id
+              ; signature
+              })
+       (fun declaration -> (signature, declaration))
+
+let lookup_lf_family_by_id_exn =
+  lookup_by_id_exn Id.lift_typ_id guard_typ_declaration
+
+let lookup_lf_constant_by_id_exn =
+  lookup_by_id_exn Id.lift_const_id guard_const_declaration
+
+let lookup_comp_typ_by_id_exn =
+  lookup_by_id_exn Id.lift_comp_typ_id guard_comp_typ_declaration
+
+let lookup_comp_constructor_by_id_exn =
+  lookup_by_id_exn Id.lift_comp_const_id guard_comp_const_declaration
+
+let lookup_comp_cotyp_by_id_exn =
+  lookup_by_id_exn Id.lift_comp_cotyp_id guard_comp_cotyp_declaration
+
+let lookup_comp_destructor_by_id_exn =
+  lookup_by_id_exn Id.lift_comp_dest_id guard_comp_dest_declaration
+
+let lookup_comp_by_id_exn =
+  lookup_by_id_exn Id.lift_comp_id guard_comp_declaration
+
+let lookup_schema_by_id_exn =
+  lookup_by_id_exn Id.lift_schema_id guard_schema_declaration
+
+let lookup_module_by_id_exn =
+  lookup_by_id_exn Id.lift_module_id guard_module_declaration
+
+let lookup_query_by_id_exn =
+  lookup_by_id_exn Id.lift_query_id guard_query_declaration
+
+let lookup_mquery_by_id_exn =
+  lookup_by_id_exn Id.lift_mquery_id guard_mquery_declaration
+

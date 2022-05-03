@@ -814,3 +814,30 @@ val lookup_module_by_id :
 val lookup_query_by_id : t -> Id.Query.t -> (t * Query.t) Option.t
 
 val lookup_mquery_by_id : t -> Id.MQuery.t -> (t * MQuery.t) Option.t
+
+(** {1 Unsafe lookups by ID} *)
+
+val lookup_lf_family_by_id_exn : t -> Id.Typ.t -> t * Typ.t
+
+val lookup_lf_constant_by_id_exn : t -> Id.Const.t -> t * Const.t
+
+val lookup_comp_typ_by_id_exn : t -> Id.CompTyp.t -> t * CompTyp.t
+
+val lookup_comp_constructor_by_id_exn :
+  t -> Id.CompConst.t -> t * CompConst.t
+
+val lookup_comp_cotyp_by_id_exn : t -> Id.CompCotyp.t -> t * CompCotyp.t
+
+val lookup_comp_destructor_by_id_exn : t -> Id.CompDest.t -> t * CompDest.t
+
+val lookup_comp_by_id_exn : t -> Id.Comp.t -> t * Comp.t
+
+val lookup_schema_by_id_exn : t -> Id.Schema.t -> t * Schema.t
+
+val lookup_module_by_id_exn :
+  t -> Id.Query.t -> t * (t * declaration) Module.t
+
+val lookup_query_by_id_exn : t -> Id.Query.t -> t * Query.t
+
+val lookup_mquery_by_id_exn : t -> Id.MQuery.t -> t * MQuery.t
+
