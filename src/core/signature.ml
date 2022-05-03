@@ -309,6 +309,8 @@ module Id = struct
   end
 end
 
+(** Beluga Signature Entries *)
+
 module Typ = struct
   open Syntax.Int
 
@@ -995,6 +997,8 @@ module MQuery = struct
   let[@inline] search_parameters { search_parameters; _ } = search_parameters
 end
 
+(** Beluga Signatures *)
+
 type mutually_recursive_typs =
   [ `Typs of (Typ.t * Const.t Name.LinkedHamt.t) Nonempty.t ]
 
@@ -1066,6 +1070,8 @@ and t =
             for shadowed declarations to be frozen. *)
   }
 
+(** Destructors *)
+
 let[@inline] declarations { declarations; _ } = declarations |> Lazy.force
 
 let[@inline] declarations_by_name { declarations_by_name; _ } =
@@ -1079,6 +1085,8 @@ let[@inline] unfrozen_entries { unfrozen; _ } = unfrozen
 let[@inline] queries { queries; _ } = queries
 
 let[@inline] mqueries { mqueries; _ } = mqueries
+
+(** Declaration Guards *)
 
 let guard_typ_declaration : declaration -> Typ.t Option.t = function
   | `Typ_declaration declaration -> Option.some declaration
@@ -1132,6 +1140,8 @@ let guard_query_declaration : declaration -> Query.t Option.t = function
 let guard_mquery_declaration : declaration -> MQuery.t Option.t = function
   | `MQuery_declaration mquery -> Option.some mquery
   | _ -> Option.none
+
+(** Lookups by Qualified Name *)
 
 let extract_declaration guard (signature, declaration_opt) =
   let open Option in
@@ -1189,6 +1199,8 @@ let lookup_query = guarded_declaration_lookup guard_query_declaration
 
 let lookup_mquery = guarded_declaration_lookup guard_mquery_declaration
 
+(** Lookups by ID *)
+
 (** [lookup signature id] returns [None] if there is no declaration in
     [signature] having ID [id], and otherwise returns
     [Some (signature', declaration)] where [signature'] is the signature up
@@ -1233,6 +1245,8 @@ let lookup_query_by_id =
 
 let lookup_mquery_by_id =
   guarded_lookup_by_id Id.lift_mquery_id guard_mquery_declaration
+
+(** Unsafe Lookups by ID *)
 
 let id_of_declaration_with_id : [< declaration_with_id ] -> Id.t = function
   | `Typ_declaration declaration -> `Typ_id (declaration |> Typ.id)
