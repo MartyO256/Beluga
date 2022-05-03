@@ -321,7 +321,7 @@ module Typ = struct
       ; kind : LF.kind
       ; var_name_base : Name.t Option.t
       ; mvar_name_base : Name.t Option.t
-      ; constructors : Id.Const.t Name.Map.t
+      ; constructors : Id.Const.t Name.Hamt.t
       }
 
     let make ~id ~name ~location ~implicit_arguments
@@ -338,7 +338,7 @@ module Typ = struct
       }
 
     let add_constructor ({ constructors; _ } as entry) name const =
-      { entry with constructors = Name.Map.add name const constructors }
+      { entry with constructors = Name.Hamt.add name const constructors }
 
     let set_var_naming_convention var entry =
       { entry with var_name_base = var }
@@ -359,7 +359,7 @@ module Typ = struct
       ; kind : LF.kind
       ; var_name_base : Name.t Option.t
       ; mvar_name_base : Name.t Option.t
-      ; constructors : Id.Const.t Name.Map.t
+      ; constructors : Id.Const.t Name.Hamt.t
       ; subordinates : Id.Typ.Set.t
       ; type_subordinated : Id.Typ.Set.t
       }
@@ -422,11 +422,22 @@ module Typ = struct
     | Unfrozen { Unfrozen.id; _ } ->
       Result.error @@ `Unfrozen_typ_declaration_error id
 
-  let add_constructor name const =
-    if_unfrozen (fun x -> Unfrozen (Unfrozen.add_constructor x name const))
-
   let has_constructor_with_name name entry =
-    entry |> constructors |> Name.Map.mem name
+    entry |> constructors |> Name.Hamt.mem name
+
+  let add_constructor tM_name tM tA =
+    let tA_name = name tA in
+    let open Result in
+    Result.of_bool
+      Name.(tA_name <> tM_name)
+      (fun () -> `Kind_name_collision (tM_name, tM, tA))
+    >>= fun () ->
+    Result.of_bool (has_constructor_with_name tM_name tA) (fun () ->
+        `Constructor_name_collision (tM_name, tM, tA))
+    >>= fun () ->
+    tA
+    |> if_unfrozen (fun tA ->
+           Unfrozen (Unfrozen.add_constructor tA tM_name tM))
 
   let frozen ~subordinates ~type_subordinated
       { Unfrozen.id

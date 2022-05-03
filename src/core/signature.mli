@@ -296,9 +296,14 @@ module Typ : sig
        Name.t
     -> Id.Const.t
     -> t
-    -> (t, [> `Frozen_typ_declaration_error of Id.Typ.t ]) result
+    -> ( t
+       , [> `Kind_name_collision of Name.t * Id.Const.t * t
+         | `Constructor_name_collision of Name.t * Id.Const.t * t
+         | `Frozen_typ_declaration_error of Id.Typ.t
+         ] )
+       result
 
-  val constructors : t -> Id.Const.t Name.Map.t
+  val constructors : t -> Id.Const.t Name.Hamt.t
 
   val has_constructor_with_name : Name.t -> t -> bool
 
