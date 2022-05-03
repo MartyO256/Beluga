@@ -1061,13 +1061,20 @@ and t =
         (** An index of the entries mapped by ID. Each entry is also
             associated with the signature up to and including that entry.
             This allows for looking up shadowed declarations. *)
+  ; paths : QualifiedName.Set.t Id.Hamt.t
+        (** The set of qualified names in the signature mapped by declaration
+            ID. This allows for determining whether and how an entry is in
+            scope in the presence of aliases. These paths are only added to,
+            so they may have been shadowed. The mappings of declarations by
+            name take precedence over this map to determine declaration
+            scoping. *)
   ; queries : Id.Query.Set.t
         (** The set of logic programming queries on LF types. *)
   ; mqueries : Id.MQuery.Set.t
         (** The set of logic programming queries on Comp types. *)
   ; unfrozen : Id.Set.t
         (** The set of entry IDs for currently unfrozen entries. This allows
-            for shadowed declarations to be frozen. *)
+            for keeping track of entries to freeze before programs. *)
   }
 
 (** Destructors *)
@@ -1079,6 +1086,8 @@ let[@inline] declarations_by_name { declarations_by_name; _ } =
 
 let[@inline] declarations_by_id { declarations_by_id; _ } =
   declarations_by_id |> Lazy.force
+
+let[@inline] paths { paths; _ } = paths
 
 let[@inline] unfrozen_entries { unfrozen; _ } = unfrozen
 
