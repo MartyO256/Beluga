@@ -817,27 +817,120 @@ val lookup_mquery_by_id : t -> Id.MQuery.t -> (t * MQuery.t) Option.t
 
 (** {1 Unsafe lookups by ID} *)
 
+(** These signature lookup functions are intended to be used when it is known
+    that the given ID is bound in the signature and has the intended ID sort.
+
+    The exception types they raise are programmer errors. *)
+
+(** [UnboundId (id, signature)] is the exception raised when [id] could not
+    be found in [signature]. *)
+exception UnboundId of Id.t * t
+
+type id_kind_mismatch =
+  { bound : Id.t
+  ; expected : Id.t
+  ; signature : t
+  }
+
+(** [IdKindMismatch { bound; expected; signature }] is the exception raised
+    when IDs [bound] and [expected] differ in the sort of ID looked up in
+    [signature]. *)
+exception IdKindMismatch of id_kind_mismatch
+
+(** [lookup_lf_family_by_id_exn signature id] is the LF type family having ID
+    [id] in [signature].
+
+    @raise UnboundId If the ID [id] is not in [signature].
+    @raise IdKindMismatch
+      If the entry having the ID [id] in [signature] is not an LF type
+      family. *)
 val lookup_lf_family_by_id_exn : t -> Id.Typ.t -> t * Typ.t
 
+(** [lookup_lf_constant_by_id_exn signature id] is the LF constant having ID
+    [id] in [signature].
+
+    @raise UnboundId If the ID [id] is not in [signature].
+    @raise IdKindMismatch
+      If the entry having the ID [id] in [signature] is not an LF constant. *)
 val lookup_lf_constant_by_id_exn : t -> Id.Const.t -> t * Const.t
 
+(** [lookup_comp_typ_by_id_exn signature id] is the computational type having
+    ID [id] in [signature].
+
+    @raise UnboundId If the ID [id] is not in [signature].
+    @raise IdKindMismatch
+      If the entry having the ID [id] in [signature] is not a computational
+      type. *)
 val lookup_comp_typ_by_id_exn : t -> Id.CompTyp.t -> t * CompTyp.t
 
+(** [lookup_comp_constructor_by_id_exn signature id] is the computational
+    type constructor having ID [id] in [signature].
+
+    @raise UnboundId If the ID [id] is not in [signature].
+    @raise IdKindMismatch
+      If the entry having the ID [id] in [signature] is not a computational
+      type constructor. *)
 val lookup_comp_constructor_by_id_exn :
   t -> Id.CompConst.t -> t * CompConst.t
 
+(** [lookup_comp_cotyp_by_id_exn signature id] is the computational cotype
+    having ID [id] in [signature].
+
+    @raise UnboundId If the ID [id] is not in [signature].
+    @raise IdKindMismatch
+      If the entry having the ID [id] in [signature] is not a computational
+      cotype. *)
 val lookup_comp_cotyp_by_id_exn : t -> Id.CompCotyp.t -> t * CompCotyp.t
 
+(** [lookup_comp_destructor_by_id_exn signature id] is the computational
+    cotype destructor having ID [id] in [signature].
+
+    @raise UnboundId If the ID [id] is not in [signature].
+    @raise IdKindMismatch
+      If the entry having the ID [id] in [signature] is not a computational
+      cotype destructor. *)
 val lookup_comp_destructor_by_id_exn : t -> Id.CompDest.t -> t * CompDest.t
 
+(** [lookup_comp_by_id_exn signature id] is the computation having ID [id] in
+    [signature].
+
+    @raise UnboundId If the ID [id] is not in [signature].
+    @raise IdKindMismatch
+      If the entry having the ID [id] in [signature] is not a computation. *)
 val lookup_comp_by_id_exn : t -> Id.Comp.t -> t * Comp.t
 
+(** [lookup_schema_by_id_exn signature id] is the schema having ID [id] in
+    [signature].
+
+    @raise UnboundId If the ID [id] is not in [signature].
+    @raise IdKindMismatch
+      If the entry having the ID [id] in [signature] is not a schema. *)
 val lookup_schema_by_id_exn : t -> Id.Schema.t -> t * Schema.t
 
+(** [lookup_module_by_id_exn signature id] is the module having ID [id] in
+    [signature].
+
+    @raise UnboundId If the ID [id] is not in [signature].
+    @raise IdKindMismatch
+      If the entry having the ID [id] in [signature] is not a module. *)
 val lookup_module_by_id_exn :
   t -> Id.Query.t -> t * (t * declaration) Module.t
 
+(** [lookup_query_by_id_exn signature id] is the logic programming query
+    having ID [id] in [signature].
+
+    @raise UnboundId If the ID [id] is not in [signature].
+    @raise IdKindMismatch
+      If the entry having the ID [id] in [signature] is not a logic
+      programming query. *)
 val lookup_query_by_id_exn : t -> Id.Query.t -> t * Query.t
 
+(** [lookup_query_by_id_exn signature id] is the logic programming meta-query
+    having ID [id] in [signature].
+
+    @raise UnboundId If the ID [id] is not in [signature].
+    @raise IdKindMismatch
+      If the entry having the ID [id] in [signature] is not a logic
+      programming meta-query. *)
 val lookup_mquery_by_id_exn : t -> Id.MQuery.t -> t * MQuery.t
 

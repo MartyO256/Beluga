@@ -1255,12 +1255,12 @@ type id_kind_mismatch =
 
 exception IdKindMismatch of id_kind_mismatch
 
-let lookup_by_id_exn lift_id guard signature id =
+let lookup_by_id_exn lift_id guard_declaration signature id =
   let lifted_id = lift_id id in
   lookup_by_id signature lifted_id
   |> Option.get_or_else (fun () -> raise @@ UnboundId (lifted_id, signature))
   |> fun (signature, declaration) ->
-  declaration |> guard
+  declaration |> guard_declaration
   |> Option.eliminate
        (fun () ->
          raise
