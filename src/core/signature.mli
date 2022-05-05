@@ -760,6 +760,11 @@ type declaration =
 
 (** {1 Lookups by Qualified Name} *)
 
+(** Lookups by qualified name allow for looking up the entry currently in
+    scope at a given path. That is, if a lookup results in some declaration,
+    then that declaration is in scope for the signature in which it was
+    looked up. *)
+
 (** [lookup signature name] returns [None] if there is no declaration in
     [signature] having name [name], and otherwise returns
     [Some (signature', declaration)] where [signature'] is the signature up
@@ -794,6 +799,14 @@ val lookup_mquery : t -> QualifiedName.t -> (t * MQuery.t) Option.t
 
 (** {1 Lookups by ID} *)
 
+(** Lookups by ID in a signature allows for bypassing scope checks.
+    Declaration IDs were allocated during signature reconstruction as
+    declarations were added. Since IDs are floating references, then a
+    declaration looked up by ID in a signature is its latest version. That
+    is, if the declaration associated with a given ID was altered since it
+    was first added, then the lookup by ID returns the altered version of the
+    declaration. *)
+
 val lookup_typ_by_id : t -> Id.Typ.t -> (t * Typ.t) Option.t
 
 val lookup_constructor_by_id : t -> Id.Const.t -> (t * Const.t) Option.t
@@ -822,10 +835,15 @@ val lookup_mquery_by_id : t -> Id.MQuery.t -> (t * MQuery.t) Option.t
 
 (** {1 Unsafe lookups by ID} *)
 
-(** These signature lookup functions are intended to be used when it is known
-    that the given ID is bound in the signature and has the intended ID kind.
+(** Unsafe lookups by ID are functionally equivalent to safe lookups by ID,
+    except that exceptions are raised when a lookup fails.
 
-    The exception types they raise are programmer errors. *)
+    These unsafe signature lookup functions are intended to be used when it
+    is known that the given ID is bound in the signature and has the intended
+    ID kind.
+
+    The exception types they raise are strictly programmer errors, not user
+    errors. *)
 
 (** [UnboundId (id, signature)] is the exception raised when [id] could not
     be found in [signature]. *)

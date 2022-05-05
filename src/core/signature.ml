@@ -248,6 +248,13 @@ module Id = struct
     | `MQuery_id id
     | `Schema_id id -> id
 
+  (* Equality, ordering and hashing are defined by contramapping because IDs
+     are allocated using one sequence of integers.
+
+     If a sequence of integers was defined for each ID kind, then equality,
+     ordering and hashing would need to consider the ID kind label as
+     well. *)
+
   module OrdByBaseId = (val Ord.contramap (module BaseId) to_base_id)
 
   include (OrdByBaseId : Ord.ORD with type t := t)
