@@ -823,7 +823,7 @@ val lookup_mquery_by_id : t -> Id.MQuery.t -> (t * MQuery.t) Option.t
 (** {1 Unsafe lookups by ID} *)
 
 (** These signature lookup functions are intended to be used when it is known
-    that the given ID is bound in the signature and has the intended ID sort.
+    that the given ID is bound in the signature and has the intended ID kind.
 
     The exception types they raise are programmer errors. *)
 
@@ -838,7 +838,7 @@ type id_kind_mismatch =
   }
 
 (** [IdKindMismatch { bound; expected; signature }] is the exception raised
-    when IDs [bound] and [expected] differ in the sort of ID looked up in
+    when IDs [bound] and [expected] differ in the kind of ID looked up in
     [signature]. *)
 exception IdKindMismatch of id_kind_mismatch
 

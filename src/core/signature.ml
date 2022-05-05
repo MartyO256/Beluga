@@ -1257,6 +1257,8 @@ let lookup_mquery_by_id =
 
 (** Unsafe Lookups by ID *)
 
+(** [id_of_declaration_with_id declaration] is the lifted ID of
+    [declaration]. *)
 let id_of_declaration_with_id : [< declaration_with_id ] -> Id.t = function
   | `Typ_declaration declaration -> `Typ_id (declaration |> Typ.id)
   | `Const_declaration declaration -> `Const_id (declaration |> Const.id)
@@ -1274,6 +1276,9 @@ let id_of_declaration_with_id : [< declaration_with_id ] -> Id.t = function
   | `MQuery_declaration mquery -> `MQuery_id (mquery |> MQuery.id)
   | `Schema_declaration schema -> `Schema_id (schema |> Schema.id)
 
+(** [id_of_declaration declaration] is the lifted ID of [declaration].
+
+    @raise Invalid_argument If there is no ID associated with [declaration]. *)
 let id_of_declaration : [< declaration ] -> Id.t = function
   | #declaration_with_id as declaration ->
     id_of_declaration_with_id declaration
