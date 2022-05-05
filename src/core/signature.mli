@@ -957,3 +957,29 @@ val lookup_query_by_id_exn : t -> Id.Query.t -> t * Query.t
       programming meta-query. *)
 val lookup_mquery_by_id_exn : t -> Id.MQuery.t -> t * MQuery.t
 
+(** {1 Paths} *)
+
+(** Qualified names define paths to entries in a signature.
+
+    In a signature, a path to an entry is valid if it is not shadowed by a
+    later and equal path to a different entry. *)
+
+(** [is_path_to_entry signature id path] is [Some (signature', declaration)]
+    if looking up the entry in [signature] by ID [id] or qualified name
+    [path] result in the same declaration [declaration], with [signature']
+    being the signature up to and including [declaration]. If the looked up
+    declarations differ or do not exist, then [None] is returned. *)
+val is_path_to_entry :
+  t -> Id.t -> QualifiedName.t -> (t * declaration) Option.t
+
+(** [all_paths_to_entry signature id] is the set of all qualified names in
+    scope that may be used to refer to the declaration having ID [id] in
+    [signature]. *)
+val all_paths_to_entry :
+  t -> Id.t -> (QualifiedName.Set.t, [> `Unbound_id of Id.t * t ]) Result.t
+
+(** [all_paths_to_entry_exn signature id] is
+    [all_paths_to_entry signature id], but a programmer error is raised if
+    [id] is not bound in [signature]. *)
+val all_paths_to_entry_exn : t -> Id.t -> QualifiedName.Set.t
+

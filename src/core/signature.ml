@@ -1183,7 +1183,7 @@ let lookup signature qualified_name =
     >>= fun top_module ->
     Module.deep_lookup
       (fun looked_up_module ->
-        looked_up_module |> Pair.snd |> guard_module_declaration)
+        looked_up_module |> Fun.(Pair.snd >> guard_module_declaration))
       top_module tail_module_names base_name
 
 let guarded_declaration_lookup guard signature qualified_name =
@@ -1227,7 +1227,7 @@ let lookup_by_id signature id =
 
 let guarded_lookup_by_id lift_id guard signature id =
   let open Option in
-  id |> lift_id |> lookup_by_id signature >>= extract_declaration guard
+  id |> Fun.(lift_id >> lookup_by_id signature) >>= extract_declaration guard
 
 let lookup_typ_by_id =
   guarded_lookup_by_id Id.lift_typ_id guard_typ_declaration
@@ -1315,7 +1315,7 @@ let lookup_by_id_exn lift_id guard_declaration signature id =
               ; expected = lifted_id
               ; signature
               })
-       (fun declaration -> (signature, declaration))
+       (Pair.left signature)
 
 let lookup_typ_by_id_exn =
   lookup_by_id_exn Id.lift_typ_id guard_typ_declaration
@@ -1349,4 +1349,20 @@ let lookup_query_by_id_exn =
 
 let lookup_mquery_by_id_exn =
   lookup_by_id_exn Id.lift_mquery_id guard_mquery_declaration
+
+let is_path_to_entry signature id path =
+  let open Option in
+  path |> lookup signature >>= fun (signature', declaration) ->
+  declaration |> id_of_declaration |> Id.equal id |> Option.of_bool
+  $> Fun.const (signature', declaration)
+
+let all_paths_to_entry signature id =
+  let open Result in
+  signature |> paths |> Id.Hamt.find_opt id
+  |> Option.to_result ~none:(`Unbound_id (id, signature))
+  $> QualifiedName.Set.filter (fun path ->
+         path |> is_path_to_entry signature id |> Option.is_some)
+
+let all_paths_to_entry_exn signature id =
+  all_paths_to_entry signature id |> Result.get_ok
 
