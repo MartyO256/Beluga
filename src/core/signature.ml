@@ -1368,5 +1368,7 @@ let all_paths_to_entry signature id =
          path |> is_path_to_entry signature id |> Option.is_some)
 
 let all_paths_to_entry_exn signature id =
-  all_paths_to_entry signature id |> Result.get_ok
+  all_paths_to_entry signature id
+  |> Result.get_or_else (fun _ -> raise @@ UnboundId (id, signature))
+
 

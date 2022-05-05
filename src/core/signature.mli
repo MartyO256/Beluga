@@ -994,7 +994,8 @@ val all_paths_to_entry :
   t -> Id.t -> (QualifiedName.Set.t, [> `Unbound_id of Id.t * t ]) Result.t
 
 (** [all_paths_to_entry_exn signature id] is
-    [all_paths_to_entry signature id], but a programmer error is raised if
-    [id] is not bound in [signature]. *)
+    [all_paths_to_entry signature id].
+
+    @raise UnboundId If the ID [id] is not in [signature]. *)
 val all_paths_to_entry_exn : t -> Id.t -> QualifiedName.Set.t
 
