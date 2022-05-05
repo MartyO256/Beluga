@@ -957,6 +957,21 @@ val lookup_query_by_id_exn : t -> Id.Query.t -> t * Query.t
       programming meta-query. *)
 val lookup_mquery_by_id_exn : t -> Id.MQuery.t -> t * MQuery.t
 
+(** {1 Declaration IDs} *)
+
+(** [id_of_declaration declaration] is [Some id] with [id] being the lifted
+    ID of [declaration] if one is found, and [None] otherwise. *)
+val id_of_declaration : [< declaration ] -> Id.t Option.t
+
+(** Exception raised when an ID cannot be found for a declaration. *)
+exception DeclarationWithoutId of declaration
+
+(** [id_of_declaration_exn declaration] is the lifted ID of [declaration].
+
+    @raise DeclarationWithoutId
+      If there is no ID associated with [declaration]. *)
+val id_of_declaration_exn : [< declaration ] -> Id.t
+
 (** {1 Paths} *)
 
 (** Qualified names define paths to entries in a signature.

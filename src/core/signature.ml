@@ -1283,13 +1283,17 @@ let id_of_declaration_with_id : [< declaration_with_id ] -> Id.t = function
   | `MQuery_declaration mquery -> `MQuery_id (mquery |> MQuery.id)
   | `Schema_declaration schema -> `Schema_id (schema |> Schema.id)
 
-(** [id_of_declaration declaration] is the lifted ID of [declaration].
+let id_of_declaration : [< declaration ] -> Id.t Option.t = function
+  | #declaration_with_id as declaration ->
+    Option.some @@ id_of_declaration_with_id declaration
+  | #declaration -> Option.none
 
-    @raise Invalid_argument If there is no ID associated with [declaration]. *)
-let id_of_declaration : [< declaration ] -> Id.t = function
+exception DeclarationWithoutId of declaration
+
+let id_of_declaration_exn : [< declaration ] -> Id.t = function
   | #declaration_with_id as declaration ->
     id_of_declaration_with_id declaration
-  | _ -> raise @@ Invalid_argument "Unsupported declaration"
+  | #declaration as declaration -> raise @@ DeclarationWithoutId declaration
 
 exception UnboundId of Id.t * t
 
@@ -1311,7 +1315,7 @@ let lookup_by_id_exn lift_id guard_declaration signature id =
        (fun () ->
          raise
          @@ IdKindMismatch
-              { bound = id_of_declaration declaration
+              { bound = id_of_declaration_exn declaration
               ; expected = lifted_id
               ; signature
               })
@@ -1353,7 +1357,7 @@ let lookup_mquery_by_id_exn =
 let is_path_to_entry signature id path =
   let open Option in
   path |> lookup signature >>= fun (signature', declaration) ->
-  declaration |> id_of_declaration |> Id.equal id |> Option.of_bool
+  declaration |> id_of_declaration_exn |> Id.equal id |> Option.of_bool
   $> Fun.const (signature', declaration)
 
 let all_paths_to_entry signature id =
