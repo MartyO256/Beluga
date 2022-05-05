@@ -767,9 +767,9 @@ type declaration =
     declaration in [signature] having name [name]. *)
 val lookup : t -> QualifiedName.t -> (t * declaration) Option.t
 
-val lookup_lf_family : t -> QualifiedName.t -> (t * Typ.t) Option.t
+val lookup_typ : t -> QualifiedName.t -> (t * Typ.t) Option.t
 
-val lookup_lf_constant : t -> QualifiedName.t -> (t * Const.t) Option.t
+val lookup_constructor : t -> QualifiedName.t -> (t * Const.t) Option.t
 
 val lookup_comp_typ : t -> QualifiedName.t -> (t * CompTyp.t) Option.t
 
@@ -794,9 +794,9 @@ val lookup_mquery : t -> QualifiedName.t -> (t * MQuery.t) Option.t
 
 (** {1 Lookups by ID} *)
 
-val lookup_lf_family_by_id : t -> Id.Typ.t -> (t * Typ.t) Option.t
+val lookup_typ_by_id : t -> Id.Typ.t -> (t * Typ.t) Option.t
 
-val lookup_lf_constant_by_id : t -> Id.Const.t -> (t * Const.t) Option.t
+val lookup_constructor_by_id : t -> Id.Const.t -> (t * Const.t) Option.t
 
 val lookup_comp_typ_by_id : t -> Id.CompTyp.t -> (t * CompTyp.t) Option.t
 
@@ -842,22 +842,22 @@ type id_kind_mismatch =
     [signature]. *)
 exception IdKindMismatch of id_kind_mismatch
 
-(** [lookup_lf_family_by_id_exn signature id] is the LF type family having ID
-    [id] in [signature].
+(** [lookup_typ_by_id_exn signature id] is the LF type family having ID [id]
+    in [signature].
 
     @raise UnboundId If the ID [id] is not in [signature].
     @raise IdKindMismatch
       If the entry having the ID [id] in [signature] is not an LF type
       family. *)
-val lookup_lf_family_by_id_exn : t -> Id.Typ.t -> t * Typ.t
+val lookup_typ_by_id_exn : t -> Id.Typ.t -> t * Typ.t
 
-(** [lookup_lf_constant_by_id_exn signature id] is the LF constant having ID
+(** [lookup_constructor_by_id_exn signature id] is the LF constant having ID
     [id] in [signature].
 
     @raise UnboundId If the ID [id] is not in [signature].
     @raise IdKindMismatch
       If the entry having the ID [id] in [signature] is not an LF constant. *)
-val lookup_lf_constant_by_id_exn : t -> Id.Const.t -> t * Const.t
+val lookup_constructor_by_id_exn : t -> Id.Const.t -> t * Const.t
 
 (** [lookup_comp_typ_by_id_exn signature id] is the computational type having
     ID [id] in [signature].

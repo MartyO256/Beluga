@@ -1183,9 +1183,9 @@ let guarded_declaration_lookup guard signature qualified_name =
   let open Option in
   lookup signature qualified_name >>= extract_declaration guard
 
-let lookup_lf_family = guarded_declaration_lookup guard_typ_declaration
+let lookup_typ = guarded_declaration_lookup guard_typ_declaration
 
-let lookup_lf_constant = guarded_declaration_lookup guard_const_declaration
+let lookup_constructor = guarded_declaration_lookup guard_const_declaration
 
 let lookup_comp_typ = guarded_declaration_lookup guard_comp_typ_declaration
 
@@ -1222,10 +1222,10 @@ let guarded_lookup_by_id lift_id guard signature id =
   let open Option in
   id |> lift_id |> lookup_by_id signature >>= extract_declaration guard
 
-let lookup_lf_family_by_id =
+let lookup_typ_by_id =
   guarded_lookup_by_id Id.lift_typ_id guard_typ_declaration
 
-let lookup_lf_constant_by_id =
+let lookup_constructor_by_id =
   guarded_lookup_by_id Id.lift_const_id guard_const_declaration
 
 let lookup_comp_typ_by_id =
@@ -1305,10 +1305,10 @@ let lookup_by_id_exn lift_id guard_declaration signature id =
               })
        (fun declaration -> (signature, declaration))
 
-let lookup_lf_family_by_id_exn =
+let lookup_typ_by_id_exn =
   lookup_by_id_exn Id.lift_typ_id guard_typ_declaration
 
-let lookup_lf_constant_by_id_exn =
+let lookup_constructor_by_id_exn =
   lookup_by_id_exn Id.lift_const_id guard_const_declaration
 
 let lookup_comp_typ_by_id_exn =
