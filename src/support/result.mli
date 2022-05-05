@@ -8,3 +8,6 @@ val ( >>= ) : ('a, 'e) t -> ('a -> ('b, 'e) t) -> ('b, 'e) t
 
 (** [( >>= )] is an infix synonym of {!map}. *)
 val ( $> ) : ('a, 'e) t -> ('a -> 'b) -> ('b, 'e) t
+
+(** [get_or_else f r] is [f e] if [r] is [Error e] and [v] if [r] is [Ok v]. *)
+val get_or_else : ('e -> 'a) -> ('a, 'e) t -> 'a
