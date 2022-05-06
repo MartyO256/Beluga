@@ -29,8 +29,8 @@ module LF = struct
     | DeclOpt of name * Plicity.t
 
   and typ =                                     (* LF level                       *)
-    | Atom of Location.t * cid_typ * spine           (* A ::= a M1 ... Mn              *)
-    | PiTyp of (typ_decl * Depend.t) * typ        (*   | Pi x:A.B                   *)
+    | Atom of Location.t * cid_typ * spine      (* A ::= a M1 ... Mn              *)
+    | PiTyp of (typ_decl * Depend.t) * typ      (*   | Pi x:A.B                   *)
     | Sigma of typ_rec
     | TClo of (typ * sub)                       (*   | TClo(A,s)                  *)
 
