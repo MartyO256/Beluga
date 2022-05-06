@@ -1064,7 +1064,7 @@ and t =
             element is currently in scope. Each entry is also associated with
             the signature up to and including that entry. This allows for
             entry lookups that respects scoping. *)
-  ; declarations_by_id : (t * declaration) Id.Hamt.t Lazy.t
+  ; declarations_by_id : (t * declaration_with_id) Id.Hamt.t Lazy.t
         (** An index of the entries mapped by ID. Each entry is also
             associated with the signature up to and including that entry.
             This allows for looking up shadowed declarations. *)
@@ -1104,56 +1104,62 @@ let[@inline] mqueries { mqueries; _ } = mqueries
 
 (** Declaration Guards *)
 
-let guard_typ_declaration : declaration -> Typ.t Option.t = function
+let guard_typ_declaration : [> `Typ_declaration of Typ.t ] -> Typ.t Option.t
+    = function
   | `Typ_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
-let guard_const_declaration : declaration -> Const.t Option.t = function
+let guard_const_declaration :
+    [> `Const_declaration of Const.t ] -> Const.t Option.t = function
   | `Const_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
-let guard_comp_typ_declaration : declaration -> CompTyp.t Option.t = function
+let guard_comp_typ_declaration :
+    [> `Comp_typ_declaration of CompTyp.t ] -> CompTyp.t Option.t = function
   | `Comp_typ_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
-let guard_comp_const_declaration : declaration -> CompConst.t Option.t =
+let guard_comp_const_declaration :
+    [> `Comp_const_declaration of CompConst.t ] -> CompConst.t Option.t =
   function
   | `Comp_const_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
-let guard_comp_cotyp_declaration : declaration -> CompCotyp.t Option.t =
+let guard_comp_cotyp_declaration :
+    [> `Comp_cotyp_declaration of CompCotyp.t ] -> CompCotyp.t Option.t =
   function
   | `Comp_cotyp_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
-let guard_comp_dest_declaration : declaration -> CompDest.t Option.t =
+let guard_comp_dest_declaration :
+    [> `Comp_dest_declaration of CompDest.t ] -> CompDest.t Option.t =
   function
   | `Comp_dest_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
-let guard_comp_declaration : declaration -> Comp.t Option.t = function
+let guard_comp_declaration :
+    [> `Comp_declaration of Comp.t ] -> Comp.t Option.t = function
   | `Comp_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
-let guard_schema_declaration : declaration -> Schema.t Option.t = function
+let guard_schema_declaration :
+    [> `Schema_declaration of Schema.t ] -> Schema.t Option.t = function
   | `Schema_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
 let guard_module_declaration :
-    declaration -> (t * declaration) Module.t Option.t = function
+       [> `Module_declaration of (t * declaration) Module.t ]
+    -> (t * declaration) Module.t Option.t = function
   | `Module_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
-let guard_documentation_comment :
-    declaration -> DocumentationComment.t Option.t = function
-  | `Documentation_comment declaration -> Option.some declaration
-  | _ -> Option.none
-
-let guard_query_declaration : declaration -> Query.t Option.t = function
+let guard_query_declaration :
+    [> `Query_declaration of Query.t ] -> Query.t Option.t = function
   | `Query_declaration query -> Option.some query
   | _ -> Option.none
 
-let guard_mquery_declaration : declaration -> MQuery.t Option.t = function
+let guard_mquery_declaration :
+    [> `MQuery_declaration of MQuery.t ] -> MQuery.t Option.t = function
   | `MQuery_declaration mquery -> Option.some mquery
   | _ -> Option.none
 
