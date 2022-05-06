@@ -6,6 +6,10 @@ type ('e, 'a) t =
 (** Eliminator for disjoint unions. *)
 val eliminate : ('e -> 'c) -> ('a -> 'c) -> ('e, 'a) t -> 'c
 
+(** [get_or_else f x] is [a] if [x] is [Right a] and [f e] if [x] is
+    [Left e]. *)
+val get_or_else : ('e -> 'a) -> ('e, 'a) t -> 'a
+
 (** Checks whether the union holds the right-hand type. *)
 val is_right : ('e, 'a) t -> bool
 

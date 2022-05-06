@@ -7,6 +7,8 @@ let eliminate (left : 'e -> 'c) (right : 'a -> 'c) : ('e, 'a) t -> 'c =
   | Left e -> left e
   | Right x -> right x
 
+let get_or_else f = eliminate f Fun.id
+
 let is_right (e : ('e, 'a) t) : bool =
   eliminate (fun _ -> false) (fun _ -> true) e
 
