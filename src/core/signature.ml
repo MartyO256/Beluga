@@ -835,12 +835,13 @@ module Comp = struct
 end
 
 module Module = struct
-  type 'a t =
+  type ('signature, 'declaration, 'declaration_with_id) t =
     { id : Id.Module.t
     ; name : Name.t
     ; location : Location.t
-    ; declarations : 'a List.t
-    ; declarations_by_name : 'a Nonempty.t Name.Hamt.t
+    ; declarations : ('signature * 'declaration) List.t
+    ; declarations_by_name :
+        ('signature * 'declaration_with_id) Nonempty.t Name.Hamt.t
     }
 
   let make_empty ~id ~location name =
@@ -854,11 +855,10 @@ module Module = struct
   let add_declaration ({ declarations; _ } as m) declaration =
     { m with declarations = List.cons declaration declarations }
 
-  let add_named_declaration ({ declarations; declarations_by_name; _ } as m)
-      name declaration =
+  let add_to_name_index ({ declarations; declarations_by_name; _ } as m) name
+      declaration =
     { m with
-      declarations = declarations |> List.cons declaration
-    ; declarations_by_name =
+      declarations_by_name =
         declarations_by_name
         |> Name.Hamt.alter name (fun bindings ->
                bindings
@@ -884,10 +884,7 @@ module Module = struct
     let open Option in
     m |> declarations_by_name |> Name.Hamt.find_opt name $> Nonempty.head
 
-  let rec deep_lookup :
-      ('a -> 'a t Option.t) -> 'a t -> Name.t List.t -> Name.t -> 'a Option.t
-      =
-   fun extract current_module module_names base_name ->
+  let rec deep_lookup extract current_module module_names base_name =
     match module_names with
     | [] -> lookup current_module base_name
     | head_module_name :: tail_module_names ->
@@ -1028,7 +1025,7 @@ type declaration =
   | `Comp_dest_declaration of CompDest.t
   | `Comp_declaration of Comp.t
   | `Schema_declaration of Schema.t
-  | `Module_declaration of (t * declaration) Module.t
+  | `Module_declaration of (t, declaration, declaration_with_id) Module.t
   | `Documentation_comment of DocumentationComment.t
   | `Mutually_recursive_declaration of
     [ mutually_recursive_typs
@@ -1048,7 +1045,7 @@ and declaration_with_id =
   | `Comp_dest_declaration of CompDest.t
   | `Comp_declaration of Comp.t
   | `Schema_declaration of Schema.t
-  | `Module_declaration of (t * declaration) Module.t
+  | `Module_declaration of (t, declaration, declaration_with_id) Module.t
   | `Query_declaration of Query.t
   | `MQuery_declaration of MQuery.t
   ]
@@ -1059,7 +1056,8 @@ and t =
             Each entry is also associated with the signature up to and
             including that entry. This allows for in-order traversal of the
             signature for pretty-printing. *)
-  ; declarations_by_name : (t * declaration) Nonempty.t Name.Hamt.t Lazy.t
+  ; declarations_by_name :
+      (t * declaration_with_id) Nonempty.t Name.Hamt.t Lazy.t
         (** The bindings of entries by name. For a given name, only the head
             element is currently in scope. Each entry is also associated with
             the signature up to and including that entry. This allows for
@@ -1148,8 +1146,11 @@ let guard_schema_declaration :
   | _ -> Option.none
 
 let guard_module_declaration :
-       [> `Module_declaration of (t * declaration) Module.t ]
-    -> (t * declaration) Module.t Option.t = function
+       [> `Module_declaration of
+          ('signature, 'declaration, 'declaration_with_id) Module.t
+       ]
+    -> ('signature, 'declaration, 'declaration_with_id) Module.t Option.t =
+  function
   | `Module_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
@@ -1169,7 +1170,7 @@ let extract_declaration guard (signature, declaration_opt) =
   let open Option in
   declaration_opt |> guard $> Pair.left signature
 
-let lookup_name : t -> Name.t -> (t * declaration) Option.t =
+let lookup_name : t -> Name.t -> (t * declaration_with_id) Option.t =
  fun signature name ->
   let open Option in
   signature |> declarations_by_name |> Name.Hamt.find_opt name
@@ -1228,8 +1229,8 @@ let lookup_mquery = guarded_declaration_lookup guard_mquery_declaration
     [Some (signature', declaration)] where [signature'] is the signature up
     to and including [declaration]. Declarations looked up by ID may not be
     in scope. *)
-let lookup_by_id signature id =
-  signature |> declarations_by_id |> Id.Hamt.find_opt id
+let lookup_by_id : t -> Id.t -> (t * declaration_with_id) Option.t =
+ fun signature id -> signature |> declarations_by_id |> Id.Hamt.find_opt id
 
 let guarded_lookup_by_id lift_id guard signature id =
   let open Option in

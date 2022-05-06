@@ -593,29 +593,46 @@ end
 
 (** Namespace for declarations. *)
 module Module : sig
-  type 'a t
+  type ('signature, 'declaration, 'declaration_with_id) t
 
   (** {1 Constructors} *)
 
-  val make_empty : id:Id.Module.t -> location:Location.t -> Name.t -> 'a t
+  val make_empty :
+       id:Id.Module.t
+    -> location:Location.t
+    -> Name.t
+    -> ('signature, 'declaration, 'declaration_with_id) t
 
-  val add_declaration : 'a t -> 'a -> 'a t
+  val add_declaration :
+       ('signature, 'declaration, 'declaration_with_id) t
+    -> 'signature * 'declaration
+    -> ('signature, 'declaration, 'declaration_with_id) t
 
-  val add_named_declaration : 'a t -> Name.t -> 'a -> 'a t
+  val add_to_name_index :
+       ('signature, 'declaration, 'declaration_with_id) t
+    -> Name.t
+    -> 'signature * 'declaration_with_id
+    -> ('signature, 'declaration, 'declaration_with_id) t
 
   (** {1 Destructors} *)
 
-  val id : 'a t -> Id.Comp.t
+  val id : ('signature, 'declaration, 'declaration_with_id) t -> Id.Comp.t
 
-  val location : 'a t -> Location.t
+  val location :
+    ('signature, 'declaration, 'declaration_with_id) t -> Location.t
 
-  val name : 'a t -> Name.t
+  val name : ('signature, 'declaration, 'declaration_with_id) t -> Name.t
 
-  val declarations : 'a t -> 'a List.t
+  val declarations :
+       ('signature, 'declaration, 'declaration_with_id) t
+    -> ('signature * 'declaration) List.t
 
   (** {1 Lookups} *)
 
-  val lookup : 'a t -> Name.t -> 'a Option.t
+  val lookup :
+       ('signature, 'declaration, 'declaration_with_id) t
+    -> Name.t
+    -> ('signature * 'declaration_with_id) Option.t
 end
 
 (** Documentation comments.
@@ -747,13 +764,28 @@ type declaration =
   | `Comp_dest_declaration of CompDest.t
   | `Comp_declaration of Comp.t
   | `Schema_declaration of Schema.t
-  | `Module_declaration of (t * declaration) Module.t
+  | `Module_declaration of (t, declaration, declaration_with_id) Module.t
   | `Documentation_comment of DocumentationComment.t
   | `Mutually_recursive_declaration of
     [ mutually_recursive_typs
     | mutually_recursive_comp_typs
     | mutually_recursive_programs
     ]
+  | `Query_declaration of Query.t
+  | `MQuery_declaration of MQuery.t
+  ]
+
+(** The subtype of declarations having and ID associated with them. *)
+and declaration_with_id =
+  [ `Typ_declaration of Typ.t
+  | `Const_declaration of Const.t
+  | `Comp_typ_declaration of CompTyp.t
+  | `Comp_const_declaration of CompConst.t
+  | `Comp_cotyp_declaration of CompCotyp.t
+  | `Comp_dest_declaration of CompDest.t
+  | `Comp_declaration of Comp.t
+  | `Schema_declaration of Schema.t
+  | `Module_declaration of (t, declaration, declaration_with_id) Module.t
   | `Query_declaration of Query.t
   | `MQuery_declaration of MQuery.t
   ]
@@ -770,7 +802,7 @@ type declaration =
     [Some (signature', declaration)] where [signature'] is the signature up
     to and including [declaration] and [declaration] is the latest
     declaration in [signature] having name [name]. *)
-val lookup : t -> QualifiedName.t -> (t * declaration) Option.t
+val lookup : t -> QualifiedName.t -> (t * declaration_with_id) Option.t
 
 val lookup_typ : t -> QualifiedName.t -> (t * Typ.t) Option.t
 
@@ -791,7 +823,9 @@ val lookup_comp : t -> QualifiedName.t -> (t * Comp.t) Option.t
 val lookup_schema : t -> QualifiedName.t -> (t * Schema.t) Option.t
 
 val lookup_module :
-  t -> QualifiedName.t -> (t * (t * declaration) Module.t) Option.t
+     t
+  -> QualifiedName.t
+  -> (t * (t, declaration, declaration_with_id) Module.t) Option.t
 
 val lookup_query : t -> QualifiedName.t -> (t * Query.t) Option.t
 
@@ -827,7 +861,9 @@ val lookup_comp_by_id : t -> Id.Comp.t -> (t * Comp.t) Option.t
 val lookup_schema_by_id : t -> Id.Schema.t -> (t * Schema.t) Option.t
 
 val lookup_module_by_id :
-  t -> Id.Module.t -> (t * (t * declaration) Module.t) Option.t
+     t
+  -> Id.Module.t
+  -> (t * (t, declaration, declaration_with_id) Module.t) Option.t
 
 val lookup_query_by_id : t -> Id.Query.t -> (t * Query.t) Option.t
 
@@ -937,7 +973,7 @@ val lookup_schema_by_id_exn : t -> Id.Schema.t -> t * Schema.t
     @raise IdKindMismatch
       If the entry having the ID [id] in [signature] is not a module. *)
 val lookup_module_by_id_exn :
-  t -> Id.Query.t -> t * (t * declaration) Module.t
+  t -> Id.Query.t -> t * (t, declaration, declaration_with_id) Module.t
 
 (** [lookup_query_by_id_exn signature id] is the logic programming query
     having ID [id] in [signature].
@@ -985,7 +1021,7 @@ val id_of_declaration_exn : [< declaration ] -> Id.t
     being the signature up to and including [declaration]. If the looked up
     declarations differ or do not exist, then [None] is returned. *)
 val is_path_to_entry :
-  t -> Id.t -> QualifiedName.t -> (t * declaration) Option.t
+  t -> Id.t -> QualifiedName.t -> (t * declaration_with_id) Option.t
 
 (** [all_paths_to_entry signature id] is the set of all qualified names in
     scope that may be used to refer to the declaration having ID [id] in
