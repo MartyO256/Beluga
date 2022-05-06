@@ -974,17 +974,17 @@ let index_ctx_var name : (cvar_error_status, Apx.LF.dctx) Either.t index =
   let open Bind in
   lookup_fv name
   >>= function
-    | true -> Either.Right (Apx.LF.CtxVar (Apx.LF.CtxName name)) |> pure
+    | true -> pure @@ Either.Right (Apx.LF.CtxVar (Apx.LF.CtxName name))
     | false ->
        seq2 (get_fvars) (index_cvar name)
        >>= function
          | (_, Either.Right k) ->
-            Either.Right (Apx.LF.CtxVar (Apx.LF.CtxOffset k)) |> pure
+            pure @@ Either.Right (Apx.LF.CtxVar (Apx.LF.CtxOffset k))
          | (fvars, Either.Left e) ->
             match fvars.open_flag with
             | `closed_term -> pure (Either.Left e)
             | `open_term ->
-               Either.Right (Apx.LF.CtxVar (Apx.LF.CtxName name)) |> pure
+               pure @@ Either.Right (Apx.LF.CtxVar (Apx.LF.CtxName name))
                <& modify_fvars (extending_by name)
 
 let rec index_dctx disambiguate_name cvars bvars (fvars : fvars) =
