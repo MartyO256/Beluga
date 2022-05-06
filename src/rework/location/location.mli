@@ -8,9 +8,6 @@ type t
 (** Text file position type and operations. *)
 module Position : module type of Position
 
-(** Text file position range type and operations. *)
-module PositionRange : module type of Range.Make (Position)
-
 (** {1 Constructors} *)
 
 (** Makes a location over a range of characters.
@@ -34,7 +31,7 @@ val make_from_point : filename:string -> position:Position.t -> t
 
     @param filename The name of location's file.
     @param range The location's position range. *)
-val make_from_range : filename:string -> range:PositionRange.t -> t
+val make_from_range : filename:string -> range:Position.Range.t -> t
 
 (** [initial filename] is the initial location in the file [filename]. *)
 val initial : string -> t
@@ -45,7 +42,7 @@ val initial : string -> t
 val filename : t -> string
 
 (** [range location] is the [location]'s position range. *)
-val range : t -> PositionRange.t
+val range : t -> Position.Range.t
 
 (** [start_position location] is the start position of [location]'s range. *)
 val start_position : t -> Position.t

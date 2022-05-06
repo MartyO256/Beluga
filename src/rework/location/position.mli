@@ -9,12 +9,14 @@ type t
 
 (** Makes a text file position.
 
-    @param offset The distance from the position to the beginning of the text
-    file, expressed in characters.
-    @param offset_beginning_of_line The distance from the beginning of the
-    line the position lies in to the beginning of the text file, expressed in
-    characters. That is, [offset - offset_beginning_of_line + 1] is the
-    one-based column number of the position.
+    @param offset
+      The distance from the position to the beginning of the text file,
+      expressed in characters.
+    @param offset_beginning_of_line
+      The distance from the beginning of the line the position lies in to the
+      beginning of the text file, expressed in characters. That is,
+      [offset - offset_beginning_of_line + 1] is the one-based column number
+      of the position.
     @param line The one-based line number the position lies in.
     @raise Assert_failure if [line <= 0].
     @raise Assert_failure if [offset < 0].
@@ -41,3 +43,7 @@ val line_start_position : t -> t
 include Ord.ORD with type t := t
 
 include Show.SHOW with type t := t
+
+(** {1 Collections} *)
+
+module Range : Range.RANGE with type e = t
