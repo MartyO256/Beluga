@@ -994,13 +994,7 @@ let rec index_dctx disambiguate_name cvars bvars (fvars : fvars) =
 
   | Ext.LF.CtxVar (loc, psi_name) ->
      index_ctx_var psi_name {cvars; bvars; disambiguate_name} fvars
-     |> Pair.rmap
-          begin
-            function
-            | Either.Right x -> x
-            | Either.Left e ->
-               throw_hint' loc (cvar_error_to_hint e) (UnboundName psi_name)
-          end
+     |> Pair.rmap (Either.get_or_else (fun e -> throw_hint' loc (cvar_error_to_hint e) (UnboundName psi_name)))
      |> fun (fvars, dctx) -> (dctx, bvars, fvars)
 
   | Ext.LF.DDec (psi, decl) ->
