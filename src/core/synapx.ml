@@ -152,14 +152,14 @@ module Comp = struct
 
   and exp_syn =
     | Var of Location.t * offset                                    (* x              *)
-     | FVar of name                                                 (* x              *)
-     | DataConst of Location.t * cid_comp_const                     (* c              *)
-     | Obs of Location.t * exp_chk * cid_comp_dest                  (* e.d            *)
-     | Const of Location.t * cid_prog                               (* c              *)
-     | Apply of Location.t * exp_syn * exp_chk                      (* i e            *)
-     | BoxVal of Location.t * meta_obj
-     | PairVal of Location.t * exp_syn * exp_syn
-     | Ann of exp_chk * typ                                         (* e : tau        *)
+    | FVar of name                                                  (* x              *)
+    | DataConst of Location.t * cid_comp_const                      (* c              *)
+    | Obs of Location.t * exp_chk * cid_comp_dest                   (* e.d            *)
+    | Const of Location.t * cid_prog                                (* c              *)
+    | Apply of Location.t * exp_syn * exp_chk                       (* i e            *)
+    | BoxVal of Location.t * meta_obj
+    | PairVal of Location.t * exp_syn * exp_syn
+    | Ann of exp_chk * typ                                          (* e : tau        *)
 
   and pattern =
     | PatMetaObj of Location.t * meta_obj
