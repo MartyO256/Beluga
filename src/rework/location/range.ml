@@ -18,6 +18,8 @@ module type RANGE = sig
   val contains : t -> e -> bool
 
   val includes : t -> t -> bool
+
+  include Eq.EQ with type t := t
 end
 
 module Make (Element : Ord.ORD) : RANGE with type e = Element.t = struct
@@ -53,4 +55,13 @@ module Make (Element : Ord.ORD) : RANGE with type e = Element.t = struct
   let includes outer =
     let contains = contains outer in
     fun inner -> contains (start_point inner) && contains (end_point inner)
+
+  include (
+    Eq.Make (struct
+      type nonrec t = t
+
+      let equal x y =
+        Element.(start_point x = start_point y && end_point x = end_point y)
+    end) :
+      Eq.EQ with type t := t)
 end

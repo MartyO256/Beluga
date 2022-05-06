@@ -43,6 +43,15 @@ let[@inline] end_column location =
   location |> end_position |> Position.column
 
 include (
+  Eq.Make (struct
+    type nonrec t = t
+
+    let equal x y =
+      String.(filename x = filename y) && Position.Range.(range x = range y)
+  end) :
+    Eq.EQ with type t := t)
+
+include (
   Show.Make (struct
     type nonrec t = t
 
@@ -52,9 +61,9 @@ include (
       and end_column = end_column location
       and start_line = start_line location
       and end_line = end_line location in
-      if start_line = end_line then
+      if Stdlib.(start_line = end_line) then
         let line = start_line in
-        if start_column = end_column then
+        if Stdlib.(start_column = end_column) then
           Format.fprintf ppf "File \"%s\", line %d, character %d" filename
             line start_column
         else

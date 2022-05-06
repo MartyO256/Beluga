@@ -40,6 +40,8 @@ val line_start_position : t -> t
 
 (** {1 Instances} *)
 
+include Eq.EQ with type t := t
+
 include Ord.ORD with type t := t
 
 include Show.SHOW with type t := t

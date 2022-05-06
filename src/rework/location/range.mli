@@ -39,6 +39,10 @@ module type RANGE = sig
   (** [includes outer inner] is [true] if and only if the delimiters of
       [inner] are contained in [outer]. *)
   val includes : t -> t -> bool
+
+  (** {1 Instances} *)
+
+  include Eq.EQ with type t := t
 end
 
 (** Functor for making range types over totally ordered elements. *)

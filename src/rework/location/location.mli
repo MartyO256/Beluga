@@ -67,4 +67,6 @@ val end_column : t -> int
 
 (** {1 Instances} *)
 
+include Eq.EQ with type t := t
+
 include Show.SHOW with type t := t
