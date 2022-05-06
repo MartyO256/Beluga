@@ -1208,24 +1208,22 @@ let rec index_compkind cvars fcvars =
 
 let rec index_comptyp (tau : Ext.Comp.typ) cvars : Apx.Comp.typ fvar_state =
   fun fvars ->
+  let open Option in
   match tau with
   | Ext.Comp.TypBase (loc, a, ms) ->
     Option.choice
       [ lazy
-          (CompTyp.index_of_name_opt a
-          |> Option.map (fun a' ->
-                 let ms', fvars = index_meta_spine cvars fvars ms in
-                 fvars, Apx.Comp.TypBase (loc, a', ms')))
+          ( CompTyp.index_of_name_opt a $> fun a ->
+            let ms', fvars = index_meta_spine cvars fvars ms in
+            (fvars, Apx.Comp.TypBase (loc, a, ms')) )
       ; lazy
-          (CompCotyp.index_of_name_opt a
-          |> Option.map (fun a' ->
-                 let ms', fvars = index_meta_spine cvars fvars ms in
-                 fvars, Apx.Comp.TypCobase (loc, a', ms')))
+          ( CompCotyp.index_of_name_opt a $> fun a ->
+            let ms', fvars = index_meta_spine cvars fvars ms in
+            (fvars, Apx.Comp.TypCobase (loc, a, ms')) )
       ; lazy
-          (CompTypDef.index_of_name_opt a
-          |> Option.map (fun a' ->
-                 let ms', fvars = index_meta_spine cvars fvars ms in
-                 fvars, Apx.Comp.TypDef (loc, a', ms')))
+          ( CompTypDef.index_of_name_opt a $> fun a ->
+            let ms', fvars = index_meta_spine cvars fvars ms in
+            (fvars, Apx.Comp.TypDef (loc, a, ms')) )
       ]
     |> Lazy.map @@ Option.get_or_else (fun () -> throw loc (UnboundName a))
     |> Lazy.force
