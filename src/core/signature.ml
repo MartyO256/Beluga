@@ -891,6 +891,9 @@ module Module = struct
       let open Option in
       lookup current_module head_module_name >>= extract >>= fun m' ->
       deep_lookup extract m' tail_module_names base_name
+
+  let fold_declarations f init m =
+    m |> declarations |> List.fold_right (Fun.flip f) |> Fun.apply init
 end
 
 module Schema = struct
@@ -1364,7 +1367,7 @@ let lookup_mquery_by_id_exn =
 let is_path_to_entry signature id path =
   let open Option in
   path |> lookup signature >>= fun (signature', declaration) ->
-  declaration |> id_of_declaration_exn |> Id.equal id |> Option.of_bool
+  declaration |> id_of_declaration_with_id |> Id.equal id |> Option.of_bool
   $> Fun.const (signature', declaration)
 
 let all_paths_to_entry signature id =

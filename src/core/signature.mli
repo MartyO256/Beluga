@@ -598,10 +598,7 @@ module Module : sig
   (** {1 Constructors} *)
 
   val make_empty :
-       id:Id.Module.t
-    -> location:Location.t
-    -> Name.t
-    -> ('signature, 'declaration, 'declaration_with_id) t
+    id:Id.Module.t -> location:Location.t -> Name.t -> (_, _, _) t
 
   val add_declaration :
        ('signature, 'declaration, 'declaration_with_id) t
@@ -616,23 +613,29 @@ module Module : sig
 
   (** {1 Destructors} *)
 
-  val id : ('signature, 'declaration, 'declaration_with_id) t -> Id.Comp.t
+  val id : (_, _, _) t -> Id.Comp.t
 
-  val location :
-    ('signature, 'declaration, 'declaration_with_id) t -> Location.t
+  val location : (_, _, _) t -> Location.t
 
-  val name : ('signature, 'declaration, 'declaration_with_id) t -> Name.t
+  val name : (_, _, _) t -> Name.t
 
   val declarations :
-       ('signature, 'declaration, 'declaration_with_id) t
-    -> ('signature * 'declaration) List.t
+    ('signature, 'declaration, _) t -> ('signature * 'declaration) List.t
 
   (** {1 Lookups} *)
 
   val lookup :
-       ('signature, 'declaration, 'declaration_with_id) t
+       ('signature, _, 'declaration_with_id) t
     -> Name.t
     -> ('signature * 'declaration_with_id) Option.t
+
+  (** {1 Iterators} *)
+
+  val fold_declarations :
+       ('a -> 'signature * 'declaration -> 'a)
+    -> 'a
+    -> ('signature, 'declaration, _) t
+    -> 'a
 end
 
 (** Documentation comments.
