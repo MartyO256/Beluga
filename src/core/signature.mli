@@ -157,6 +157,30 @@ module Id : sig
 
   (** {1 Constructors} *)
 
+  val lift_typ_id : Typ.t -> t
+
+  val lift_const_id : Const.t -> t
+
+  val lift_comp_typ_id : CompTyp.t -> t
+
+  val lift_comp_const_id : CompConst.t -> t
+
+  val lift_comp_cotyp_id : CompCotyp.t -> t
+
+  val lift_comp_dest_id : CompDest.t -> t
+
+  val lift_comp_id : Comp.t -> t
+
+  val lift_module_id : Module.t -> t
+
+  val lift_query_id : Query.t -> t
+
+  val lift_mquery_id : MQuery.t -> t
+
+  val lift_schema_id : Schema.t -> t
+
+  (** {1 ID Allocation} *)
+
   (** Stateful builder pattern for sequentially making distinct IDs. *)
   module Allocator : sig
     type id = t
@@ -212,30 +236,6 @@ module Id : sig
     (** [next_schema_id] is an ID allocator whose next ID is a schema ID. *)
     val next_schema_id : Schema.t t
   end
-
-  (** {1 Constructors} *)
-
-  val lift_typ_id : Typ.t -> t
-
-  val lift_const_id : Const.t -> t
-
-  val lift_comp_typ_id : CompTyp.t -> t
-
-  val lift_comp_const_id : CompConst.t -> t
-
-  val lift_comp_cotyp_id : CompCotyp.t -> t
-
-  val lift_comp_dest_id : CompDest.t -> t
-
-  val lift_comp_id : Comp.t -> t
-
-  val lift_module_id : Module.t -> t
-
-  val lift_query_id : Query.t -> t
-
-  val lift_mquery_id : MQuery.t -> t
-
-  val lift_schema_id : Schema.t -> t
 
   (** {1 Instances} *)
 
