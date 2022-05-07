@@ -1064,7 +1064,7 @@ and t =
         (** The bindings of entries by name. For a given name, only the head
             element is currently in scope. Each entry is also associated with
             the signature up to and including that entry. This allows for
-            entry lookups that respects scoping. *)
+            entry lookups that respect scoping. *)
   ; declarations_by_id : (t * declaration_with_id) Id.Hamt.t Lazy.t
         (** An index of the entries mapped by ID. Each entry is also
             associated with the signature up to and including that entry.

@@ -140,7 +140,7 @@ module Id : sig
 
   module Schema : ID
 
-  (** The tagged union type of Beluga IDs. *)
+  (** The tagged union type of Beluga declaration IDs. *)
   type t =
     [ `Typ_id of Typ.t
     | `Const_id of Const.t
@@ -212,6 +212,8 @@ module Id : sig
     (** [next_schema_id] is an ID allocator whose next ID is a schema ID. *)
     val next_schema_id : Schema.t t
   end
+
+  (** {1 Constructors} *)
 
   val lift_typ_id : Typ.t -> t
 
@@ -335,7 +337,7 @@ module Typ : sig
     -> (bool, [> `Unfrozen_typ_declaration_error of Id.Typ.t ]) Result.t
 end
 
-(** LF type constant declarations. *)
+(** LF type constructor declarations. *)
 module Const : sig
   open Syntax.Int
 
@@ -798,7 +800,11 @@ and declaration_with_id =
 (** Lookups by qualified name allow for looking up the entry currently in
     scope at a given path. That is, if a lookup results in some declaration,
     then that declaration is in scope for the signature in which it was
-    looked up. *)
+    looked up.
+
+    Looked up declarations are associated with the signature up to and
+    including that declaration. This allows for subsequent lookups to be made
+    on the signature as of that declaration being made. *)
 
 (** [lookup signature name] returns [None] if there is no declaration in
     [signature] having name [name], and otherwise returns
@@ -807,31 +813,60 @@ and declaration_with_id =
     declaration in [signature] having name [name]. *)
 val lookup : t -> QualifiedName.t -> (t * declaration_with_id) Option.t
 
+(** [lookup_typ signature qualified_name] is the latest LF type family
+    declared at [qualified_name] in [signature] if such a declaration exists. *)
 val lookup_typ : t -> QualifiedName.t -> (t * Typ.t) Option.t
 
+(** [lookup_constructor signature qualified_name] is the latest LF type
+    constructor declared at [qualified_name] in [signature] if such a
+    declaration exists. *)
 val lookup_constructor : t -> QualifiedName.t -> (t * Const.t) Option.t
 
+(** [lookup_comp_typ signature qualified_name] is the latest computational
+    type declared at [qualified_name] in [signature] if such a declaration
+    exists. *)
 val lookup_comp_typ : t -> QualifiedName.t -> (t * CompTyp.t) Option.t
 
+(** [lookup_comp_constructor signature qualified_name] is the latest
+    computational type constructor declared at [qualified_name] in
+    [signature] if such a declaration exists. *)
 val lookup_comp_constructor :
   t -> QualifiedName.t -> (t * CompConst.t) Option.t
 
+(** [lookup_comp_cotyp signature qualified_name] is the latest computational
+    cotype declared at [qualified_name] in [signature] if such a declaration
+    exists. *)
 val lookup_comp_cotyp : t -> QualifiedName.t -> (t * CompCotyp.t) Option.t
 
+(** [lookup_comp_destructor signature qualified_name] is the latest
+    computational cotype destructor declared at [qualified_name] in
+    [signature] if such a declaration exists. *)
 val lookup_comp_destructor :
   t -> QualifiedName.t -> (t * CompDest.t) Option.t
 
+(** [lookup_comp signature qualified_name] is the latest computation declared
+    at [qualified_name] in [signature] if such a declaration exists. *)
 val lookup_comp : t -> QualifiedName.t -> (t * Comp.t) Option.t
 
+(** [lookup_schema signature qualified_name] is the latest context schema
+    declared at [qualified_name] in [signature] if such a declaration exists. *)
 val lookup_schema : t -> QualifiedName.t -> (t * Schema.t) Option.t
 
+(** [lookup_module signature qualified_name] is the latest module declared at
+    [qualified_name] in [signature] if such a declaration exists. *)
 val lookup_module :
      t
   -> QualifiedName.t
   -> (t * (t, declaration, declaration_with_id) Module.t) Option.t
 
+(** [lookup_query signature qualified_name] is the latest logic programming
+    query on LF types declared at [qualified_name] in [signature] if such a
+    declaration exists. *)
 val lookup_query : t -> QualifiedName.t -> (t * Query.t) Option.t
 
+(** [lookup_mquery signature qualified_name] is the latest logic programming
+    meta-query on computational types declared at [qualified_name] in
+    [signature] if such a declaration exists. *)
 val lookup_mquery : t -> QualifiedName.t -> (t * MQuery.t) Option.t
 
 (** {1 Lookups by ID} *)
@@ -844,32 +879,54 @@ val lookup_mquery : t -> QualifiedName.t -> (t * MQuery.t) Option.t
     was first added, then the lookup by ID returns the altered version of the
     declaration. *)
 
+(** [lookup_typ_by_id signature id] is the LF type family having ID [id] in
+    [signature] if such a declaration exists. *)
 val lookup_typ_by_id : t -> Id.Typ.t -> (t * Typ.t) Option.t
 
+(** [lookup_constructor_by_id signature id] is the LF type constructor having
+    ID [id] in [signature] if such a declaration exists. *)
 val lookup_constructor_by_id : t -> Id.Const.t -> (t * Const.t) Option.t
 
+(** [lookup_comp_typ_by_id signature id] is the computational type having ID
+    [id] in [signature] if such a declaration exists. *)
 val lookup_comp_typ_by_id : t -> Id.CompTyp.t -> (t * CompTyp.t) Option.t
 
+(** [lookup_comp_constructor_by_id signature id] is the computational type
+    constructor having ID [id] in [signature] if such a declaration exists. *)
 val lookup_comp_constructor_by_id :
   t -> Id.CompConst.t -> (t * CompConst.t) Option.t
 
+(** [lookup_comp_cotyp_by_id signature id] is the computational cotype having
+    ID [id] in [signature] if such a declaration exists. *)
 val lookup_comp_cotyp_by_id :
   t -> Id.CompCotyp.t -> (t * CompCotyp.t) Option.t
 
+(** [lookup_comp_destructor_by_id signature id] is the computational cotype
+    destructor having ID [id] in [signature] if such a declaration exists. *)
 val lookup_comp_destructor_by_id :
   t -> Id.CompDest.t -> (t * CompDest.t) Option.t
 
+(** [lookup_comp_by_id signature id] is the computation having ID [id] in
+    [signature] if such a declaration exists. *)
 val lookup_comp_by_id : t -> Id.Comp.t -> (t * Comp.t) Option.t
 
+(** [lookup_schema_by_id signature id] is the schema having ID [id] in
+    [signature] if such a declaration exists. *)
 val lookup_schema_by_id : t -> Id.Schema.t -> (t * Schema.t) Option.t
 
+(** [lookup_module_by_id signature id] is the module having ID [id] in
+    [signature] if such a declaration exists. *)
 val lookup_module_by_id :
      t
   -> Id.Module.t
   -> (t * (t, declaration, declaration_with_id) Module.t) Option.t
 
+(** [lookup_query_by_id signature id] is the logic programming query having
+    ID [id] in [signature] if such a declaration exists. *)
 val lookup_query_by_id : t -> Id.Query.t -> (t * Query.t) Option.t
 
+(** [lookup_query_by_id signature id] is the logic programming meta-query
+    having ID [id] in [signature] if such a declaration exists. *)
 val lookup_mquery_by_id : t -> Id.MQuery.t -> (t * MQuery.t) Option.t
 
 (** {1 Unsafe lookups by ID} *)
@@ -908,12 +965,13 @@ exception IdKindMismatch of id_kind_mismatch
       family. *)
 val lookup_typ_by_id_exn : t -> Id.Typ.t -> t * Typ.t
 
-(** [lookup_constructor_by_id_exn signature id] is the LF constant having ID
-    [id] in [signature].
+(** [lookup_constructor_by_id_exn signature id] is the LF type constructor
+    having ID [id] in [signature].
 
     @raise UnboundId If the ID [id] is not in [signature].
     @raise IdKindMismatch
-      If the entry having the ID [id] in [signature] is not an LF constant. *)
+      If the entry having the ID [id] in [signature] is not an LF type
+      constructor. *)
 val lookup_constructor_by_id_exn : t -> Id.Const.t -> t * Const.t
 
 (** [lookup_comp_typ_by_id_exn signature id] is the computational type having
@@ -996,7 +1054,7 @@ val lookup_query_by_id_exn : t -> Id.Query.t -> t * Query.t
       programming meta-query. *)
 val lookup_mquery_by_id_exn : t -> Id.MQuery.t -> t * MQuery.t
 
-(** {1 Declaration IDs} *)
+(** {1 Declarations} *)
 
 (** [id_of_declaration declaration] is [Some id] with [id] being the lifted
     ID of [declaration] if one is found, and [None] otherwise. *)
