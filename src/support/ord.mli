@@ -5,20 +5,20 @@ module type ORD = sig
   (** The type of elements to compare. *)
   type t
 
-  (** [compare a b] compares [a] and [b] for ordering. It returns
+  (** [compare a b] compares [a] and [b] for ordering.
 
-      - a negative number if [a] precedes [b] (denoted [a < b])
-      - [0] if [a] is equal to [b] (denoted [a = b])
-      - a positive number if [a] succeeds [b] (denoted [a > b]).
+      - [compare a b < 0] if [a] precedes [b] (denoted [a < b])
+      - [compare a b = 0] if [a] is equal to [b] (denoted [a = b])
+      - [compare a b > 0] if [a] succeeds [b] (denoted [a > b]).
 
       This should satisfy the following properties:
 
       - {b Comparability}: [(compare a b <= 0 || compare b a >= 0) = true]
-      - {b Transitivity}: if [compare a b <= 0] and [compare b c <= 0], then
-        [compare a c <= 0]
+      - {b Transitivity}: if [(compare a b <= 0) = true] and
+        [(compare b c <= 0) = true], then [compare a c <= 0 = true]
       - {b Reflexivity}: [(compare a a = 0) = true]
-      - {b Antisymmetry}: if [(compare a b) <= 0] and [(compare a b) >= 0]
-        then [(compare a b) = 0] *)
+      - {b Antisymmetry}: if [(compare a b <= 0) = true] and
+        [(compare a b >= 0) = true] then [(compare a b = 0) = true] *)
   val compare : t -> t -> int
 
   val ( < ) : t -> t -> bool
