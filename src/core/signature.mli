@@ -194,8 +194,6 @@ module Id : sig
 
   (** Stateful builder pattern for sequentially making distinct IDs. *)
   module Allocator : sig
-    type id = t
-
     (** Instance of the state monad for the integer value of the latest
         allocated ID. *)
     include State.STATE

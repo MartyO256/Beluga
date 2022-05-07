@@ -272,8 +272,6 @@ module Id = struct
   end)
 
   module Allocator = struct
-    type id = t
-
     type state = { previous_id : BaseId.t }
 
     include (
