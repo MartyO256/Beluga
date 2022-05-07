@@ -145,8 +145,8 @@ module Id : sig
     [ `Typ_id of Typ.t
     | `Const_id of Const.t
     | `Comp_typ_id of CompTyp.t
-    | `Comp_cotyp_id of CompCotyp.t
     | `Comp_const_id of CompConst.t
+    | `Comp_cotyp_id of CompCotyp.t
     | `Comp_dest_id of CompDest.t
     | `Comp_id of Comp.t
     | `Module_id of Module.t
@@ -157,26 +157,37 @@ module Id : sig
 
   (** {1 Constructors} *)
 
+  (** [lift_typ_id id] is [`Typ_id id]. *)
   val lift_typ_id : Typ.t -> t
 
+  (** [lift_const_id id] is [`Const_id id]. *)
   val lift_const_id : Const.t -> t
 
+  (** [lift_comp_typ_id id] is [`Comp_typ_id id]. *)
   val lift_comp_typ_id : CompTyp.t -> t
 
+  (** [lift_comp_const_id id] is [`Comp_const_id id]. *)
   val lift_comp_const_id : CompConst.t -> t
 
+  (** [lift_comp_cotyp_id id] is [`Comp_cotyp_id id]. *)
   val lift_comp_cotyp_id : CompCotyp.t -> t
 
+  (** [lift_comp_dest_id id] is [`Comp_dest_id id]. *)
   val lift_comp_dest_id : CompDest.t -> t
 
+  (** [lift_comp_id id] is [`Comp_id id]. *)
   val lift_comp_id : Comp.t -> t
 
+  (** [lift_module_id id] is [`Module_id id]. *)
   val lift_module_id : Module.t -> t
 
+  (** [lift_query_id id] is [`Query_id id]. *)
   val lift_query_id : Query.t -> t
 
+  (** [lift_mquery_id id] is [`MQuery_id id]. *)
   val lift_mquery_id : MQuery.t -> t
 
+  (** [lift_schema_id id] is [`Schema_id id]. *)
   val lift_schema_id : Schema.t -> t
 
   (** {1 ID Allocation} *)
