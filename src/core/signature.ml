@@ -93,7 +93,7 @@ module QualifiedName = struct
     end) :
       Eq.EQ with type t := t)
 
-  module Ord' : Ord.ORD with type t = t = Ord.Make (struct
+  module Ord : Ord.ORD with type t = t = Ord.Make (struct
     type nonrec t = t
 
     module ModuleListOrd : Ord.ORD with type t = Name.t list =
@@ -105,10 +105,10 @@ module QualifiedName = struct
       else Name.compare (name x) (name y)
   end)
 
-  include (Ord' : Ord.ORD with type t := t)
+  include (Ord : Support.Ord.ORD with type t := t)
 
-  module Set = Set.Make (Ord')
-  module Map = Map.Make (Ord')
+  module Set = Set.Make (Ord)
+  module Map = Map.Make (Ord)
 end
 
 (** Unique identifiers for declarations in a signature.
