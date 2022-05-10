@@ -1599,7 +1599,7 @@ let abstrCompTypcD cD tau =
   let cQ' = abstractMVarCtx cQ (l - 1 - p) in
   (* let cQ' = abstractMVarCtx cQ (l-1) in *)
   let tau' = abstractMVarCompTyp cQ' (l, 0) tau1 in
-  let cD' = ctxToMCtx (fun _ -> I.Maybe) cQ' in
+  let cD' = ctxToMCtx (fun _ -> Depend.Implicit) cQ' in
 
   let tau'' = raiseCompTyp cD' tau' in
   (* We can't just subtract l' because l' counts also implicit context quantifications.

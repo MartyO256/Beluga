@@ -24,7 +24,7 @@ let assert_int_list_equal =
 
 let assert_int_pair_list_equal =
   assert_equal
-    ~cmp:(List.equal (=))
+    ~cmp:(List.equal Stdlib.(=))
     ~printer:int_pair_list_printer
 
 let test_last (input, expected) _ =
@@ -43,7 +43,7 @@ let test_index_of ((p, input), expected) _ =
   assert_equal ~cmp:(Option.equal (=)) (List.index_of p input) expected
 
 let test_index (input, expected) _ =
-  assert_equal ~cmp:(List.equal (=)) (List.index input) expected
+  assert_equal ~cmp:(List.equal Stdlib.(=)) (List.index input) expected
 
 let test_mapi2 ((f, l1, l2), expected) _ =
   assert_int_list_equal (List.mapi2 f l1 l2) expected

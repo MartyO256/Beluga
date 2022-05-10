@@ -115,7 +115,7 @@ and atomic_spine =
   | End
   | Spine of atomic_spine * (Comp.meta_typ
                              * LF.mfront
-                             * Syncom.LF.plicity) (* For recreating type*)
+                             * Plicity.t) (* For recreating type*)
 
 and comp_res =                          (* Residual Comp Goals   *)
   | Base of Comp.typ                    (* cr ::= A              *)
@@ -234,10 +234,10 @@ module Convert = struct
        If BV(i) is free in tA, then BV(i) is bound in (eV |- tA).
        If tA = PiTyp (x:A, No), then tA ~ cG (i.e. conjunction representing the subgoals).
   *)
-  let rec typToClause' eV cG tM (cS, dS, dR) =
-    match tM with
-    | LF.PiTyp ((tD, Depend.Implicit), tM') ->
-       typToClause' (LF.DDec (eV, tD)) cG tM' (cS, dS, dR)
+  let rec typToClause' eV cG tA (cS, dS, dR) =
+    match tA with
+    | LF.PiTyp ((tD, Depend.Implicit), tA') ->
+       typToClause' (LF.DDec (eV, tD)) cG tA' (cS, dS, dR)
     | LF.PiTyp ((LF.TypDecl (_, tA), Depend.Explicit), tB) ->
        typToClause' eV (Conjunct (cG, typToGoal tA (cS, dS, dR)))
          tB (cS + 1, dS, dR)
@@ -247,23 +247,60 @@ module Convert = struct
        ; subGoals = cG
        }
 
-  and typToGoal tM (cS, dS, dR) =
-    match tM with
-    | LF.PiTyp ((tD, Depend.Implicit), tM') ->
-       All (tD, typToGoal tM' (cS, dS, dR + 1))
-    | LF.PiTyp ((LF.TypDecl (x, tA) as tD, Depend.Explicit), tB) ->
-       Impl ((typToRes tA (cS, dS, dR), tD), typToGoal tB (cS, dS, dR + 1))
-    | LF.Atom _ ->
-       Atom (Shift.shiftAtom tA (-cS, -dS, dR))
+  (* comptypToCClause' cD tau subgoals  = cclause
+     Invariants:
+       cD |- tau
+       cD |- subgoals
+       If tau = TypPiBox (u:U, tau) then cD := cD, u:U
+       If tau = TypArr tau1 tau2 then subgoals := Solve (subgoals, tau1)
+   To do:
+   - add other types (such as codata, etc. ) abort gracefull
+  *)
 
-  and typToRes tM (cS, dS, dR) =
-    match tM with
-    | LF.PiTyp ((tD, Depend.Implicit), tM') ->
-       Exists (tD, typToRes tM' (cS, dS, dR + 1))
-    | LF.PiTyp ((LF.TypDecl (_, tA), Depend.Explicit), tB) ->
-       And (typToGoal tA (cS, dS, dR), typToRes tB (cS + 1, dS + 1, dR + 1))
-    | LF.Atom _ ->
-       Head (Shift.shiftAtom tM (-cS, -dS, dR))
+  and comptypToCClause' cD tau subgoals  =
+    match tau with
+    | Comp.TypBox (_, _U) ->
+       { cHead = tau
+       ; cMVars = cD
+       ; cSubGoals = subgoals
+       }
+    | Comp.TypPiBox (l, tdecl, tau') ->
+       let cD' = Whnf.extend_mctx cD (tdecl, LF.MShift 0) in
+       comptypToCClause' cD' tau' subgoals
+    | Comp.TypArr (_, t1, t2) ->
+       let cg = comptypToCompGoal t1 in
+       comptypToCClause' cD t2 (Solve (subgoals, cg))
+    | Comp.TypBase (_) ->
+       { cHead = tau
+       ; cMVars = cD
+       ; cSubGoals = subgoals
+       }
+    | _  ->
+       { cHead = tau
+       ; cMVars = cD
+       ; cSubGoals = subgoals
+       }
+
+  (* Write out invariant / comment
+     in particular: what is cS, dS, dR
+   *)
+   and typToGoal tA (cS, dS, dR) =
+   match tA with
+   | LF.PiTyp ((tdec, Depend.Implicit), tA') ->
+      All (tdec, typToGoal tA' (cS, dS, dR + 1))
+   | LF.PiTyp ((LF.TypDecl (x, tA) as tdec, Depend.Explicit), tB) ->
+      Impl ((typToRes tA (cS, dS, dR), tdec), typToGoal tB (cS, dS, dR + 1))
+   | LF.Atom _ ->
+      Atom (Shift.shiftAtom tA (-cS, -dS, dR))
+
+ and typToRes tM (cS, dS, dR) =
+   match tM with
+   | LF.PiTyp ((tD, Depend.Implicit), tM') ->
+      Exists (tD, typToRes tM' (cS, dS, dR + 1))
+   | LF.PiTyp ((LF.TypDecl (_, tA), Depend.Explicit), tB) ->
+      And (typToGoal tA (cS, dS, dR), typToRes tB (cS + 1, dS + 1, dR + 1))
+   | LF.Atom _ ->
+      Head (Shift.shiftAtom tM (-cS, -dS, dR))
 
 
   and comptypToCompGoal tau  =
@@ -420,13 +457,13 @@ module Convert = struct
 
   let rec mctxToMSub cD (mV, ms) fS =
     let etaExpand' cD cPsi (tA, ms) name =
-      let cvar = Whnf.newMMVar (Some name) (cD, cPsi, tA) LF.Maybe in
-       LF.Root (Syntax.Loc.ghost, LF.MMVar((cvar, ms), S.id), LF.Nil, `explicit)
+      let cvar = Whnf.newMMVar (Some name) (cD, cPsi, tA) Depend.Implicit in
+       LF.Root (Syntax.Loc.ghost, LF.MMVar((cvar, ms), S.id), LF.Nil, Plicity.Explicit)
     in
     let get_plicity dep =
       match dep with
-      | LF.No -> `explicit
-      | LF.Maybe -> `implicit
+      | Depend.Explicit -> Plicity.Explicit
+      | Depend.Implicit -> Plicity.Implicit
     in
     let noLoc = Syntax.Loc.ghost in
     match mV with
@@ -2101,7 +2138,7 @@ module CSolver = struct
           the cD.
           When an assumption gets unboxed, we no longer consider it in Gamma. *)
        let name = Id.mk_name (Whnf.newMTypName r) in
-       let mctx_decl = LF.Decl (name, r, LF.No) in
+       let mctx_decl = LF.Decl (name, r, Depend.Explicit) in
        let cD' = Whnf.extend_mctx cD (mctx_decl, ms) in
        let cG' = Whnf.cnormGCtx (cG, LF.MShift 1) in
        let box = Comp.Var (noLoc, k') in
@@ -2114,7 +2151,7 @@ module CSolver = struct
                  (noLoc
                  ,LF.MVar (LF.Offset 1, S.id)
                  , LF.Nil
-                 , `explicit
+                 , Plicity.Explicit
                  )
              in
              LF.ClObj (Context.dctxToHat (Whnf.cnormDCtx (cPsi, LF.MShift 1)), LF.MObj tM)
@@ -2198,7 +2235,7 @@ module CSolver = struct
        let cPool' = cnormCPool (cPool, LF.MShift 1) cD in
        let sc' =
          (fun e ->
-           sc (Comp.MLam (noLoc, name, e, `explicit))) in
+           sc (Comp.MLam (noLoc, name, e, Plicity.Explicit))) in
        uniform_right cD' cG' cPool' cg' (Whnf.mvar_dot1 ms) sc' currDepth maxDepth
     | Implies ((r, tdecl), cg') ->
        (* We gain an assumption for the computation context *)

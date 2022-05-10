@@ -1397,7 +1397,7 @@ let ctyp_decl, implicit_ctyp_decl =
     |> span
     |> g
     $> fun (loc, (psi, w)) ->
-       LF.Decl (psi, (loc, LF.CTyp w), LF.No)
+       LF.Decl (psi, (loc, LF.CTyp w), Depend.Explicit)
   in
   f braces,
   f parens

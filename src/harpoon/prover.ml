@@ -177,7 +177,7 @@ let process_command
       begin
         let { compGoal; Holes.cG = cGh; compSolution } = h.info
         in
-        assert (compSolution = None);
+        assert Stdlib.(compSolution = None);
         let typ = Whnf.cnormCTyp compGoal in
         dprintf
           begin fun p ->
@@ -193,7 +193,7 @@ let process_command
           Logic.CSolver.cgSolve cDh cGh mquery
             begin
               fun e ->
-              State.printf s "found solution: @[%a@]@,@?"
+              HarpoonState.printf s "found solution: @[%a@]@,@?"
                 (P.fmt_ppr_cmp_exp_chk cDh cGh P.l0) e;
               h.info.compSolution <- Some e;
               raise Logic.Frontend.Done
@@ -201,7 +201,7 @@ let process_command
             (Some 999)
         with
           | Logic.Frontend.Done ->
-              State.printf s "logic programming finished@,@?";
+              HarpoonState.printf s "logic programming finished@,@?";
               ()
              end
     | Holes.LFInfo ->

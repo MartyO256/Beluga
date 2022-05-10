@@ -1334,7 +1334,7 @@ let ctyp_decl, implicit_ctyp_decl =
     |> span
     |> g
     $> fun (loc, (psi, w)) ->
-       LF.Decl (psi, (loc, LF.CTyp w), LF.No)
+       LF.Decl (psi, (loc, LF.CTyp w), Depend.Explicit)
   in
   f braces,
   f parens
@@ -2644,7 +2644,7 @@ let sgn_query_pragma =
   pragma "query" &>
     seq4
       (seq2 bound bound)
-      (mctx ~sep: (pure ()) (clf_ctyp_decl_bare name' (fun x -> LF.No, x) |> braces))
+      (mctx ~sep: (pure ()) (clf_ctyp_decl_bare name' (fun x -> Depend.Explicit, x) |> braces))
       (maybe (name <& token T.COLON))
       lf_typ
   <& token T.DOT
@@ -2663,7 +2663,7 @@ let sgn_mquery_pragma =
   pragma "mquery" &>
     seq2
       (seq3 bound bound bound)
-      (*      (mctx ~sep: (pure ()) (clf_ctyp_decl_bare name' (fun x -> LF.No, x) |> braces)) *)
+      (*      (mctx ~sep: (pure ()) (clf_ctyp_decl_bare name' (fun x -> Depend.Explicit, x) |> braces)) *)
       cmp_typ
   <& token T.DOT
   |> span
