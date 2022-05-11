@@ -1505,33 +1505,43 @@ and declaration_with_id =
 and t =
   { declarations : (t * declaration) List.t Lazy.t
         (** The sequence of declarations as they appear in the signature.
+
             Each entry is also associated with the signature up to and
             including that entry. This allows for in-order traversal of the
-            signature for pretty-printing. *)
-  ; declarations_by_name :
-      (t * declaration_with_id) Nonempty.t Name.Hamt.t Lazy.t
-        (** The bindings of entries by name. For a given name, only the head
-            element is currently in scope. Each entry is also associated with
-            the signature up to and including that entry. This allows for
-            entry lookups that respect scoping. *)
+            signature for pretty-printing.
+
+            This sequence of declarations is only added to. Hence, freezable
+            declarations are likely unfrozen at the position in the sequence
+            in which they are added. Looking ahead in the sequence of
+            declarations is then required to find the first signature that
+            contains the declaration as frozen. *)
+  ; declarations_by_name : Id.t Nonempty.t Name.Hamt.t Lazy.t
+        (** The bindings of entries by name.
+
+            For a given name, only the head element is currently in scope. *)
   ; declarations_by_id : (t * declaration_with_id) Id.Hamt.t Lazy.t
-        (** An index of the entries mapped by ID. Each entry is also
-            associated with the signature up to and including that entry.
-            This allows for looking up shadowed declarations. *)
+        (** An index of the entries mapped by ID.
+
+            Each entry is also associated with the signature up to and
+            including that entry. This allows for looking up shadowed
+            declarations. *)
   ; paths : QualifiedName.Set.t Id.Hamt.t
         (** The set of qualified names in the signature mapped by declaration
-            ID. This allows for determining whether and how an entry is in
-            scope in the presence of aliases. These paths are only added to,
-            so they may have been shadowed. The mappings of declarations by
-            name take precedence over this map to determine declaration
-            scoping. *)
+            ID.
+
+            This allows for determining whether and how an entry is in scope
+            in the presence of aliases. These paths are only added to, so
+            they may have been shadowed. The mappings of declarations by name
+            take precedence over this map to determine declaration scoping. *)
   ; queries : Id.Query.Set.t
         (** The set of logic programming queries on LF types. *)
   ; mqueries : Id.MQuery.Set.t
         (** The set of logic programming queries on Comp types. *)
   ; unfrozen : Id.Set.t
-        (** The set of entry IDs for currently unfrozen entries. This allows
-            for keeping track of entries to freeze before programs. *)
+        (** The set of entry IDs for currently unfrozen entries.
+
+            This allows for keeping track of entries to freeze before
+            programs and at the end of signature reconstruction. *)
   }
 
 (** Destructors *)
@@ -1616,63 +1626,9 @@ let guard_mquery_declaration :
   | `MQuery_declaration mquery -> Option.some mquery
   | _ -> Option.none
 
-(** Lookups by Qualified Name *)
-
 let extract_declaration guard (signature, declaration_opt) =
   let open Option in
   declaration_opt |> guard $> Pair.left signature
-
-let lookup_name : t -> Name.t -> (t * declaration_with_id) Option.t =
- fun signature name ->
-  let open Option in
-  signature |> declarations_by_name |> Name.Hamt.find_opt name
-  $> Nonempty.head
-
-let lookup signature qualified_name =
-  let base_name = QualifiedName.name qualified_name in
-  match QualifiedName.modules qualified_name with
-  | [] ->
-    (* Lookup top-level declaration in signature *)
-    lookup_name signature base_name
-  | head_module_name :: tail_module_names ->
-    (* Lookup recursively in modules *)
-    let open Option in
-    lookup_name signature head_module_name
-    $> Pair.snd >>= guard_module_declaration
-    >>= fun top_module ->
-    Module.deep_lookup
-      (fun looked_up_module ->
-        looked_up_module |> Fun.(Pair.snd >> guard_module_declaration))
-      top_module tail_module_names base_name
-
-let guarded_declaration_lookup guard signature qualified_name =
-  let open Option in
-  lookup signature qualified_name >>= extract_declaration guard
-
-let lookup_typ = guarded_declaration_lookup guard_typ_declaration
-
-let lookup_constructor = guarded_declaration_lookup guard_const_declaration
-
-let lookup_comp_typ = guarded_declaration_lookup guard_comp_typ_declaration
-
-let lookup_comp_constructor =
-  guarded_declaration_lookup guard_comp_const_declaration
-
-let lookup_comp_cotyp =
-  guarded_declaration_lookup guard_comp_cotyp_declaration
-
-let lookup_comp_destructor =
-  guarded_declaration_lookup guard_comp_dest_declaration
-
-let lookup_comp = guarded_declaration_lookup guard_comp_declaration
-
-let lookup_schema = guarded_declaration_lookup guard_schema_declaration
-
-let lookup_module = guarded_declaration_lookup guard_module_declaration
-
-let lookup_query = guarded_declaration_lookup guard_query_declaration
-
-let lookup_mquery = guarded_declaration_lookup guard_mquery_declaration
 
 (** Lookups by ID *)
 
@@ -1813,6 +1769,60 @@ let lookup_query_by_id_exn =
 let lookup_mquery_by_id_exn =
   lookup_by_id_exn Id.lift_mquery_id guard_mquery_declaration
 
+(** Lookups by Qualified Name *)
+
+let lookup_name : t -> Name.t -> (t * declaration_with_id) Option.t =
+ fun signature name ->
+  let open Option in
+  signature |> declarations_by_name |> Name.Hamt.find_opt name
+  $> Nonempty.head >>= lookup_by_id signature
+
+let lookup signature qualified_name =
+  let base_name = QualifiedName.name qualified_name in
+  match QualifiedName.modules qualified_name with
+  | [] ->
+    (* Lookup top-level declaration in signature *)
+    lookup_name signature base_name
+  | head_module_name :: tail_module_names ->
+    (* Lookup recursively in modules *)
+    let open Option in
+    lookup_name signature head_module_name
+    $> Pair.snd >>= guard_module_declaration
+    >>= fun top_module ->
+    Module.deep_lookup
+      (fun looked_up_module ->
+        looked_up_module |> Fun.(Pair.snd >> guard_module_declaration))
+      top_module tail_module_names base_name
+
+let guarded_declaration_lookup guard signature qualified_name =
+  let open Option in
+  lookup signature qualified_name >>= extract_declaration guard
+
+let lookup_typ = guarded_declaration_lookup guard_typ_declaration
+
+let lookup_constructor = guarded_declaration_lookup guard_const_declaration
+
+let lookup_comp_typ = guarded_declaration_lookup guard_comp_typ_declaration
+
+let lookup_comp_constructor =
+  guarded_declaration_lookup guard_comp_const_declaration
+
+let lookup_comp_cotyp =
+  guarded_declaration_lookup guard_comp_cotyp_declaration
+
+let lookup_comp_destructor =
+  guarded_declaration_lookup guard_comp_dest_declaration
+
+let lookup_comp = guarded_declaration_lookup guard_comp_declaration
+
+let lookup_schema = guarded_declaration_lookup guard_schema_declaration
+
+let lookup_module = guarded_declaration_lookup guard_module_declaration
+
+let lookup_query = guarded_declaration_lookup guard_query_declaration
+
+let lookup_mquery = guarded_declaration_lookup guard_mquery_declaration
+
 let is_path_to_entry signature id path =
   let open Option in
   path |> lookup signature >>= fun (signature', declaration) ->
@@ -1829,5 +1839,3 @@ let all_paths_to_entry signature id =
 let all_paths_to_entry_exn signature id =
   all_paths_to_entry signature id
   |> Result.get_or_else (fun _ -> raise @@ UnboundId (id, signature))
-
-
