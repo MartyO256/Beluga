@@ -817,11 +817,11 @@ module Typ = struct
       ; var_name_base : Name.t Option.t
       ; mvar_name_base : Name.t Option.t
       ; constructors : Id.Const.t Name.Hamt.t
-      ; subordinates : Id.Typ.Set.t
+      ; term_subordinates : Id.Typ.Set.t
       ; type_subordinated_to : Id.Typ.Set.t
       }
 
-    let[@inline] subordinates { subordinates; _ } = subordinates
+    let[@inline] term_subordinates { term_subordinates; _ } = term_subordinates
 
     let[@inline] type_subordinated_to { type_subordinated_to; _ } =
       type_subordinated_to
@@ -901,7 +901,7 @@ module Typ = struct
     |> if_unfrozen (fun tA ->
            Unfrozen (Unfrozen.add_constructor tA tM_name tM))
 
-  let frozen ~subordinates ~type_subordinated_to
+  let frozen ~term_subordinates ~type_subordinated_to
       { Unfrozen.id
       ; name
       ; location
@@ -919,13 +919,13 @@ module Typ = struct
     ; constructors
     ; var_name_base
     ; mvar_name_base
-    ; subordinates
+    ; term_subordinates
     ; type_subordinated_to
     }
 
-  let freeze ~subordinates ~type_subordinated_to =
+  let freeze ~term_subordinates ~type_subordinated_to =
     if_unfrozen (fun x ->
-        Frozen (frozen ~subordinates ~type_subordinated_to x))
+        Frozen (frozen ~term_subordinates ~type_subordinated_to x))
 
   let fresh_var_name entry ?(default_base_name = "x") =
     entry |> var_name_base |> Option.map Name.show
@@ -949,8 +949,8 @@ module Typ = struct
     | Frozen x -> Frozen (Frozen.set_naming_conventions ~var ~mvar x)
     | Unfrozen x -> Unfrozen (Unfrozen.set_naming_conventions ~var ~mvar x)
 
-  let is_subordinate entry typ =
-    entry |> if_frozen Fun.(Frozen.subordinates >> Id.Typ.Set.mem typ)
+  let is_term_subordinate entry typ =
+    entry |> if_frozen Fun.(Frozen.term_subordinates >> Id.Typ.Set.mem typ)
 
   let is_type_subordinate entry typ =
     entry

@@ -746,7 +746,7 @@ module Typ : sig
   val is_unfrozen : t -> bool
 
   val freeze :
-       subordinates:Id.Typ.Set.t
+       term_subordinates:Id.Typ.Set.t
     -> type_subordinated_to:Id.Typ.Set.t
     -> t
     -> (t, [> `Frozen_typ_declaration_error of Id.Typ.t ]) Result.t
@@ -785,12 +785,12 @@ module Typ : sig
 
   (** {1 Subordination} *)
 
-  (** [is_subordinate tA tB_id] is [true] if and only if the LF family having
-      ID [tB_id] is term-level subordinate to [tA].
+  (** [is_term_subordinate tA tB_id] is [true] if and only if the LF family
+      having ID [tB_id] is term-level subordinate to [tA].
 
       This is determined using the subordination data passed when [tA] was
       frozen with {!freeze}. *)
-  val is_subordinate :
+  val is_term_subordinate :
        t
     -> Id.Typ.t
     -> (bool, [> `Unfrozen_typ_declaration_error of Id.Typ.t ]) Result.t
