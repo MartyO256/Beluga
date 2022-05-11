@@ -1515,7 +1515,7 @@ and t =
             in which they are added. Looking ahead in the sequence of
             declarations is then required to find the first signature that
             contains the declaration as frozen. *)
-  ; declarations_by_name : Id.t Nonempty.t Name.Hamt.t Lazy.t
+  ; declarations_by_name : Id.t Nonempty.t Name.Hamt.t
         (** The bindings of entries by name.
 
             For a given name, only the head element is currently in scope. *)
@@ -1549,7 +1549,7 @@ and t =
 let[@inline] declarations { declarations; _ } = declarations |> Lazy.force
 
 let[@inline] declarations_by_name { declarations_by_name; _ } =
-  declarations_by_name |> Lazy.force
+  declarations_by_name
 
 let[@inline] declarations_by_id { declarations_by_id; _ } =
   declarations_by_id |> Lazy.force
