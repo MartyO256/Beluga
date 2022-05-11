@@ -747,7 +747,7 @@ module Typ : sig
 
   val freeze :
        subordinates:Id.Typ.Set.t
-    -> type_subordinated:Id.Typ.Set.t
+    -> type_subordinated_to:Id.Typ.Set.t
     -> t
     -> (t, [> `Frozen_typ_declaration_error of Id.Typ.t ]) Result.t
 
@@ -785,12 +785,53 @@ module Typ : sig
 
   (** {1 Subordination} *)
 
+  (** [is_subordinate tA tB_id] is [true] if and only if the LF family having
+      ID [tB_id] is term-level subordinate to [tA].
+
+      This is determined using the subordination data passed when [tA] was
+      frozen with {!freeze}. *)
   val is_subordinate :
        t
     -> Id.Typ.t
     -> (bool, [> `Unfrozen_typ_declaration_error of Id.Typ.t ]) Result.t
 
-  val is_type_subordinated :
+  (** [is_type_subordinate tA tB_id] is [true] if and only if the LF family
+      [tA] is type-level subordinate to the LF family having ID [tB_id].
+
+      If [tA] is type-level subordinate to [tB], then [tA]-terms can contain
+      [tB]-terms. Type-level subordination is not transitive.
+
+      For instance, given the following frozen signature:
+
+      {v
+        nat : type.
+        list : nat -> type.
+        t : list (suc (suc z)) -> type.
+        t' : list (suc (suc N)) -> type.
+      v}
+
+      We have that:
+
+      - [is_type_subordinate list (id nat) = Ok true]
+      - [is_type_subordinate t (id list) = Ok true]
+      - [is_type_subordinate t' (id list) = Ok true]
+      - [is_type_subordinate t' (id nat) = Ok true]
+
+      And:
+
+      - [is_type_subordinate nat (id nat) = Ok false]
+      - [is_type_subordinate nat (id list) = Ok false]
+      - [is_type_subordinate nat (id t) = Ok false]
+      - [is_type_subordinate nat (id t') = Ok false]
+      - [is_type_subordinate list (id t) = Ok false]
+      - [is_type_subordinate list (id t') = Ok false]
+      - [is_type_subordinate t (id nat) = Ok false]
+      - [is_type_subordinate t (id t') = Ok false]
+      - [is_type_subordinate t' (id t') = Ok false]
+
+      Type-level subordination is determined using the subordination data
+      passed when [tA] was frozen with {!freeze}. *)
+  val is_type_subordinate :
        t
     -> Id.Typ.t
     -> (bool, [> `Unfrozen_typ_declaration_error of Id.Typ.t ]) Result.t
