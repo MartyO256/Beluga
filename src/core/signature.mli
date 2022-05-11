@@ -115,7 +115,7 @@ end
 
 (** Beluga declaration identifiers (IDs). *)
 module Id : sig
-  (** {1 ID Classes} *)
+  (** {1 ID Kinds} *)
 
   module Typ : ID
 
@@ -141,52 +141,51 @@ module Id : sig
 
   (** The tagged union type of Beluga declaration IDs. *)
   type t =
-    [ `Typ_id of Typ.t
-    | `Const_id of Const.t
-    | `Comp_typ_id of CompTyp.t
-    | `Comp_const_id of CompConst.t
-    | `Comp_cotyp_id of CompCotyp.t
-    | `Comp_dest_id of CompDest.t
-    | `Comp_id of Comp.t
-    | `Module_id of Module.t
-    | `Query_id of Query.t
-    | `MQuery_id of MQuery.t
-    | `Schema_id of Schema.t
-    ]
+    | Typ of Typ.t
+    | Const of Const.t
+    | CompTyp of CompTyp.t
+    | CompConst of CompConst.t
+    | CompCotyp of CompCotyp.t
+    | CompDest of CompDest.t
+    | Comp of Comp.t
+    | Module of Module.t
+    | Query of Query.t
+    | MQuery of MQuery.t
+    | Schema of Schema.t
 
   (** {1 Constructors} *)
 
-  (** [lift_typ_id id] is [`Typ_id id]. *)
+  (** [lift_typ_id id] is [Typ id]. *)
   val lift_typ_id : Typ.t -> t
 
-  (** [lift_const_id id] is [`Const_id id]. *)
+  (** [lift_const_id id] is [Const id]. *)
   val lift_const_id : Const.t -> t
 
-  (** [lift_comp_typ_id id] is [`Comp_typ_id id]. *)
+  (** [lift_comp_typ_id id] is [CompTyp id]. *)
   val lift_comp_typ_id : CompTyp.t -> t
 
-  (** [lift_comp_const_id id] is [`Comp_const_id id]. *)
+  (** [lift_comp_const_id id] is [CompConst id]. *)
   val lift_comp_const_id : CompConst.t -> t
 
-  (** [lift_comp_cotyp_id id] is [`Comp_cotyp_id id]. *)
+  (** [lift_comp_cotyp_id id] is [CompCotyp id]. *)
   val lift_comp_cotyp_id : CompCotyp.t -> t
 
-  (** [lift_comp_dest_id id] is [`Comp_dest_id id]. *)
+  (** [lift_comp_dest_id id] is [CompDest id]. *)
   val lift_comp_dest_id : CompDest.t -> t
 
-  (** [lift_comp_id id] is [`Comp_id id]. *)
+  (** [lift_comp_id id] is [Comp id]. *)
   val lift_comp_id : Comp.t -> t
 
-  (** [lift_module_id id] is [`Module_id id]. *)
+  (** [lift_module_id id] is [Module id]. *)
   val lift_module_id : Module.t -> t
 
-  (** [lift_query_id id] is [`Query_id id]. *)
+  (** [lift_query_id id] is [Query id]. *)
   val lift_query_id : Query.t -> t
 
-  (** [lift_mquery_id id] is [`MQuery_id id]. *)
+  (** [lift_mquery_id id] is [MQuery id]. *)
   val lift_mquery_id : MQuery.t -> t
 
-  (** [lift_schema_id id] is [`Schema_id id]. *)
+  (** [lift_schema_id id] is [Schema id]. *)
   val lift_schema_id : Schema.t -> t
 
   (** {1 ID Allocation} *)

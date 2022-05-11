@@ -189,8 +189,8 @@ module Id = struct
   module Typ = BaseId
   module Const = BaseId
   module CompTyp = BaseId
-  module CompCotyp = BaseId
   module CompConst = BaseId
+  module CompCotyp = BaseId
   module CompDest = BaseId
   module Comp = BaseId
   module Module = BaseId
@@ -199,53 +199,52 @@ module Id = struct
   module Schema = BaseId
 
   type t =
-    [ `Typ_id of Typ.t
-    | `Const_id of Const.t
-    | `Comp_typ_id of CompTyp.t
-    | `Comp_cotyp_id of CompCotyp.t
-    | `Comp_const_id of CompConst.t
-    | `Comp_dest_id of CompDest.t
-    | `Comp_id of Comp.t
-    | `Module_id of Module.t
-    | `Query_id of Query.t
-    | `MQuery_id of MQuery.t
-    | `Schema_id of Schema.t
-    ]
+    | Typ of Typ.t
+    | Const of Const.t
+    | CompTyp of CompTyp.t
+    | CompConst of CompConst.t
+    | CompCotyp of CompCotyp.t
+    | CompDest of CompDest.t
+    | Comp of Comp.t
+    | Module of Module.t
+    | Query of Query.t
+    | MQuery of MQuery.t
+    | Schema of Schema.t
 
-  let lift_typ_id id = `Typ_id id
+  let[@inline] lift_typ_id id = Typ id
 
-  let lift_const_id id = `Const_id id
+  let[@inline] lift_const_id id = Const id
 
-  let lift_comp_typ_id id = `Comp_typ_id id
+  let[@inline] lift_comp_typ_id id = CompTyp id
 
-  let lift_comp_const_id id = `Comp_const_id id
+  let[@inline] lift_comp_const_id id = CompConst id
 
-  let lift_comp_cotyp_id id = `Comp_cotyp_id id
+  let[@inline] lift_comp_cotyp_id id = CompCotyp id
 
-  let lift_comp_dest_id id = `Comp_dest_id id
+  let[@inline] lift_comp_dest_id id = CompDest id
 
-  let lift_comp_id id = `Comp_id id
+  let[@inline] lift_comp_id id = Comp id
 
-  let lift_module_id id = `Module_id id
+  let[@inline] lift_module_id id = Module id
 
-  let lift_query_id id = `Query_id id
+  let[@inline] lift_query_id id = Query id
 
-  let lift_mquery_id id = `MQuery_id id
+  let[@inline] lift_mquery_id id = MQuery id
 
-  let lift_schema_id id = `Schema_id id
+  let[@inline] lift_schema_id id = Schema id
 
   let to_base_id : t -> BaseId.t = function
-    | `Typ_id id
-    | `Const_id id
-    | `Comp_typ_id id
-    | `Comp_cotyp_id id
-    | `Comp_const_id id
-    | `Comp_dest_id id
-    | `Comp_id id
-    | `Module_id id
-    | `Query_id id
-    | `MQuery_id id
-    | `Schema_id id -> id
+    | Typ id
+    | Const id
+    | CompTyp id
+    | CompCotyp id
+    | CompConst id
+    | CompDest id
+    | Comp id
+    | Module id
+    | Query id
+    | MQuery id
+    | Schema id -> id
 
   (* Equality, ordering and hashing are defined by contramapping because IDs
      are allocated using one sequence of integers.
@@ -1682,21 +1681,23 @@ let lookup_mquery_by_id =
 (** [id_of_declaration_with_id declaration] is the lifted ID of
     [declaration]. *)
 let id_of_declaration_with_id : [< declaration_with_id ] -> Id.t = function
-  | `Typ_declaration declaration -> `Typ_id (declaration |> Typ.id)
-  | `Const_declaration declaration -> `Const_id (declaration |> Const.id)
+  | `Typ_declaration declaration -> declaration |> Typ.id |> Id.lift_typ_id
+  | `Const_declaration declaration ->
+    declaration |> Const.id |> Id.lift_const_id
   | `Comp_typ_declaration declaration ->
-    `Comp_typ_id (declaration |> CompTyp.id)
+    declaration |> CompTyp.id |> Id.lift_comp_typ_id
   | `Comp_cotyp_declaration declaration ->
-    `Comp_cotyp_id (declaration |> CompCotyp.id)
+    declaration |> CompCotyp.id |> Id.lift_comp_cotyp_id
   | `Comp_const_declaration declaration ->
-    `Comp_const_id (declaration |> CompConst.id)
+    declaration |> CompConst.id |> Id.lift_comp_const_id
   | `Comp_dest_declaration declaration ->
-    `Comp_dest_id (declaration |> CompDest.id)
-  | `Comp_declaration declaration -> `Comp_id (declaration |> Comp.id)
-  | `Module_declaration m -> `Module_id (m |> Module.id)
-  | `Query_declaration query -> `Query_id (query |> Query.id)
-  | `MQuery_declaration mquery -> `MQuery_id (mquery |> MQuery.id)
-  | `Schema_declaration schema -> `Schema_id (schema |> Schema.id)
+    declaration |> CompDest.id |> Id.lift_comp_dest_id
+  | `Comp_declaration declaration ->
+    declaration |> Comp.id |> Id.lift_comp_id
+  | `Module_declaration m -> m |> Module.id |> Id.lift_module_id
+  | `Query_declaration query -> query |> Query.id |> Id.lift_query_id
+  | `MQuery_declaration mquery -> mquery |> MQuery.id |> Id.lift_mquery_id
+  | `Schema_declaration schema -> schema |> Schema.id |> Id.lift_schema_id
 
 let id_of_declaration : [< declaration ] -> Id.t Option.t = function
   | #declaration_with_id as declaration ->
