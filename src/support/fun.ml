@@ -1,12 +1,12 @@
 include Stdlib.Fun
 
-let ( ++ ) f g x = f (g x)
+let[@inline] ( ++ ) f g x = x |> g |> f
 
-let ( >> ) f g x = x |> f |> g
+let[@inline] ( >> ) f g x = x |> f |> g
 
 let[@inline] apply x f = f x
 
-let flip f y x = f x y
+let[@inline] flip f y x = f x y
 
 let rec until f = if f () then until f else ()
 
