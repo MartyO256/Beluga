@@ -821,7 +821,8 @@ module Typ = struct
       ; type_subordinated_to : Id.Typ.Set.t
       }
 
-    let[@inline] term_subordinates { term_subordinates; _ } = term_subordinates
+    let[@inline] term_subordinates { term_subordinates; _ } =
+      term_subordinates
 
     let[@inline] type_subordinated_to { type_subordinated_to; _ } =
       type_subordinated_to
@@ -952,7 +953,7 @@ module Typ = struct
   let is_term_subordinate entry typ =
     entry |> if_frozen Fun.(Frozen.term_subordinates >> Id.Typ.Set.mem typ)
 
-  let is_type_subordinate entry typ =
+  let is_type_subordinate_to entry typ =
     entry
     |> if_frozen Fun.(Frozen.type_subordinated_to >> Id.Typ.Set.mem typ)
 end
@@ -1826,6 +1827,194 @@ let lookup_module = guarded_declaration_lookup guard_module_declaration
 let lookup_query = guarded_declaration_lookup guard_query_declaration
 
 let lookup_mquery = guarded_declaration_lookup guard_mquery_declaration
+
+module Subordination = struct
+  open Syntax.Int
+
+  type state' =
+    { lookup_kind : Id.Typ.t -> LF.kind
+          (** [lookup_kind tA_id] is the kind corresponding to the LF family
+              having ID [tA_id]. *)
+    ; lookup_constructors : Id.Typ.t -> LF.typ list
+          (** [lookup_constructors tA_id] are the constructors corresponding
+              to the LF family having ID [tA_id]. *)
+    ; is_term_subordinate_known : Id.Typ.t -> Id.Typ.t -> bool Option.t
+          (** [is_term_subordinate_known tA tB] is
+
+              - [Some true] if [tB] is a known term-level subordinate to
+                [tA],
+              - [Some false] if [tB] is known not to be a term-level
+                subordinate to [tA],
+              - [None] if the term-level subordination of [tA] and [tB] is
+                unknown.
+
+              This function is constructed from an existing Beluga signature
+              when the initial subordination state is created with
+              {!initial_state}. *)
+    ; is_type_subordinate_to_known : Id.Typ.t -> Id.Typ.t -> bool Option.t
+          (** [is_type_subordinate_to_known tA tB] is
+
+              - [Some true] if [tB] is a known type-level subordinate to
+                [tA],
+              - [Some false] if [tB] is known not to be a type-level
+                subordinate to [tA],
+              - [None] if the type-level subordination of [tA] and [tB] is
+                unknown.
+
+              This function is constructed from an existing Beluga signature
+              when the initial subordination state is created with
+              {!initial_state}. *)
+    ; new_term_subordinations : Id.Typ.Set.t Id.Typ.Map.t
+          (** The mapping from LF families to their term-level subordinates.
+
+              These are the term-level subordination relations discovered
+              after the initial state. To check whether an LF family is a
+              term-level subordinate of another LF family using both these
+              new subordination relations and the previously known ones, see
+              {!lookup_is_subordinate}. *)
+    ; new_type_subordinations : Id.Typ.Set.t Id.Typ.Map.t
+          (** The mapping from LF families to their type-level subordinates.
+
+              These are the type-level subordination relations discovered
+              after the initial state. To check whether an LF family is a
+              type-level subordinate of another LF family using both these
+              new subordination relations and the previously known ones, see
+              {!lookup_is_type_subordinate}. *)
+    }
+
+  include State.Make (struct
+    type t = state'
+  end)
+
+  let[@inline] lookup_kind { lookup_kind; _ } = lookup_kind
+
+  let[@inline] lookup_constructors { lookup_constructors; _ } =
+    lookup_constructors
+
+  let[@inline] is_term_subordinate_known { is_term_subordinate_known; _ } =
+    is_term_subordinate_known
+
+  let[@inline] is_type_subordinate_to_known
+      { is_type_subordinate_to_known; _ } =
+    is_type_subordinate_to_known
+
+  let[@inline] new_term_subordinations { new_term_subordinations; _ } =
+    new_term_subordinations
+
+  let[@inline] new_type_subordinations { new_type_subordinations; _ } =
+    new_type_subordinations
+
+  let initial_state :
+         lookup_kind:(Id.Typ.t -> LF.kind)
+      -> lookup_constructors:(Id.Typ.t -> LF.typ list)
+      -> is_term_subordinate_known:(Id.Typ.t -> Id.Typ.t -> bool Option.t)
+      -> is_type_subordinate_to_known:(Id.Typ.t -> Id.Typ.t -> bool Option.t)
+      -> state =
+   fun ~lookup_kind ~lookup_constructors ~is_term_subordinate_known
+       ~is_type_subordinate_to_known ->
+    { lookup_kind
+    ; lookup_constructors
+    ; is_term_subordinate_known
+    ; is_type_subordinate_to_known
+    ; new_term_subordinations = Id.Typ.Map.empty
+    ; new_type_subordinations = Id.Typ.Map.empty
+    }
+
+  let lookup_kind tA = get $> Fun.(lookup_kind >> Fun.apply tA)
+
+  let lookup_constructors tA =
+    get $> Fun.(lookup_constructors >> Fun.apply tA)
+
+  let lookup_old_term_subordinations tA tB =
+    get $> Fun.(is_term_subordinate_known >> Fun.apply tA >> Fun.apply tB)
+
+  let lookup_old_type_subordinations tA tB =
+    get $> Fun.(is_type_subordinate_to_known >> Fun.apply tA >> Fun.apply tB)
+
+  let lookup_new_term_subordinations tA =
+    get $> Fun.(new_term_subordinations >> Id.Typ.Map.find_opt tA)
+
+  let lookup_new_type_subordinations tA =
+    get $> Fun.(new_type_subordinations >> Id.Typ.Map.find_opt tA)
+
+  (** [lookup_is_term_subordinate tA tB state] is
+
+      - [Some true] if [tB] is a term-level subordinate to [tA] with respect
+        to [state],
+      - [Some false] if [tB] is not a term-level subordinate to [tA] with
+        respect to [state],
+      - [None] if the term-level subordination of [tA] and [tB] is unknown
+        with respect to [state].
+
+      The term-level subordination of [tA] and [tB] is determined by first
+      looking up in the new subordination relations and then the old ones. *)
+  let lookup_is_term_subordinate tA tB =
+    lookup_new_term_subordinations tA
+    >>= Option.eliminate
+          (fun () -> lookup_old_term_subordinations tA tB)
+          Fun.(Id.Typ.Set.mem tB >> Option.some >> return)
+
+  (** [lookup_is_type_subordinate tA tB state] is
+
+      - [Some true] if [tB] is a type-level subordinate to [tA] with respect
+        to [state],
+      - [Some false] if [tB] is not a type-level subordinate to [tA] with
+        respect to [state],
+      - [None] if the type-level subordination of [tA] and [tB] is unknown
+        with respect to [state].
+
+      The type-level subordination of [tA] and [tB] is determined by first
+      looking up in the new subordination relations and then the old ones. *)
+  let lookup_is_type_subordinate_to tA tB =
+    lookup_new_type_subordinations tA
+    >>= Option.eliminate
+          (fun () -> lookup_old_type_subordinations tA tB)
+          Fun.(Id.Typ.Set.mem tB >> Option.some >> return)
+
+  type subordinations =
+    { term_subordinations : Id.Typ.Set.t Id.Typ.Map.t
+          (** The mapping from LF families to their term-level subordinates. *)
+    ; type_subordinations : Id.Typ.Set.t Id.Typ.Map.t
+          (** The mapping from LF families to their type-level subordinates. *)
+    }
+
+  let compute_subordinations : Id.Typ.t -> state -> subordinations =
+    let compute_subordinations : Id.Typ.t -> subordinations t =
+     fun _ _ -> Error.not_implemented' "[compute_subordinations tA state]"
+    in
+    fun tA state -> run ~init:state (compute_subordinations tA) |> Pair.snd
+end
+
+let empty_subordination_state : t -> Subordination.state =
+ fun signature ->
+  let lookup_kind =
+    Fun.(lookup_typ_by_id_exn signature >> Pair.snd >> Typ.kind)
+  in
+  let lookup_constructors =
+    Fun.(
+      lookup_typ_by_id_exn signature
+      >> Pair.snd >> Typ.constructors >> Name.Hamt.values
+      >> List.map
+           (lookup_constructor_by_id_exn signature >> Pair.snd >> Const.typ))
+  in
+  let is_term_subordinate_known =
+    Fun.(
+      lookup_typ_by_id_exn signature >> Pair.snd >> Typ.is_term_subordinate)
+  in
+  let is_term_subordinate_known_opt tA tB =
+    is_term_subordinate_known tA tB |> Result.to_option
+  in
+  let is_type_subordinate_to_known =
+    Fun.(
+      lookup_typ_by_id_exn signature
+      >> Pair.snd >> Typ.is_type_subordinate_to)
+  in
+  let is_type_subordinate_to_known_opt tA tB =
+    is_type_subordinate_to_known tA tB |> Result.to_option
+  in
+  Subordination.initial_state ~lookup_kind ~lookup_constructors
+    ~is_term_subordinate_known:is_term_subordinate_known_opt
+    ~is_type_subordinate_to_known:is_type_subordinate_to_known_opt
 
 let is_path_to_entry signature id path =
   let open Option in
