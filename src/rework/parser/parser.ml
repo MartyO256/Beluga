@@ -152,13 +152,13 @@ type state =
 (*
 (** Peeks at the next token in the input stream in the given state. *)
 let peek_at (s : state) : T.t locd option =
-  Option.(LinkStream.observe s.input $> fst)
+  Option.(LinkStream.observe s.input $> Pair.fst)
    *)
 
 (*
 (** Like `peek_at` but forgets the location. *)
 let next_token s =
-  Option.(peek_at s $> snd |> get_default T.EOI)
+  Option.(peek_at s $> Pair.snd |> get_default T.EOI)
    *)
 
 (***** ERROR HANDLING *****)
@@ -1003,13 +1003,6 @@ let namify (p : string t) : Name.t t =
 
 let name : Name.t parser = namify identifier
 
-(*
-let simple_name : Name.t parser =
-  identifier
-  |> span
-  $> fun (location, value) -> Name.make location value
-*)
-
 type name_or_blank =
   [ `name of Name.t
   | `blank of Location.t
@@ -1017,7 +1010,6 @@ type name_or_blank =
 
 let blankify (p : unit t) : name_or_blank t =
   p |> span $> fun (loc, _) -> `blank loc
-
 
 let name_or_blank : name_or_blank parser =
   alt (name $> fun x -> `name x) (token T.UNDERSCORE |> blankify)
@@ -2265,7 +2257,7 @@ and cmp_pattern_atomic =
           $> fun (loc, mobj) -> Comp.PatMetaObj (loc, mobj)
         in
         let nested =
-          nested cmp_pattern snd (fun (l1, p1) (l2, p2) ->
+          nested cmp_pattern Pair.snd (fun (l1, p1) (l2, p2) ->
               Comp.PatPair (Location.join l1 l2, p1, p2) )
           |> labelled "nested/pair pattern"
         in
@@ -2371,7 +2363,7 @@ and cmp_exp_chk' =
           &> let_pattern
         in
         let nested =
-          nested cmp_exp_chk snd (fun (l1, e1) (l2, e2) ->
+          nested cmp_exp_chk Pair.snd (fun (l1, e1) (l2, e2) ->
               Comp.Pair (Location.join l1 l2, e1, e2) )
         in
         let hole = hole |> span $> fun (loc, h) -> Comp.Hole (loc, h) in
@@ -2478,7 +2470,7 @@ and cmp_exp_syn' =
           $> fun (loc, tR) -> Comp.BoxVal (loc, tR)
         in
         let nested =
-          nested cmp_exp_syn snd (fun (l1, i1) (l2, i2) ->
+          nested cmp_exp_syn Pair.snd (fun (l1, i1) (l2, i2) ->
               Comp.PairVal (Location.join l1 l2, i1, i2) )
           |> labelled "nested synthesizable expression or pair"
         in

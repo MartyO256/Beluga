@@ -1,3 +1,5 @@
+open Support
+
 type 'a t' =
   | Nil
   | Cons of 'a * 'a t
@@ -6,34 +8,36 @@ and 'a t = int * 'a t' Lazy.t
 
 let of_gen (g : unit -> 'a option) : 'a t =
   let rec go n =
-    (n, lazy (match g () with None -> Nil | Some x -> Cons (x, go (n + 1))))
+    ( n
+    , lazy
+        (match g () with
+        | None -> Nil
+        | Some x -> Cons (x, go (n + 1))) )
   in
   go 0
-
 
 let of_stream (s : 'a Stream.t) : 'a t =
   let rec go n =
     ( n
     , lazy
-        ( match try Some (Stream.next s) with Stream.Failure -> None with
-        | None ->
-            Nil
-        | Some x ->
-            Cons (x, go (n + 1)) ) )
+        (match try Some (Stream.next s) with Stream.Failure -> None with
+        | None -> Nil
+        | Some x -> Cons (x, go (n + 1))) )
   in
   go 0
 
-
 let rec iter f s =
-  match snd s with
-  | (lazy Nil) ->
-      ()
+  match Pair.snd s with
+  | (lazy Nil) -> ()
   | (lazy (Cons (x, s))) ->
-      f x ;
-      iter f s
+    f x;
+    iter f s
 
+let position = Pair.fst
 
-let position s = fst s
+let stream = Pair.snd
 
 let observe s =
-  match snd s with (lazy Nil) -> None | (lazy (Cons (x, s))) -> Some (x, s)
+  s |> stream |> function
+  | (lazy Nil) -> None
+  | (lazy (Cons (x, s))) -> Some (x, s)

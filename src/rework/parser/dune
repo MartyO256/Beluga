@@ -1,7 +1,18 @@
 (library
  (name parser)
  (modules :standard)
- (libraries util syntax external common camlp-streams gen sedlex extlib support unix str)
+ (libraries
+  util
+  syntax
+  external
+  common
+  camlp-streams
+  gen
+  sedlex
+  extlib
+  support
+  unix
+  str)
  (preprocess
   (pps sedlex.ppx)))
 
