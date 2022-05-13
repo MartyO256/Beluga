@@ -17,3 +17,11 @@ module Make (T : sig
 
   val pp : Format.formatter -> t -> unit
 end) : SHOW with type t = T.t
+
+(** If [val f : 't -> 's], then [contramap show f] is an instance of {!SHOW}
+    for values of type ['t] by the {!SHOW} insance [show] for values of type
+    ['s]. *)
+val contramap :
+     (module SHOW with type t = 's)
+  -> ('t -> 's)
+  -> (module SHOW with type t = 't)
