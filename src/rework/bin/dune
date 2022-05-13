@@ -1,0 +1,6 @@
+(executable
+ (name parse)
+ (public_name parse)
+ (package beluga)
+ (libraries rework gen parser location support)
+ (modules parse))
