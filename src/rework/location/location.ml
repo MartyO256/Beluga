@@ -37,6 +37,15 @@ let start_column = Fun.(start_position >> Position.column)
 
 let end_column = Fun.(end_position >> Position.column)
 
+exception IncompatibleLocations of (t * t)
+
+let join l1 l2 =
+  let file = filename l1 in
+  if String.(file <> filename l2) then raise @@ IncompatibleLocations (l1, l2)
+  else
+    let range = Position.Range.join (range l1) (range l2) in
+    make_from_range ~filename:file ~range
+
 include (
   Eq.Make (struct
     type nonrec t = t

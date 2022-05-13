@@ -19,7 +19,7 @@ module type RANGE = sig
   (** [make_from_point p] makes a point range from [p] to [p]. *)
   val make_from_point : e -> t
 
-  (** [join r1 r2] computes the least range that includes both [r1] and [r2]. *)
+  (** [join r1 r2] is the least range that includes both [r1] and [r2]. *)
   val join : t -> t -> t
 
   (** {1 Destructors} *)

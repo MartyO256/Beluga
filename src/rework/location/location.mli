@@ -59,6 +59,15 @@ val end_line : t -> int
     position. *)
 val end_column : t -> int
 
+(** {1 Combinators} *)
+
+exception IncompatibleLocations of (t * t)
+
+(** [join l1 l2] is the least location that includes [l1] and [l2].
+
+    @raise IncompatibleLocations If [l1] and [l2] lie in different files. *)
+val join : t -> t -> t
+
 (** {1 Instances} *)
 
 include Eq.EQ with type t := t
