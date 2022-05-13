@@ -10,27 +10,21 @@ module Position : module type of Position
 
 (** {1 Constructors} *)
 
-(** Makes a location over a range of characters.
-
-    @param start_position The start position of the location's range.
-    @param end_position The end position of the location's range.
-    @param filename The name of location's file. *)
+(** [make ~filename ~start_position ~end_position] makes the location from
+    position [~start_position] to position [~end_position] in the file at
+    [~filename]. *)
 val make :
      filename:string
   -> start_position:Position.t
   -> end_position:Position.t
   -> t
 
-(** Makes a location over a single character.
-
-    @param filename The name of location's file.
-    @param position The text file position of the character. *)
+(** [make_from_point ~filename ~position] makes the location over the single
+    character at position [~position] in the file at [~filename]. *)
 val make_from_point : filename:string -> position:Position.t -> t
 
-(** Makes a location over a range of characters.
-
-    @param filename The name of location's file.
-    @param range The location's position range. *)
+(** [make_from_range ~filename ~range] makes the location over the range of
+    characters [~range] in the file at [~filename]. *)
 val make_from_range : filename:string -> range:Position.Range.t -> t
 
 (** [initial filename] is the initial location in the file [filename]. *)
