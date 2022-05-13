@@ -14,9 +14,17 @@ let pack cs = concat "" (List.map (make 1) cs)
 
 let drop n s = sub s n (length s - n)
 
-include (Ord.Make (Stdlib.String) : Ord.ORD with type t := t)
+module type ORD = Ord.ORD
 
-include (Hash.Make (Stdlib.String) : Hash.HASH with type t := t)
+module Ord : Ord.ORD with type t = t = Ord.Make (Stdlib.String)
+
+include (Ord : ORD with type t := t)
+
+module type HASH = Hash.HASH
+
+module Hash : HASH with type t := t = Hash.Make (Stdlib.String)
+
+include (Hash : HASH with type t := t)
 
 include (
   Show.Make (struct
@@ -25,3 +33,11 @@ include (
     let pp = Format.pp_print_string
   end) :
     Show.SHOW with type t := t)
+
+module Set = Set.Make (Stdlib.String)
+module Map = Map.Make (Stdlib.String)
+
+module Hamt = HamtMisc.Make (struct
+  include Ord
+  include Hash
+end)

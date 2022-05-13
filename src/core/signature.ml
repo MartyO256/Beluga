@@ -154,30 +154,6 @@ module BaseId : sig
   val next : t -> t
 end = struct
   include Int
-
-  module Ord : Ord.ORD with type t = t = Ord.Make (Int)
-
-  include Ord
-
-  module Hash : Hash.HASH with type t = t = struct
-    type nonrec t = t
-
-    let hash x = x
-  end
-
-  include (Hash : Support.Hash.HASH with type t := t)
-
-  module Set = Set.Make (Ord)
-  module Map = Map.Make (Ord)
-
-  module Hamt = Hamt.Make (struct
-    type nonrec t = t
-
-    include (Ord : Support.Ord.ORD with type t := t)
-
-    include (Hash : Support.Hash.HASH with type t := t)
-  end)
-
   let min_value = 0
 
   let max_value = Int.max_int

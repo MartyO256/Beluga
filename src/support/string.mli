@@ -10,7 +10,17 @@ val pack : char list -> string
     characters. *)
 val drop : int -> string -> string
 
+(** {1 Collections} *)
+
+module Set : Set.S with type elt = t
+
+module Map : Map.S with type key = t
+
+module Hamt : HamtMisc.S with type key = t
+
 (** {1 Instances} *)
+
+include Eq.EQ with type t := t
 
 include Ord.ORD with type t := t
 
