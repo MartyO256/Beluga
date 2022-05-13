@@ -27,8 +27,8 @@ val make_from_point : filename:string -> position:Position.t -> t
     characters [~range] in the file at [~filename]. *)
 val make_from_range : filename:string -> range:Position.Range.t -> t
 
-(** [initial filename] is the initial location in the file [filename]. *)
-val initial : string -> t
+(** [initial ~filename] is the initial location in the file [filename]. *)
+val initial : filename:string -> t
 
 (** {1 Destructors} *)
 

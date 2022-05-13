@@ -12,12 +12,17 @@ let make ~offset ~offset_beginning_of_line ~line =
   assert (offset_beginning_of_line <= offset);
   { offset; offset_beginning_of_line; line }
 
+let initial = make ~line:1 ~offset:0 ~offset_beginning_of_line:0
+
+let[@inline] offset { offset; _ } = offset
+
+let[@inline] offset_beginning_of_line { offset_beginning_of_line; _ } =
+  offset_beginning_of_line
+
 let[@inline] line { line; _ } = line
 
 let[@inline] column { offset; offset_beginning_of_line; _ } =
   offset - offset_beginning_of_line + 1
-
-let initial = make ~line:1 ~offset:0 ~offset_beginning_of_line:0
 
 let[@inline] line_start_position { offset_beginning_of_line; line; _ } =
   { offset = offset_beginning_of_line; offset_beginning_of_line; line }

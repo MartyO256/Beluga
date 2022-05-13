@@ -17,7 +17,7 @@ let make ~filename ~start_position ~end_position =
       (Position.Range.make ~start_point:start_position
          ~end_point:end_position)
 
-let initial filename =
+let initial ~filename =
   make_from_range ~filename
     ~range:(Position.Range.make_from_point Position.initial)
 
@@ -25,22 +25,17 @@ let[@inline] filename { filename; _ } = filename
 
 let[@inline] range { range; _ } = range
 
-let[@inline] start_position location =
-  location |> range |> Position.Range.start_point
+let start_position = Fun.(range >> Position.Range.start_point)
 
-let[@inline] end_position location =
-  location |> range |> Position.Range.end_point
+let end_position = Fun.(range >> Position.Range.end_point)
 
-let[@inline] start_line location =
-  location |> start_position |> Position.line
+let start_line = Fun.(start_position >> Position.line)
 
-let[@inline] end_line location = location |> end_position |> Position.line
+let end_line = Fun.(end_position >> Position.line)
 
-let[@inline] start_column location =
-  location |> start_position |> Position.column
+let start_column = Fun.(start_position >> Position.column)
 
-let[@inline] end_column location =
-  location |> end_position |> Position.column
+let end_column = Fun.(end_position >> Position.column)
 
 include (
   Eq.Make (struct

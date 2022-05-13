@@ -7,26 +7,35 @@ type t
 
 (** {1 Constructors} *)
 
-(** Makes a text file position.
+(** [make ~offset ~offset_beginning_of_line ~line] makes a text file
+    position, where [~offset] is the distance from the position to the
+    beginning of the text file, expressed in characters,
+    [~offset_beginning_of_line] is the distance from the beginning of the
+    line the position lies in to the beginning of the text file, expressed in
+    characters, and [~line] is the one-based line number the position lies
+    in.
 
-    @param offset
-      The distance from the position to the beginning of the text file,
-      expressed in characters.
-    @param offset_beginning_of_line
-      The distance from the beginning of the line the position lies in to the
-      beginning of the text file, expressed in characters. That is,
-      [offset - offset_beginning_of_line + 1] is the one-based column number
-      of the position.
-    @param line The one-based line number the position lies in.
-    @raise Assert_failure if [line <= 0].
-    @raise Assert_failure if [offset < 0].
-    @raise Assert_failure if [offset < offset_beginning_of_line].*)
+    [offset - offset_beginning_of_line + 1] is the one-based column number of
+    the position.
+
+    @raise Assert_failure If [line <= 0].
+    @raise Assert_failure If [offset < 0].
+    @raise Assert_failure If [offset < offset_beginning_of_line].*)
 val make : offset:int -> offset_beginning_of_line:int -> line:int -> t
 
 (** [initial] is the position at the beginning of a text file. *)
 val initial : t
 
 (** {1 Destructors} *)
+
+(** [offset position] is the number of characters from the beginning of the
+    text file and [position]. *)
+val offset : t -> int
+
+(** [offset_beginning_of_line position] is the number of characters from the
+    beginning of the text file and the start of the line containing
+    [position]. *)
+val offset_beginning_of_line : t -> int
 
 (** [line p] returns the one-based line number [p] lies in. *)
 val line : t -> int
