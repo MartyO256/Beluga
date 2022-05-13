@@ -208,6 +208,7 @@ let lexbuf_location =
     @raise LexingError If a lexical error is encountered. *)
 let make filename ?(position = L.Position.initial) gen =
   let lexbuf = Sedlexing.Utf8.from_gen gen in
+  Sedlexing.set_filename lexbuf filename;
   (Sedlexing.set_position lexbuf
   @@ Lexing.
        { pos_fname = filename
