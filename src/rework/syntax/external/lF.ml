@@ -1,3 +1,4 @@
+module L = Location
 open Support
 open Common
 
@@ -13,9 +14,9 @@ type svar_class =
   | Subst  (** Substitution *)
 
 type kind =
-  | Typ of Location.t
-  | ArrKind of Location.t * typ * kind
-  | PiKind of Location.t * typ_decl * kind
+  | Typ of L.t
+  | ArrKind of L.t * typ * kind
+  | PiKind of L.t * typ_decl * kind
 
 and typ_decl =
   | TypDecl of Name.t * typ
@@ -30,7 +31,7 @@ and ctyp =
   | ClTyp of cltyp * dctx
   | CTyp of FullyQualifiedName.t
 
-and loc_ctyp = Location.t * ctyp
+and loc_ctyp = L.t * ctyp
 
 and ctyp_decl =
   | Decl of Name.t * loc_ctyp * Depend.t
@@ -39,28 +40,28 @@ and ctyp_decl =
 (* x : _ *)
 
 and typ =
-  | Atom of Location.t * Name.t * spine
-  | ArrTyp of Location.t * typ * typ
-  | PiTyp of Location.t * typ_decl * typ
-  | Sigma of Location.t * typ_rec
-  | Ctx of Location.t * dctx
-  | AtomTerm of Location.t * normal
+  | Atom of L.t * Name.t * spine
+  | ArrTyp of L.t * typ * typ
+  | PiTyp of L.t * typ_decl * typ
+  | Sigma of L.t * typ_rec
+  | Ctx of L.t * dctx
+  | AtomTerm of L.t * normal
 
 and normal =
-  | Lam of Location.t * Name.t * normal
-  | Root of Location.t * head * spine
-  | Tuple of Location.t * tuple
-  | LFHole of Location.t * string option
-  | Ann of Location.t * normal * typ
-  | TList of Location.t * normal list
-  | NTyp of Location.t * typ
-  | PatEmpty of Location.t
+  | Lam of L.t * Name.t * normal
+  | Root of L.t * head * spine
+  | Tuple of L.t * tuple
+  | LFHole of L.t * string option
+  | Ann of L.t * normal * typ
+  | TList of L.t * normal list
+  | NTyp of L.t * typ
+  | PatEmpty of L.t
 
 and head =
-  | Name of Location.t * FullyQualifiedName.t * sub option
-  | Hole of Location.t
-  | PVar of Location.t * Name.t * sub option
-  | Proj of Location.t * head * proj
+  | Name of L.t * FullyQualifiedName.t * sub option
+  | Hole of L.t
+  | PVar of L.t * Name.t * sub option
+  | Proj of L.t * head * proj
 
 and proj =
   | ByPos of int
@@ -68,12 +69,12 @@ and proj =
 
 and spine =
   | Nil
-  | App of Location.t * normal * spine
+  | App of L.t * normal * spine
 
 and sub_start =
-  | EmptySub of Location.t
-  | Id of Location.t
-  | SVar of Location.t * Name.t * sub option
+  | EmptySub of L.t
+  | Id of L.t
+  | SVar of L.t * Name.t * sub option
 
 and sub = sub_start * normal list
 
@@ -85,11 +86,11 @@ and tuple = normal Nonempty.t
 
 and dctx =
   | Null
-  | CtxVar of Location.t * Name.t
+  | CtxVar of L.t * Name.t
   | DDec of dctx * typ_decl
   | CtxHole
 
-and sch_elem = SchElem of Location.t * typ_decl ctx * typ_rec
+and sch_elem = SchElem of L.t * typ_decl ctx * typ_rec
 
 and schema = Schema of sch_elem list
 
@@ -109,7 +110,7 @@ type mfront =
   | CObj of dctx
 
 (** Converts a spine to a list. It is visually "backwards" *)
-let rec list_of_spine : spine -> (Location.t * normal) list = function
+let rec list_of_spine : spine -> (L.t * normal) list = function
   | Nil ->
       []
   | App (l, m, s) ->

@@ -1,36 +1,23 @@
+module L = Location
 open Support
 
-module Name = struct
-  type t =
-    { location : Location.t
-    ; value : string
-    }
+type t =
+  { location : L.t
+  ; value : string
+  }
 
-  let make location value = { location; value }
+let make location value = { location; value }
 
-  let make_blank location = make location "_"
+let make_blank location = make location "_"
 
-  let[@inline] location { location; _ } = location
+let[@inline] location { location; _ } = location
 
-  let[@inline] value { value; _ } = value
-end
+let[@inline] value { value; _ } = value
 
-include Name
+module OrdByValue = (val Ord.contramap (module String) value)
 
-include Show.Make (struct
-  include Name
+include (OrdByValue : Ord.ORD with type t := t)
 
-  let pp ppf name = Format.fprintf ppf "%s" name.value
-end)
+module ShowByValue = (val Show.contramap (module String) value)
 
-include Eq.Make (struct
-  include Name
-
-  let equal x y = String.equal (value x) (value y)
-end)
-
-include Ord.Make (struct
-  include Name
-
-  let compare x y = String.compare (value x) (value y)
-end)
+include (ShowByValue : Show.SHOW with type t := t)

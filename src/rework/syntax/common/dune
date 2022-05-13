@@ -1,7 +1,7 @@
 (library
  (name common)
  (modules :standard)
- (libraries support))
+ (libraries location support))
 
 (env
  (dev

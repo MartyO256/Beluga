@@ -1,4 +1,4 @@
-open Support
+module L = Location
 open Common
 
 type invoke_kind =
@@ -57,7 +57,7 @@ type command =
   (* Actual tactics *)
   | Intros of string list option (* list of names for introduced variables *)
   | Split of split_kind * Comp.exp_syn (* the expression to split on *)
-  | MSplit of Location.t * Name.t (* split on a metavariable *)
+  | MSplit of L.t * Name.t (* split on a metavariable *)
   | Solve of Comp.exp_chk
   (* the expression to solve the current subgoal with *)
   | Unbox of Comp.exp_syn * Name.t * Comp.unbox_modifier option
