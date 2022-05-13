@@ -15,3 +15,5 @@ val drop : int -> string -> string
 include Ord.ORD with type t := t
 
 include Hash.HASH with type t := t
+
+include Show.SHOW with type t := t
