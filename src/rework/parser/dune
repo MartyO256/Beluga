@@ -3,6 +3,7 @@
  (modules :standard)
  (libraries
   util
+  location
   syntax
   external
   common
