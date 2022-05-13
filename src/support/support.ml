@@ -13,6 +13,7 @@ module Hamt = HamtMisc
 module Hash = Hash
 module Hashtbl = Hashtbl
 module History = History
+module Int = Int
 module LinkedMap = LinkedMap
 module LinkedHamt = LinkedHamt
 module List = List
