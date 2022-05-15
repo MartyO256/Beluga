@@ -117,7 +117,7 @@ end
     However, since declarations may be elaborated in steps, derived
     declarations share the same ID.
 
-    IDs are generated when initial entries are introduced to a signature. *)
+    IDs are allocated during signature reconstruction. *)
 module type ID = sig
   (** The type of identifiers for signature declarations. *)
   type t
@@ -154,9 +154,10 @@ module BaseId : sig
   val next : t -> t
 end = struct
   include Int
+
   let min_value = 0
 
-  let max_value = Int.max_int
+  let max_value = max_int
 
   let[@inline] next x = x + 1
 end
@@ -842,6 +843,10 @@ module Typ = struct
     | Frozen { Frozen.constructors; _ }
     | Unfrozen { Unfrozen.constructors; _ } -> constructors
 
+  let lifted_id =
+    let id' = id in
+    Fun.(id' >> Id.lift_typ_id)
+
   let make_initial_entry ~id ~name ~location ~implicit_arguments kind =
     Unfrozen (Unfrozen.make ~id ~name ~location ~implicit_arguments kind)
 
@@ -958,6 +963,10 @@ module Const = struct
   let[@inline] typ { typ; _ } = typ
 
   let[@inline] kind { kind; _ } = kind
+
+  let lifted_id =
+    let id' = id in
+    Fun.(id' >> Id.lift_const_id)
 end
 
 module CompTyp = struct
@@ -1021,6 +1030,10 @@ module CompTyp = struct
   let[@inline] constructors = function
     | Frozen { Frozen.constructors; _ }
     | Unfrozen { Unfrozen.constructors; _ } -> constructors
+
+  let lifted_id =
+    let id' = id in
+    Fun.(id' >> Id.lift_comp_typ_id)
 
   let make_initial_entry ~id ~name ~location ~implicit_arguments ~positivity
       kind =
@@ -1097,6 +1110,10 @@ module CompConst = struct
   let[@inline] typ { typ; _ } = typ
 
   let[@inline] kind { kind; _ } = kind
+
+  let lifted_id =
+    let id' = id in
+    Fun.(id' >> Id.lift_comp_const_id)
 end
 
 module CompCotyp = struct
@@ -1151,6 +1168,10 @@ module CompCotyp = struct
   let[@inline] destructors = function
     | Frozen { Frozen.destructors; _ } | Unfrozen { Unfrozen.destructors; _ }
       -> destructors
+
+  let lifted_id =
+    let id' = id in
+    Fun.(id' >> Id.lift_comp_cotyp_id)
 
   let make_initial_entry ~id ~name ~location ~implicit_arguments kind =
     Unfrozen (Unfrozen.make ~id ~name ~location ~implicit_arguments kind)
@@ -1227,6 +1248,10 @@ module CompDest = struct
   let[@inline] return_typ { return_typ; _ } = return_typ
 
   let[@inline] kind { kind; _ } = kind
+
+  let lifted_id =
+    let id' = id in
+    Fun.(id' >> Id.lift_comp_dest_id)
 end
 
 module Comp = struct
@@ -1260,6 +1285,10 @@ module Comp = struct
   let[@inline] program { program; _ } = program
 
   let[@inline] mutual_group { mutual_group; _ } = mutual_group
+
+  let lifted_id =
+    let id' = id in
+    Fun.(id' >> Id.lift_comp_id)
 end
 
 module Module = struct
@@ -1308,6 +1337,8 @@ module Module = struct
   let[@inline] declarations_by_name { declarations_by_name; _ } =
     declarations_by_name
 
+  let lifted_id m = m |> id |> Id.lift_module_id
+
   let lookup m name =
     let open Option in
     m |> declarations_by_name |> Name.Hamt.find_opt name $> Nonempty.head
@@ -1343,6 +1374,10 @@ module Schema = struct
   let[@inline] location { location; _ } = location
 
   let[@inline] schema { schema; _ } = schema
+
+  let lifted_id =
+    let id' = id in
+    Fun.(id' >> Id.lift_schema_id)
 end
 
 module DocumentationComment = struct
@@ -1392,6 +1427,10 @@ module Query = struct
   let[@inline] query { query; _ } = query
 
   let[@inline] search_parameters { search_parameters; _ } = search_parameters
+
+  let lifted_id =
+    let id' = id in
+    Fun.(id' >> Id.lift_query_id)
 end
 
 module MQuery = struct
@@ -1430,6 +1469,10 @@ module MQuery = struct
   let[@inline] query { query; _ } = query
 
   let[@inline] search_parameters { search_parameters; _ } = search_parameters
+
+  let lifted_id =
+    let id' = id in
+    Fun.(id' >> Id.lift_mquery_id)
 end
 
 (** Beluga Signatures *)
@@ -1661,23 +1704,17 @@ let lookup_mquery_by_id =
 (** [id_of_declaration_with_id declaration] is the lifted ID of
     [declaration]. *)
 let id_of_declaration_with_id : [< declaration_with_id ] -> Id.t = function
-  | `Typ_declaration declaration -> declaration |> Typ.id |> Id.lift_typ_id
-  | `Const_declaration declaration ->
-    declaration |> Const.id |> Id.lift_const_id
-  | `Comp_typ_declaration declaration ->
-    declaration |> CompTyp.id |> Id.lift_comp_typ_id
-  | `Comp_cotyp_declaration declaration ->
-    declaration |> CompCotyp.id |> Id.lift_comp_cotyp_id
-  | `Comp_const_declaration declaration ->
-    declaration |> CompConst.id |> Id.lift_comp_const_id
-  | `Comp_dest_declaration declaration ->
-    declaration |> CompDest.id |> Id.lift_comp_dest_id
-  | `Comp_declaration declaration ->
-    declaration |> Comp.id |> Id.lift_comp_id
-  | `Module_declaration m -> m |> Module.id |> Id.lift_module_id
-  | `Query_declaration query -> query |> Query.id |> Id.lift_query_id
-  | `MQuery_declaration mquery -> mquery |> MQuery.id |> Id.lift_mquery_id
-  | `Schema_declaration schema -> schema |> Schema.id |> Id.lift_schema_id
+  | `Typ_declaration declaration -> Typ.lifted_id declaration
+  | `Const_declaration declaration -> Const.lifted_id declaration
+  | `Comp_typ_declaration declaration -> CompTyp.lifted_id declaration
+  | `Comp_const_declaration declaration -> CompConst.lifted_id declaration
+  | `Comp_cotyp_declaration declaration -> CompCotyp.lifted_id declaration
+  | `Comp_dest_declaration declaration -> CompDest.lifted_id declaration
+  | `Comp_declaration declaration -> Comp.lifted_id declaration
+  | `Module_declaration m -> Module.lifted_id m
+  | `Query_declaration query -> Query.lifted_id query
+  | `MQuery_declaration mquery -> MQuery.lifted_id mquery
+  | `Schema_declaration schema -> Schema.lifted_id schema
 
 let id_of_declaration : [< declaration ] -> Id.t Option.t = function
   | #declaration_with_id as declaration ->

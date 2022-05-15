@@ -733,6 +733,8 @@ module Typ : sig
 
   val id : t -> Id.Typ.t
 
+  val lifted_id : t -> Id.t
+
   val location : t -> Location.t
 
   val name : t -> Name.t
@@ -858,6 +860,8 @@ module Const : sig
 
   val id : t -> Id.Const.t
 
+  val lifted_id : t -> Id.t
+
   val location : t -> Location.t
 
   val name : t -> Name.t
@@ -887,6 +891,8 @@ module CompTyp : sig
   (** {1 Destructors} *)
 
   val id : t -> Id.CompTyp.t
+
+  val lifted_id : t -> Id.t
 
   val location : t -> Location.t
 
@@ -936,7 +942,9 @@ module CompConst : sig
 
   (** {1 Destructors}*)
 
-  val id : t -> Id.Const.t
+  val id : t -> Id.CompConst.t
+
+  val lifted_id : t -> Id.t
 
   val location : t -> Location.t
 
@@ -968,6 +976,8 @@ module CompCotyp : sig
   (** {1 Destructors} *)
 
   val id : t -> Id.CompCotyp.t
+
+  val lifted_id : t -> Id.t
 
   val location : t -> Location.t
 
@@ -1023,7 +1033,9 @@ module CompDest : sig
 
   (** {1 Destructors}*)
 
-  val id : t -> Id.Const.t
+  val id : t -> Id.CompDest.t
+
+  val lifted_id : t -> Id.t
 
   val location : t -> Location.t
 
@@ -1062,6 +1074,8 @@ module Comp : sig
 
   val id : t -> Id.Comp.t
 
+  val lifted_id : t -> Id.t
+
   val location : t -> Location.t
 
   val name : t -> Name.t
@@ -1081,10 +1095,16 @@ module Schema : sig
 
   type t
 
+  (** {1 Constructors} *)
+
   val make :
     id:Id.Schema.t -> name:Name.t -> location:Location.t -> LF.schema -> t
 
+  (** {1 Destructors} *)
+
   val id : t -> Id.Schema.t
+
+  val lifted_id : t -> Id.t
 
   val name : t -> Name.t
 
@@ -1115,7 +1135,9 @@ module Module : sig
 
   (** {1 Destructors} *)
 
-  val id : (_, _, _) t -> Id.Comp.t
+  val id : (_, _, _) t -> Id.Module.t
+
+  val lifted_id : (_, _, _) t -> Id.t
 
   val location : (_, _, _) t -> Location.t
 
@@ -1190,6 +1212,8 @@ module Query : sig
 
   val id : t -> Id.Query.t
 
+  val lifted_id : t -> Id.t
+
   val location : t -> Location.t
 
   val name : t -> Name.t Option.t
@@ -1232,7 +1256,9 @@ module MQuery : sig
 
   (** {1 Destructors} *)
 
-  val id : t -> Id.Query.t
+  val id : t -> Id.MQuery.t
+
+  val lifted_id : t -> Id.t
 
   val location : t -> Location.t
 
