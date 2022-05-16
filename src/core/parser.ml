@@ -2644,7 +2644,7 @@ let sgn_query_pragma =
   pragma "query" &>
     seq4
       (seq2 bound bound)
-      (mctx ~sep: (pure ()) (clf_ctyp_decl_bare name' (fun x -> Depend.Explicit, x) |> braces))
+      (mctx ~sep: (pure ()) (clf_ctyp_decl_bare name' (fun x -> Depend.explicit, x) |> braces))
       (maybe (name <& token T.COLON))
       lf_typ
   <& token T.DOT

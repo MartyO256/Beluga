@@ -1,7 +1,7 @@
 open Support
 
 (** The type for implicit or explicit values. *)
-type plicity =
+type plicity = private
   | Implicit
   | Explicit
 

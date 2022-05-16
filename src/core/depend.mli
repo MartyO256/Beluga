@@ -1,7 +1,7 @@
 open Support
 
 (** The type for implicit, explicit or inductive values. *)
-type depend =
+type depend = private
   | Implicit
   | Explicit
   | Inductive

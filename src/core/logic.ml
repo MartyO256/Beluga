@@ -457,13 +457,13 @@ module Convert = struct
 
   let rec mctxToMSub cD (mV, ms) fS =
     let etaExpand' cD cPsi (tA, ms) name =
-      let cvar = Whnf.newMMVar (Some name) (cD, cPsi, tA) Depend.Implicit in
-       LF.Root (Syntax.Loc.ghost, LF.MMVar((cvar, ms), S.id), LF.Nil, Plicity.Explicit)
+      let cvar = Whnf.newMMVar (Some name) (cD, cPsi, tA) Depend.implicit in
+       LF.Root (Syntax.Loc.ghost, LF.MMVar((cvar, ms), S.id), LF.Nil, Plicity.explicit)
     in
     let get_plicity dep =
       match dep with
-      | Depend.Explicit -> Plicity.Explicit
-      | Depend.Implicit -> Plicity.Implicit
+      | Depend.Explicit -> Plicity.explicit
+      | Depend.Implicit -> Plicity.implicit
     in
     let noLoc = Syntax.Loc.ghost in
     match mV with
@@ -2138,7 +2138,7 @@ module CSolver = struct
           the cD.
           When an assumption gets unboxed, we no longer consider it in Gamma. *)
        let name = Id.mk_name (Whnf.newMTypName r) in
-       let mctx_decl = LF.Decl (name, r, Depend.Explicit) in
+       let mctx_decl = LF.Decl (name, r, Depend.explicit) in
        let cD' = Whnf.extend_mctx cD (mctx_decl, ms) in
        let cG' = Whnf.cnormGCtx (cG, LF.MShift 1) in
        let box = Comp.Var (noLoc, k') in
@@ -2151,7 +2151,7 @@ module CSolver = struct
                  (noLoc
                  ,LF.MVar (LF.Offset 1, S.id)
                  , LF.Nil
-                 , Plicity.Explicit
+                 , Plicity.explicit
                  )
              in
              LF.ClObj (Context.dctxToHat (Whnf.cnormDCtx (cPsi, LF.MShift 1)), LF.MObj tM)
@@ -2235,7 +2235,7 @@ module CSolver = struct
        let cPool' = cnormCPool (cPool, LF.MShift 1) cD in
        let sc' =
          (fun e ->
-           sc (Comp.MLam (noLoc, name, e, Plicity.Explicit))) in
+           sc (Comp.MLam (noLoc, name, e, Plicity.explicit))) in
        uniform_right cD' cG' cPool' cg' (Whnf.mvar_dot1 ms) sc' currDepth maxDepth
     | Implies ((r, tdecl), cg') ->
        (* We gain an assumption for the computation context *)
