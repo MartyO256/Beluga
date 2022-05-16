@@ -764,7 +764,9 @@ module Typ = struct
       { id : Id.Typ.t
       ; name : Name.t
       ; location : Location.t
+      ; arguments : int
       ; implicit_arguments : int
+      ; explicit_arguments : int
       ; kind : LF.kind
       ; var_name_base : Name.t Option.t
       ; mvar_name_base : Name.t Option.t
@@ -772,13 +774,34 @@ module Typ = struct
       ; documentation_comment : DocumentationComment.t Option.t
       }
 
-    let make ~id ~name ~location ~implicit_arguments ?var_name_base
-        ?mvar_name_base ?(constructors = Name.Hamt.empty)
+    module Kind = struct
+      let arguments =
+        let rec arguments (implicit, explicit) tK =
+          match tK with
+          | LF.Typ -> (implicit, explicit)
+          | LF.PiKind ((_, Depend.Explicit), tK')
+          | LF.PiKind ((_, Depend.Inductive), tK') ->
+            arguments (implicit, 1 + explicit) tK'
+          | LF.PiKind ((_, Depend.Implicit), tK') ->
+            arguments (1 + implicit, explicit) tK'
+        in
+        fun tK ->
+          let implicit, explicit = arguments (0, 0) tK in
+          (implicit, explicit, implicit + explicit)
+    end
+
+    let make ~id ~name ~location ?var_name_base ?mvar_name_base
+        ?(constructors = Name.Hamt.empty)
         ?(documentation_comment = Option.none) kind =
+      let implicit_arguments, explicit_arguments, arguments =
+        Kind.arguments kind
+      in
       { id
       ; name
       ; location
       ; implicit_arguments
+      ; explicit_arguments
+      ; arguments
       ; kind
       ; var_name_base
       ; mvar_name_base
@@ -804,7 +827,9 @@ module Typ = struct
       { id : Id.Typ.t
       ; name : Name.t
       ; location : Location.t
+      ; arguments : int
       ; implicit_arguments : int
+      ; explicit_arguments : int
       ; kind : LF.kind
       ; var_name_base : Name.t Option.t
       ; mvar_name_base : Name.t Option.t
@@ -847,6 +872,18 @@ module Typ = struct
   let[@inline] kind = function
     | Frozen { Frozen.kind; _ } | Unfrozen { Unfrozen.kind; _ } -> kind
 
+  let[@inline] arguments = function
+    | Frozen { Frozen.arguments; _ } | Unfrozen { Unfrozen.arguments; _ } ->
+      arguments
+
+  let[@inline] implicit_arguments = function
+    | Frozen { Frozen.implicit_arguments; _ }
+    | Unfrozen { Unfrozen.implicit_arguments; _ } -> implicit_arguments
+
+  let[@inline] explicit_arguments = function
+    | Frozen { Frozen.explicit_arguments; _ }
+    | Unfrozen { Unfrozen.explicit_arguments; _ } -> explicit_arguments
+
   let[@inline] var_name_base = function
     | Frozen { Frozen.var_name_base; _ }
     | Unfrozen { Unfrozen.var_name_base; _ } -> var_name_base
@@ -867,11 +904,8 @@ module Typ = struct
     let id' = id in
     Fun.(id' >> Id.lift_typ_id)
 
-  let make_initial_entry ~id ~name ~location ~implicit_arguments
-      ?documentation_comment kind =
-    Unfrozen
-      (Unfrozen.make ~id ~name ~location ~implicit_arguments
-         ~documentation_comment kind)
+  let make_initial_entry ~id ~name ~location ?documentation_comment kind =
+    Unfrozen (Unfrozen.make ~id ~name ~location ~documentation_comment kind)
 
   let is_frozen = function
     | Frozen _ -> true
@@ -910,7 +944,9 @@ module Typ = struct
       { Unfrozen.id
       ; name
       ; location
+      ; arguments
       ; implicit_arguments
+      ; explicit_arguments
       ; kind
       ; var_name_base
       ; mvar_name_base
@@ -920,7 +956,9 @@ module Typ = struct
     { Frozen.id
     ; name
     ; location
+    ; arguments
     ; implicit_arguments
+    ; explicit_arguments
     ; kind
     ; constructors
     ; var_name_base

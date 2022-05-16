@@ -742,7 +742,6 @@ module Typ : sig
        id:Id.Typ.t
     -> name:Name.t
     -> location:Location.t
-    -> implicit_arguments:int
     -> ?documentation_comment:DocumentationComment.t
     -> LF.kind
     -> t
@@ -758,6 +757,12 @@ module Typ : sig
   val name : t -> Name.t
 
   val kind : t -> LF.kind
+
+  val arguments : t -> int
+
+  val implicit_arguments : t -> int
+
+  val explicit_arguments : t -> int
 
   val documentation_comment : t -> DocumentationComment.t Option.t
 
