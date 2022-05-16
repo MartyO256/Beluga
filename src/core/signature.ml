@@ -743,6 +743,19 @@ end
 
 (** Beluga Signature Entries *)
 
+module DocumentationComment = struct
+  type t =
+    { content : string
+    ; location : Location.t
+    }
+
+  let make ~location content = { content; location }
+
+  let[@inline] content { content; _ } = content
+
+  let[@inline] location { location; _ } = location
+end
+
 module Typ = struct
   open Syntax.Int
 
@@ -756,11 +769,12 @@ module Typ = struct
       ; var_name_base : Name.t Option.t
       ; mvar_name_base : Name.t Option.t
       ; constructors : Id.Const.t Name.Hamt.t
+      ; documentation_comment : DocumentationComment.t Option.t
       }
 
-    let make ~id ~name ~location ~implicit_arguments
-        ?(var_name_base = Option.none) ?(mvar_name_base = Option.none)
-        ?(constructors = Name.Hamt.empty) kind =
+    let make ~id ~name ~location ~implicit_arguments ?var_name_base
+        ?mvar_name_base ?(constructors = Name.Hamt.empty)
+        ?(documentation_comment = Option.none) kind =
       { id
       ; name
       ; location
@@ -769,6 +783,7 @@ module Typ = struct
       ; var_name_base
       ; mvar_name_base
       ; constructors
+      ; documentation_comment
       }
 
     let add_constructor ({ constructors; _ } as entry) name const =
@@ -796,6 +811,7 @@ module Typ = struct
       ; constructors : Id.Const.t Name.Hamt.t
       ; term_subordinates : Id.Typ.Set.t
       ; type_subordinated_to : Id.Typ.Set.t
+      ; documentation_comment : DocumentationComment.t Option.t
       }
 
     let[@inline] term_subordinates { term_subordinates; _ } =
@@ -843,12 +859,19 @@ module Typ = struct
     | Frozen { Frozen.constructors; _ }
     | Unfrozen { Unfrozen.constructors; _ } -> constructors
 
+  let[@inline] documentation_comment = function
+    | Frozen { Frozen.documentation_comment; _ }
+    | Unfrozen { Unfrozen.documentation_comment; _ } -> documentation_comment
+
   let lifted_id =
     let id' = id in
     Fun.(id' >> Id.lift_typ_id)
 
-  let make_initial_entry ~id ~name ~location ~implicit_arguments kind =
-    Unfrozen (Unfrozen.make ~id ~name ~location ~implicit_arguments kind)
+  let make_initial_entry ~id ~name ~location ~implicit_arguments
+      ?documentation_comment kind =
+    Unfrozen
+      (Unfrozen.make ~id ~name ~location ~implicit_arguments
+         ~documentation_comment kind)
 
   let is_frozen = function
     | Frozen _ -> true
@@ -892,6 +915,7 @@ module Typ = struct
       ; var_name_base
       ; mvar_name_base
       ; constructors
+      ; documentation_comment
       } =
     { Frozen.id
     ; name
@@ -903,6 +927,7 @@ module Typ = struct
     ; mvar_name_base
     ; term_subordinates
     ; type_subordinated_to
+    ; documentation_comment
     }
 
   let freeze ~term_subordinates ~type_subordinated_to =
@@ -949,10 +974,19 @@ module Const = struct
     ; implicit_arguments : int
     ; typ : LF.typ
     ; kind : Id.Typ.t
+    ; documentation_comment : DocumentationComment.t Option.t
     }
 
-  let make ~id ~name ~location ~implicit_arguments ~kind typ =
-    { id; name; location; implicit_arguments; typ; kind }
+  let make ~id ~name ~location ~implicit_arguments ~kind
+      ?(documentation_comment : DocumentationComment.t Option.t) typ =
+    { id
+    ; name
+    ; location
+    ; implicit_arguments
+    ; typ
+    ; kind
+    ; documentation_comment
+    }
 
   let[@inline] id { id; _ } = id
 
@@ -963,6 +997,9 @@ module Const = struct
   let[@inline] typ { typ; _ } = typ
 
   let[@inline] kind { kind; _ } = kind
+
+  let[@inline] documentation_comment { documentation_comment; _ } =
+    documentation_comment
 
   let lifted_id =
     let id' = id in
@@ -981,10 +1018,12 @@ module CompTyp = struct
       ; kind : Comp.kind
       ; positivity : Sgn.positivity_flag
       ; constructors : Id.CompConst.t Name.Hamt.t
+      ; documentation_comment : DocumentationComment.t Option.t
       }
 
     let make ~id ~name ~location ~implicit_arguments ~positivity
-        ?(constructors = Name.Hamt.empty) kind =
+        ?(constructors = Name.Hamt.empty)
+        ?(documentation_comment = Option.none) kind =
       { id
       ; name
       ; location
@@ -992,6 +1031,7 @@ module CompTyp = struct
       ; kind
       ; positivity
       ; constructors
+      ; documentation_comment
       }
 
     let add_constructor ({ constructors; _ } as entry) name const =
@@ -1007,6 +1047,7 @@ module CompTyp = struct
       ; kind : Comp.kind
       ; positivity : Sgn.positivity_flag
       ; constructors : Id.CompConst.t Name.Hamt.t
+      ; documentation_comment : DocumentationComment.t Option.t
       }
   end
 
@@ -1031,14 +1072,19 @@ module CompTyp = struct
     | Frozen { Frozen.constructors; _ }
     | Unfrozen { Unfrozen.constructors; _ } -> constructors
 
+  let[@inline] documentation_comment = function
+    | Frozen { Frozen.documentation_comment; _ }
+    | Unfrozen { Unfrozen.documentation_comment; _ } -> documentation_comment
+
   let lifted_id =
     let id' = id in
     Fun.(id' >> Id.lift_comp_typ_id)
 
   let make_initial_entry ~id ~name ~location ~implicit_arguments ~positivity
-      kind =
+      ?documentation_comment kind =
     Unfrozen
-      (Unfrozen.make ~id ~name ~location ~implicit_arguments ~positivity kind)
+      (Unfrozen.make ~id ~name ~location ~implicit_arguments ~positivity
+         ~documentation_comment kind)
 
   let is_frozen = function
     | Frozen _ -> true
@@ -1070,6 +1116,7 @@ module CompTyp = struct
       ; kind
       ; positivity
       ; constructors
+      ; documentation_comment
       } =
     { Frozen.id
     ; name
@@ -1078,6 +1125,7 @@ module CompTyp = struct
     ; kind
     ; positivity
     ; constructors
+    ; documentation_comment
     }
 
   let freeze = if_unfrozen (fun x -> Frozen (frozen x))
@@ -1093,10 +1141,19 @@ module CompConst = struct
     ; implicit_arguments : int
     ; typ : Comp.typ
     ; kind : Id.CompTyp.t
+    ; documentation_comment : DocumentationComment.t Option.t
     }
 
-  let make ~id ~name ~location ~implicit_arguments ~kind typ =
-    { id; name; location; implicit_arguments; typ; kind }
+  let make ~id ~name ~location ~implicit_arguments ~kind
+      ?documentation_comment typ =
+    { id
+    ; name
+    ; location
+    ; implicit_arguments
+    ; typ
+    ; kind
+    ; documentation_comment
+    }
 
   let[@inline] id { id; _ } = id
 
@@ -1110,6 +1167,9 @@ module CompConst = struct
   let[@inline] typ { typ; _ } = typ
 
   let[@inline] kind { kind; _ } = kind
+
+  let[@inline] documentation_comment { documentation_comment; _ } =
+    documentation_comment
 
   let lifted_id =
     let id' = id in
@@ -1127,11 +1187,20 @@ module CompCotyp = struct
       ; implicit_arguments : int
       ; kind : Comp.kind
       ; destructors : Id.CompDest.t Name.Hamt.t
+      ; documentation_comment : DocumentationComment.t Option.t
       }
 
     let make ~id ~name ~location ~implicit_arguments
-        ?(destructors = Name.Hamt.empty) kind =
-      { id; name; location; implicit_arguments; kind; destructors }
+        ?(destructors = Name.Hamt.empty)
+        ?(documentation_comment = Option.none) kind =
+      { id
+      ; name
+      ; location
+      ; implicit_arguments
+      ; kind
+      ; destructors
+      ; documentation_comment
+      }
 
     let add_destructor ({ destructors; _ } as entry) name dest =
       { entry with destructors = Name.Hamt.add name dest destructors }
@@ -1145,6 +1214,7 @@ module CompCotyp = struct
       ; implicit_arguments : int
       ; kind : Comp.kind
       ; destructors : Id.CompDest.t Name.Hamt.t
+      ; documentation_comment : DocumentationComment.t Option.t
       }
   end
 
@@ -1169,12 +1239,19 @@ module CompCotyp = struct
     | Frozen { Frozen.destructors; _ } | Unfrozen { Unfrozen.destructors; _ }
       -> destructors
 
+  let[@inline] documentation_comment = function
+    | Frozen { Frozen.documentation_comment; _ }
+    | Unfrozen { Unfrozen.documentation_comment; _ } -> documentation_comment
+
   let lifted_id =
     let id' = id in
     Fun.(id' >> Id.lift_comp_cotyp_id)
 
-  let make_initial_entry ~id ~name ~location ~implicit_arguments kind =
-    Unfrozen (Unfrozen.make ~id ~name ~location ~implicit_arguments kind)
+  let make_initial_entry ~id ~name ~location ~implicit_arguments
+      ?documentation_comment kind =
+    Unfrozen
+      (Unfrozen.make ~id ~name ~location ~implicit_arguments
+         ~documentation_comment kind)
 
   let is_frozen = function
     | Frozen _ -> true
@@ -1199,9 +1276,22 @@ module CompCotyp = struct
     entry |> destructors |> Name.Hamt.mem name
 
   let frozen
-      { Unfrozen.id; name; location; implicit_arguments; kind; destructors }
-      =
-    { Frozen.id; name; location; implicit_arguments; kind; destructors }
+      { Unfrozen.id
+      ; name
+      ; location
+      ; implicit_arguments
+      ; kind
+      ; destructors
+      ; documentation_comment
+      } =
+    { Frozen.id
+    ; name
+    ; location
+    ; implicit_arguments
+    ; kind
+    ; destructors
+    ; documentation_comment
+    }
 
   let freeze = if_unfrozen (fun x -> Frozen (frozen x))
 end
@@ -1218,10 +1308,11 @@ module CompDest = struct
     ; observation_typ : Comp.typ
     ; return_typ : Comp.typ
     ; kind : Id.CompCotyp.t
+    ; documentation_comment : DocumentationComment.t Option.t
     }
 
   let make ~id ~name ~location ~implicit_arguments ~mctx ~observation_typ
-      ~return_typ ~kind =
+      ~return_typ ?documentation_comment kind =
     { id
     ; name
     ; location
@@ -1230,6 +1321,7 @@ module CompDest = struct
     ; observation_typ
     ; return_typ
     ; kind
+    ; documentation_comment
     }
 
   let[@inline] id { id; _ } = id
@@ -1249,6 +1341,9 @@ module CompDest = struct
 
   let[@inline] kind { kind; _ } = kind
 
+  let[@inline] documentation_comment { documentation_comment; _ } =
+    documentation_comment
+
   let lifted_id =
     let id' = id in
     Fun.(id' >> Id.lift_comp_dest_id)
@@ -1265,11 +1360,20 @@ module Comp = struct
     ; typ : Comp.typ
     ; mutual_group : Id.Comp.t Nonempty.t Option.t
     ; program : Comp.value
+    ; documentation_comment : DocumentationComment.t Option.t
     }
 
-  let make ~id ~name ~location ~implicit_arguments ~typ
-      ?(mutual_group = None) program =
-    { id; name; location; implicit_arguments; typ; mutual_group; program }
+  let make ~id ~name ~location ~implicit_arguments ~typ ?mutual_group
+      ?documentation_comment program =
+    { id
+    ; name
+    ; location
+    ; implicit_arguments
+    ; typ
+    ; mutual_group
+    ; program
+    ; documentation_comment
+    }
 
   let[@inline] id { id; _ } = id
 
@@ -1286,6 +1390,9 @@ module Comp = struct
 
   let[@inline] mutual_group { mutual_group; _ } = mutual_group
 
+  let[@inline] documentation_comment { documentation_comment; _ } =
+    documentation_comment
+
   let lifted_id =
     let id' = id in
     Fun.(id' >> Id.lift_comp_id)
@@ -1299,14 +1406,16 @@ module Module = struct
     ; declarations : ('signature * 'declaration) List.t
     ; declarations_by_name :
         ('signature * 'declaration_with_id) Nonempty.t Name.Hamt.t
+    ; documentation_comment : DocumentationComment.t Option.t
     }
 
-  let make_empty ~id ~location name =
+  let make_empty ~id ~location ?documentation_comment name =
     { id
     ; name
     ; location
     ; declarations = []
     ; declarations_by_name = Name.Hamt.empty
+    ; documentation_comment
     }
 
   let add_declaration ({ declarations; _ } as m) declaration =
@@ -1337,6 +1446,9 @@ module Module = struct
   let[@inline] declarations_by_name { declarations_by_name; _ } =
     declarations_by_name
 
+  let[@inline] documentation_comment { documentation_comment; _ } =
+    documentation_comment
+
   let lifted_id m = m |> id |> Id.lift_module_id
 
   let lookup m name =
@@ -1363,9 +1475,11 @@ module Schema = struct
     ; name : Name.t
     ; location : Location.t
     ; schema : LF.schema
+    ; documentation_comment : DocumentationComment.t Option.t
     }
 
-  let make ~id ~name ~location schema = { id; name; location; schema }
+  let make ~id ~name ~location ?documentation_comment schema =
+    { id; name; location; schema; documentation_comment }
 
   let[@inline] id { id; _ } = id
 
@@ -1375,22 +1489,12 @@ module Schema = struct
 
   let[@inline] schema { schema; _ } = schema
 
+  let[@inline] documentation_comment { documentation_comment; _ } =
+    documentation_comment
+
   let lifted_id =
     let id' = id in
     Fun.(id' >> Id.lift_schema_id)
-end
-
-module DocumentationComment = struct
-  type t =
-    { content : string
-    ; location : Location.t
-    }
-
-  let make ~location content = { content; location }
-
-  let[@inline] content { content; _ } = content
-
-  let[@inline] location { location; _ } = location
 end
 
 module Query = struct
@@ -1402,8 +1506,8 @@ module Query = struct
     ; search_depth : int Option.t
     }
 
-  let make_search_parameters ?(expected_solutions = Option.none)
-      ?(maximum_tries = Option.none) ?(search_depth = Option.none) () =
+  let make_search_parameters ?expected_solutions ?maximum_tries ?search_depth
+      () =
     { expected_solutions; maximum_tries; search_depth }
 
   type t =
@@ -1412,11 +1516,13 @@ module Query = struct
     ; name : Name.t Option.t
     ; query : LF.mctx * (LF.typ * offset)
     ; search_parameters : search_parameters
+    ; documentation_comment : DocumentationComment.t Option.t
     }
 
-  let make ~id ~location ?(name = Option.none)
-      ?(search_parameters = make_search_parameters ()) query =
-    { id; location; name; search_parameters; query }
+  let make ~id ~location ?name
+      ?(search_parameters = make_search_parameters ()) ?documentation_comment
+      query =
+    { id; location; name; search_parameters; query; documentation_comment }
 
   let[@inline] id { id; _ } = id
 
@@ -1427,6 +1533,9 @@ module Query = struct
   let[@inline] query { query; _ } = query
 
   let[@inline] search_parameters { search_parameters; _ } = search_parameters
+
+  let[@inline] documentation_comment { documentation_comment; _ } =
+    documentation_comment
 
   let lifted_id =
     let id' = id in
@@ -1443,9 +1552,8 @@ module MQuery = struct
     ; split_index : int Option.t
     }
 
-  let make_search_parameters ?(expected_solutions = Option.none)
-      ?(search_tries = Option.none) ?(search_depth = Option.none)
-      ?(split_index = Option.none) () =
+  let make_search_parameters ?expected_solutions ?search_tries ?search_depth
+      ?split_index () =
     { expected_solutions; search_tries; search_depth; split_index }
 
   type t =
@@ -1454,11 +1562,13 @@ module MQuery = struct
     ; name : Name.t Option.t
     ; query : Comp.typ * offset
     ; search_parameters : search_parameters
+    ; documentation_comment : DocumentationComment.t Option.t
     }
 
-  let make ~id ~location ?(name = Option.none)
-      ?(search_parameters = make_search_parameters ()) query =
-    { id; location; name; search_parameters; query }
+  let make ~id ~location ?name
+      ?(search_parameters = make_search_parameters ()) ?documentation_comment
+      query =
+    { id; location; name; search_parameters; query; documentation_comment }
 
   let[@inline] id { id; _ } = id
 
@@ -1469,6 +1579,9 @@ module MQuery = struct
   let[@inline] query { query; _ } = query
 
   let[@inline] search_parameters { search_parameters; _ } = search_parameters
+
+  let[@inline] documentation_comment { documentation_comment; _ } =
+    documentation_comment
 
   let lifted_id =
     let id' = id in

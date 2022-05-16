@@ -713,6 +713,23 @@ module Syntax : sig
   end
 end
 
+(** Documentation comments.
+
+    These are declared as [%{{ content }}%] in the external syntax. *)
+module DocumentationComment : sig
+  type t
+
+  (** {1 Constructors} *)
+
+  val make : location:Location.t -> string -> t
+
+  (** {1 Destructors} *)
+
+  val content : t -> string
+
+  val location : t -> Location.t
+end
+
 (** LF type family declarations. *)
 module Typ : sig
   open Syntax.Int
@@ -726,6 +743,7 @@ module Typ : sig
     -> name:Name.t
     -> location:Location.t
     -> implicit_arguments:int
+    -> ?documentation_comment:DocumentationComment.t
     -> LF.kind
     -> t
 
@@ -740,6 +758,8 @@ module Typ : sig
   val name : t -> Name.t
 
   val kind : t -> LF.kind
+
+  val documentation_comment : t -> DocumentationComment.t Option.t
 
   (** {1 Freezing} *)
 
@@ -797,8 +817,9 @@ module Typ : sig
     -> Id.Typ.t
     -> (bool, [> `Unfrozen_typ_declaration_error of Id.Typ.t ]) Result.t
 
-  (** [is_type_subordinate_to tA tB_id] is [true] if and only if the LF family
-      [tA] is type-level subordinate to the LF family having ID [tB_id].
+  (** [is_type_subordinate_to tA tB_id] is [true] if and only if the LF
+      family [tA] is type-level subordinate to the LF family having ID
+      [tB_id].
 
       If [tA] is type-level subordinate to [tB], then [tA]-terms can contain
       [tB]-terms. Type-level subordination is not transitive.
@@ -853,6 +874,7 @@ module Const : sig
     -> location:Location.t
     -> implicit_arguments:int
     -> kind:Id.Typ.t
+    -> ?documentation_comment:DocumentationComment.t
     -> LF.typ
     -> t
 
@@ -869,6 +891,8 @@ module Const : sig
   val typ : t -> LF.typ
 
   val kind : t -> Id.Typ.t
+
+  val documentation_comment : t -> DocumentationComment.t Option.t
 end
 
 (** Computation-level data type constant declarations. *)
@@ -885,6 +909,7 @@ module CompTyp : sig
     -> location:Location.t
     -> implicit_arguments:int
     -> positivity:Sgn.positivity_flag
+    -> ?documentation_comment:DocumentationComment.t
     -> Comp.kind
     -> t
 
@@ -899,6 +924,8 @@ module CompTyp : sig
   val name : t -> Name.t
 
   val kind : t -> Comp.kind
+
+  val documentation_comment : t -> DocumentationComment.t Option.t
 
   (** {1 Freezing} *)
 
@@ -937,6 +964,7 @@ module CompConst : sig
     -> location:Location.t
     -> implicit_arguments:int
     -> kind:Id.CompTyp.t
+    -> ?documentation_comment:DocumentationComment.t
     -> Comp.typ
     -> t
 
@@ -955,6 +983,8 @@ module CompConst : sig
   val typ : t -> Comp.typ
 
   val kind : t -> Id.CompTyp.t
+
+  val documentation_comment : t -> DocumentationComment.t Option.t
 end
 
 (** Computation-level codata type constant declarations. *)
@@ -970,6 +1000,7 @@ module CompCotyp : sig
     -> name:Name.t
     -> location:Location.t
     -> implicit_arguments:int
+    -> ?documentation_comment:DocumentationComment.t
     -> Comp.kind
     -> t
 
@@ -984,6 +1015,8 @@ module CompCotyp : sig
   val name : t -> Name.t
 
   val kind : t -> Comp.kind
+
+  val documentation_comment : t -> DocumentationComment.t Option.t
 
   (** {1 Freezing} *)
 
@@ -1028,7 +1061,8 @@ module CompDest : sig
     -> mctx:LF.mctx
     -> observation_typ:Comp.typ
     -> return_typ:Comp.typ
-    -> kind:Id.CompCotyp.t
+    -> ?documentation_comment:DocumentationComment.t
+    -> Id.CompCotyp.t
     -> t
 
   (** {1 Destructors}*)
@@ -1050,6 +1084,8 @@ module CompDest : sig
   val return_typ : t -> Comp.typ
 
   val kind : t -> Id.CompCotyp.t
+
+  val documentation_comment : t -> DocumentationComment.t Option.t
 end
 
 (** Computation declarations. *)
@@ -1066,7 +1102,8 @@ module Comp : sig
     -> location:Location.t
     -> implicit_arguments:int
     -> typ:Comp.typ
-    -> ?mutual_group:Id.Comp.t Nonempty.t Option.t
+    -> ?mutual_group:Id.Comp.t Nonempty.t
+    -> ?documentation_comment:DocumentationComment.t
     -> Comp.value
     -> t
 
@@ -1087,6 +1124,8 @@ module Comp : sig
   val program : t -> Comp.value
 
   val mutual_group : t -> Id.Comp.t Nonempty.t Option.t
+
+  val documentation_comment : t -> DocumentationComment.t Option.t
 end
 
 (** Specifications for sets of contexts. *)
@@ -1098,7 +1137,12 @@ module Schema : sig
   (** {1 Constructors} *)
 
   val make :
-    id:Id.Schema.t -> name:Name.t -> location:Location.t -> LF.schema -> t
+       id:Id.Schema.t
+    -> name:Name.t
+    -> location:Location.t
+    -> ?documentation_comment:DocumentationComment.t
+    -> LF.schema
+    -> t
 
   (** {1 Destructors} *)
 
@@ -1111,6 +1155,8 @@ module Schema : sig
   val location : t -> Location.t
 
   val schema : t -> LF.schema
+
+  val documentation_comment : t -> DocumentationComment.t Option.t
 end
 
 (** Namespace for declarations. *)
@@ -1120,7 +1166,11 @@ module Module : sig
   (** {1 Constructors} *)
 
   val make_empty :
-    id:Id.Module.t -> location:Location.t -> Name.t -> (_, _, _) t
+       id:Id.Module.t
+    -> location:Location.t
+    -> ?documentation_comment:DocumentationComment.t
+    -> Name.t
+    -> (_, _, _) t
 
   val add_declaration :
        ('signature, 'declaration, 'declaration_with_id) t
@@ -1146,6 +1196,8 @@ module Module : sig
   val declarations :
     ('signature, 'declaration, _) t -> ('signature * 'declaration) List.t
 
+  val documentation_comment : (_, _, _) t -> DocumentationComment.t Option.t
+
   (** {1 Lookups} *)
 
   val lookup :
@@ -1160,23 +1212,6 @@ module Module : sig
     -> 'a
     -> ('signature, 'declaration, _) t
     -> 'a
-end
-
-(** Documentation comments.
-
-    These are declared as [%{{ content }}%] in the external syntax. *)
-module DocumentationComment : sig
-  type t
-
-  (** {1 Constructors} *)
-
-  val make : location:Location.t -> string -> t
-
-  (** {1 Destructors} *)
-
-  val content : t -> string
-
-  val location : t -> Location.t
 end
 
 (** Logic programming query declarations on LF type. *)
@@ -1194,17 +1229,18 @@ module Query : sig
   (** {1 Constructors} *)
 
   val make_search_parameters :
-       ?expected_solutions:int Option.t
-    -> ?maximum_tries:int Option.t
-    -> ?search_depth:int Option.t
+       ?expected_solutions:int
+    -> ?maximum_tries:int
+    -> ?search_depth:int
     -> unit
     -> search_parameters
 
   val make :
        id:Id.Query.t
     -> location:Location.t
-    -> ?name:string Option.t
+    -> ?name:string
     -> ?search_parameters:search_parameters
+    -> ?documentation_comment:DocumentationComment.t
     -> LF.mctx * (LF.typ * offset)
     -> t
 
@@ -1221,6 +1257,8 @@ module Query : sig
   val query : t -> LF.mctx * (LF.typ * offset)
 
   val search_parameters : t -> search_parameters
+
+  val documentation_comment : t -> DocumentationComment.t Option.t
 end
 
 (** Logic programming query declarations on computational types. *)
@@ -1239,18 +1277,19 @@ module MQuery : sig
   (** {1 Constructors} *)
 
   val make_search_parameters :
-       ?expected_solutions:int Option.t
-    -> ?search_tries:int Option.t
-    -> ?search_depth:int Option.t
-    -> ?split_index:int Option.t
+       ?expected_solutions:int
+    -> ?search_tries:int
+    -> ?search_depth:int
+    -> ?split_index:int
     -> unit
     -> search_parameters
 
   val make :
        id:Id.MQuery.t
     -> location:Location.t
-    -> ?name:string Option.t
+    -> ?name:string
     -> ?search_parameters:search_parameters
+    -> ?documentation_comment:DocumentationComment.t
     -> Syntax.Int.Comp.typ * offset
     -> t
 
@@ -1267,6 +1306,8 @@ module MQuery : sig
   val query : t -> Comp.typ * offset
 
   val search_parameters : t -> search_parameters
+
+  val documentation_comment : t -> DocumentationComment.t Option.t
 end
 
 (** The type of Beluga signatures. *)
