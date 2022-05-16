@@ -667,7 +667,7 @@ and index_typ_rec : Ext.LF.typ_rec -> Apx.LF.typ_rec index =
 
 and index_tuple : Ext.LF.tuple -> Apx.LF.tuple index =
   fun tuple ->
-    Nonempty.fold_right
+    List1.fold_right
       Bind.(fun m ->
         index_term m
         $> fun m' -> Apx.LF.Last m')

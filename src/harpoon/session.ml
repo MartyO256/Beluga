@@ -16,7 +16,7 @@ type t =
   }
 
 let make mutual_group thms =
-  { theorems = thms |> Nonempty.to_list |> DynArray.of_list
+  { theorems = thms |> List1.to_list |> DynArray.of_list
   ; finished_theorems = DynArray.make 32
   ; mutual_group
   }
@@ -24,7 +24,7 @@ let make mutual_group thms =
 (** Gets the list of mutual declarations corresponding to the
         currently loaded theorems in the active session.
  *)
-let get_mutual_decs (s : t) : Comp.total_dec Nonempty.t =
+let get_mutual_decs (s : t) : Comp.total_dec List1.t =
   CompS.lookup_mutual_group s.mutual_group
 
 (** Constructs a list of all theorems in this session, both
@@ -116,7 +116,7 @@ let prepare_translated_proofs tes total_decs =
   (* create the totality declarations for the translated
          proofs, and allocate the mutual group with them. *)
   let total_decs =
-    Nonempty.map
+    List1.map
       (fun dec ->
         let open Comp in
         { dec with name = trans_name dec.name })
@@ -208,7 +208,7 @@ let check_translated_proofs c : translation_check_result =
        let open Format in
        p.fmt "[check_translated_proofs] @[<v>total_decs:\
               @,@[%a@]@]"
-         (Nonempty.pp ~pp_sep: pp_print_cut
+         (List1.pp ~pp_sep: pp_print_cut
             P.fmt_ppr_cmp_total_dec)
        total_decs
        end;
@@ -219,7 +219,7 @@ let check_translated_proofs c : translation_check_result =
              p.fmt "[check_translated_proofs] statement @[%a@]"
                P.(fmt_ppr_cmp_typ LF.Empty l0) tau
              end;
-           Check.Comp.check None LF.Empty LF.Empty (total_decs |> Nonempty.to_list)
+           Check.Comp.check None LF.Empty LF.Empty (total_decs |> List1.to_list)
              e (tau, Whnf.m_id))
          ettaus;
        `ok
@@ -229,7 +229,7 @@ let check_translated_proofs c : translation_check_result =
 (** Runs the theorem configuration prompt to construct a mutual
     group of theorems.
  *)
-let configuration_wizard' io automation_state : (Id.cid_mutual_group * Theorem.t Nonempty.t) option =
+let configuration_wizard' io automation_state : (Id.cid_mutual_group * Theorem.t List1.t) option =
   let rec do_prompts i : Theorem.Conf.t list =
     IO.printf io "Configuring theorem #%d@." i;
     (* prompt for name, and allow using empty to signal we're done. *)
@@ -298,7 +298,7 @@ let configuration_wizard' io automation_state : (Id.cid_mutual_group * Theorem.t
 
   let confs = do_prompts 1 in
   confs
-  |> Nonempty.of_list
+  |> List1.of_list
   |> Option.map (fun confs -> Theorem.configure_set (IO.formatter io) automation_state confs)
 
 let configuration_wizard io automation_state : t option =

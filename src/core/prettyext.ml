@@ -144,7 +144,7 @@ module Make (_ : Store.Cid.RENDERER) : Printer.Ext.T = struct
 
 
   and fmt_ppr_tuple lvl ppf tuple =
-    Nonempty.pp ~pp_sep:Fmt.comma (fmt_ppr_lf_normal lvl) ppf tuple
+    List1.pp ~pp_sep:Fmt.comma (fmt_ppr_lf_normal lvl) ppf tuple
     (* the level should probably change here? -je *)
 
   and fmt_ppr_lf_normal lvl ppf =
@@ -899,7 +899,7 @@ module Make (_ : Store.Cid.RENDERER) : Printer.Ext.T = struct
     List.iter (fun d -> fmt_ppr_mrec "" lvl ppf d) body
 
   let fmt_ppr_mrecs lvl ppf l =
-    let (h, t) = Nonempty.uncons l in
+    let (h, t) = List1.uncons l in
     fmt_ppr_mrec' lvl ppf h;
     t |> List.iter (fun e ->
       fprintf ppf "@\n%s " (to_html "and" Keyword);

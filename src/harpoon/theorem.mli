@@ -116,8 +116,8 @@ val rename_variable : Id.name -> Id.name -> [ `comp | `meta ] -> t -> proof_stat
 
 val configure : Id.cid_comp_const -> Format.formatter -> (t -> unit subgoal_hook) list ->
                 proof_state -> proof_state list -> t
-val configure_set : Format.formatter -> (t -> unit subgoal_hook) list -> Conf.t Nonempty.t ->
-                    Id.cid_mutual_group * t Nonempty.t
+val configure_set : Format.formatter -> (t -> unit subgoal_hook) list -> Conf.t List1.t ->
+                    Id.cid_mutual_group * t List1.t
 
 type completeness =
   [ `incomplete

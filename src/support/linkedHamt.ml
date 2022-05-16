@@ -48,7 +48,7 @@ module Make1 (Hamt : HamtMisc.S) : S1 with type key = Hamt.key = struct
   type key = Hamt.key
 
   type 'a t =
-    { list : (key * 'a) Nonempty.t
+    { list : (key * 'a) List1.t
     ; map : 'a Hamt.t
     }
 
@@ -60,35 +60,35 @@ module Make1 (Hamt : HamtMisc.S) : S1 with type key = Hamt.key = struct
     find_opt key lmap
     |> Option.eliminate
          (fun () ->
-           { list = Nonempty.cons (key, value) list
+           { list = List1.cons (key, value) list
            ; map = Hamt.add key value map
            })
          (Fun.const lmap)
 
   let singleton key value =
-    { list = Nonempty.singleton (key, value)
+    { list = List1.singleton (key, value)
     ; map = Hamt.singleton key value
     }
 
   let iter f { list; _ } =
-    Nonempty.iter (fun (key, value) -> f key value) list
+    List1.iter (fun (key, value) -> f key value) list
 
   let iter_bindings f { map; _ } = Hamt.iter f map
 
   let fold_left sing cons =
-    Nonempty.fold_left
+    List1.fold_left
       (fun (key, value) -> sing key value)
       (fun acc (key, value) -> cons acc key value)
     |> fun go { list; _ } -> go list
 
   let fold_right sing cons =
-    Nonempty.fold_right
+    List1.fold_right
       (fun (key, value) -> sing key value)
       (fun (key, value) acc -> cons key value acc)
     |> fun go { list; _ } -> go list
 
   let fold_bindings sing cons { map; list } =
-    let key, value = Nonempty.head list in
+    let key, value = List1.head list in
     Hamt.fold cons (Hamt.remove key map) (sing key value)
 
   let exists p { map; _ } = Hamt.exists p map

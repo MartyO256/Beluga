@@ -1636,7 +1636,7 @@ module Make (R : Store.Cid.RENDERER) : Printer.Int.T = struct
       (fmt_ppr_cmp_typ LF.Empty l0) typ
       implicit_arguments
       (R.render_cid_mutual_group mutual_group)
-      (Nonempty.pp ~pp_sep: pp_print_cut fmt_ppr_cmp_total_dec) ds
+      (List1.pp ~pp_sep: pp_print_cut fmt_ppr_cmp_total_dec) ds
       (Option.print (fmt_ppr_cmp_value l0)) prog
 
   let fmt_ppr_cmp_thm ppf =
@@ -1718,7 +1718,7 @@ module Make (R : Store.Cid.RENDERER) : Printer.Int.T = struct
 
     | Sgn.MRecTyp { declarations; _ } ->
       declarations
-      |> Nonempty.to_list
+      |> List1.to_list
       |> List.flatten
       |> List.iter (fmt_ppr_sgn_decl ppf)
 
@@ -1742,7 +1742,7 @@ module Make (R : Store.Cid.RENDERER) : Printer.Int.T = struct
 
     | Sgn.Theorem { theorems; _ } ->
        fprintf ppf "@[<v>%a@]"
-         (Nonempty.pp ~pp_sep: (fun ppf _ -> fprintf ppf "@,and ")
+         (List1.pp ~pp_sep: (fun ppf _ -> fprintf ppf "@,and ")
             (fun ppf x ->
               fprintf ppf "@[%a@]"
                 fmt_ppr_sgn_thm_decl x))

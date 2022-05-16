@@ -1102,7 +1102,7 @@ module Comp : sig
     -> location:Location.t
     -> implicit_arguments:int
     -> typ:Comp.typ
-    -> ?mutual_group:Id.Comp.t Nonempty.t
+    -> ?mutual_group:Id.Comp.t List1.t
     -> ?documentation_comment:DocumentationComment.t
     -> Comp.value
     -> t
@@ -1123,7 +1123,7 @@ module Comp : sig
 
   val program : t -> Comp.value
 
-  val mutual_group : t -> Id.Comp.t Nonempty.t Option.t
+  val mutual_group : t -> Id.Comp.t List1.t Option.t
 
   val documentation_comment : t -> DocumentationComment.t Option.t
 end
@@ -1314,14 +1314,14 @@ end
 type t
 
 type mutually_recursive_typs =
-  [ `Typs of (Typ.t * Const.t Name.LinkedHamt.t) Nonempty.t ]
+  [ `Typs of (Typ.t * Const.t Name.LinkedHamt.t) List1.t ]
 
 type mutually_recursive_comp_typs =
   [ `Comp_typs of
     [ `Comp_typ of CompTyp.t * CompConst.t Name.LinkedHamt.t
     | `Comp_cotyp of CompCotyp.t * CompDest.t Name.LinkedHamt.t
     ]
-    Nonempty.t
+    List1.t
   ]
 
 type mutually_recursive_programs = [ `Programs of Comp.t Name.LinkedHamt1.t ]

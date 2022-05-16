@@ -74,7 +74,7 @@ module LF = struct
     | SigmaLast of name option * typ
     | SigmaElem of name * typ * typ_rec
 
-  and tuple = normal Nonempty.t
+  and tuple = normal List1.t
 
   and dctx =
     | Null
@@ -409,12 +409,12 @@ module Sgn = struct
 
     | MRecTyp of
       { location: Location.t
-      ; declarations: (decl * decl list) Nonempty.t
+      ; declarations: (decl * decl list) List1.t
       } (** Mutually-recursive LF type family or computation type declaration *)
 
     | Theorem of
       { location: Location.t
-      ; theorems: thm_decl Nonempty.t
+      ; theorems: thm_decl List1.t
       } (** Mutually recursive theorem declaration(s) *)
 
     | Val of

@@ -109,7 +109,7 @@ let group_by (p : 'a -> 'key) (l : 'a list) : ('key * 'a t) list =
   (* The use of unsafe_of_list here is justified because every dynarray we
      create has one element added immediately to it, and is hence nonempty *)
   Hashtbl.to_seq h
-  |> Seq.map (Pair.rmap Fun.(unsafe_of_list ++ DynArray.to_list))
+  |> Seq.map (Pair.rmap Fun.(DynArray.to_list >> unsafe_of_list))
   |> Seq.to_list
 
 let split ((x, y), t) =
@@ -118,7 +118,7 @@ let split ((x, y), t) =
 
 let combine (a, l1) (b, l2) = ((a, b), List.combine l1 l2)
 
-let ap xs = map2 (fun x f -> f x) xs
+let ap xs = map2 Fun.apply xs
 
 let ap_one x = map (fun f -> f x)
 

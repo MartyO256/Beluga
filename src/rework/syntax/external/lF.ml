@@ -82,7 +82,7 @@ and typ_rec =
   | SigmaLast of Name.t option * typ
   | SigmaElem of Name.t * typ * typ_rec
 
-and tuple = normal Nonempty.t
+and tuple = normal List1.t
 
 and dctx =
   | Null

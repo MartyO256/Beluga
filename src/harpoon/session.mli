@@ -12,11 +12,11 @@ type t
 
     Requirement: the mutual group identified by the given cid must
     indeed contain every given theorem. *)
-val make : Id.cid_mutual_group -> Theorem.t Nonempty.t -> t
+val make : Id.cid_mutual_group -> Theorem.t List1.t -> t
 
 (** Retrieves the mutual declarations associated to this session's
     mutual group. *)
-val get_mutual_decs : t -> Comp.total_dec Nonempty.t
+val get_mutual_decs : t -> Comp.total_dec List1.t
 
 (** Looks up an incomplete theorem by name in the session. *)
 val lookup_theorem : t -> Id.name -> Theorem.t option

@@ -1358,7 +1358,7 @@ module Comp = struct
     ; location : Location.t
     ; implicit_arguments : int
     ; typ : Comp.typ
-    ; mutual_group : Id.Comp.t Nonempty.t Option.t
+    ; mutual_group : Id.Comp.t List1.t Option.t
     ; program : Comp.value
     ; documentation_comment : DocumentationComment.t Option.t
     }
@@ -1405,7 +1405,7 @@ module Module = struct
     ; location : Location.t
     ; declarations : ('signature * 'declaration) List.t
     ; declarations_by_name :
-        ('signature * 'declaration_with_id) Nonempty.t Name.Hamt.t
+        ('signature * 'declaration_with_id) List1.t Name.Hamt.t
     ; documentation_comment : DocumentationComment.t Option.t
     }
 
@@ -1429,9 +1429,8 @@ module Module = struct
         |> Name.Hamt.alter name (fun bindings ->
                bindings
                |> Option.eliminate
-                    (fun () -> Nonempty.from declaration [])
-                    (fun declarations ->
-                      Nonempty.cons declaration declarations)
+                    (fun () -> List1.from declaration [])
+                    (fun declarations -> List1.cons declaration declarations)
                |> Option.some)
     }
 
@@ -1453,7 +1452,7 @@ module Module = struct
 
   let lookup m name =
     let open Option in
-    m |> declarations_by_name |> Name.Hamt.find_opt name $> Nonempty.head
+    m |> declarations_by_name |> Name.Hamt.find_opt name $> List1.head
 
   let rec deep_lookup extract current_module module_names base_name =
     match module_names with
@@ -1591,14 +1590,14 @@ end
 (** Beluga Signatures *)
 
 type mutually_recursive_typs =
-  [ `Typs of (Typ.t * Const.t Name.LinkedHamt.t) Nonempty.t ]
+  [ `Typs of (Typ.t * Const.t Name.LinkedHamt.t) List1.t ]
 
 type mutually_recursive_comp_typs =
   [ `Comp_typs of
     [ `Comp_typ of CompTyp.t * CompConst.t Name.LinkedHamt.t
     | `Comp_cotyp of CompCotyp.t * CompDest.t Name.LinkedHamt.t
     ]
-    Nonempty.t
+    List1.t
   ]
 
 type mutually_recursive_programs = [ `Programs of Comp.t Name.LinkedHamt1.t ]
@@ -1650,7 +1649,7 @@ and t =
             in which they are added. Looking ahead in the sequence of
             declarations is then required to find the first signature that
             contains the declaration as frozen. *)
-  ; declarations_by_name : Id.t Nonempty.t Name.Hamt.t
+  ; declarations_by_name : Id.t List1.t Name.Hamt.t
         (** The bindings of entries by name.
 
             For a given name, only the head element is currently in scope. *)
@@ -1905,8 +1904,8 @@ let lookup_mquery_by_id_exn =
 let lookup_name : t -> Name.t -> (t * declaration_with_id) Option.t =
  fun signature name ->
   let open Option in
-  signature |> declarations_by_name |> Name.Hamt.find_opt name
-  $> Nonempty.head >>= lookup_by_id signature
+  signature |> declarations_by_name |> Name.Hamt.find_opt name $> List1.head
+  >>= lookup_by_id signature
 
 let lookup signature qualified_name =
   let base_name = QualifiedName.name qualified_name in
@@ -1917,12 +1916,11 @@ let lookup signature qualified_name =
   | head_module_name :: tail_module_names ->
     (* Lookup recursively in modules *)
     let open Option in
-    lookup_name signature head_module_name
-    $> Pair.snd >>= guard_module_declaration
+    head_module_name |> lookup_name signature $> Pair.snd
+    >>= guard_module_declaration
     >>= fun top_module ->
     Module.deep_lookup
-      (fun looked_up_module ->
-        looked_up_module |> Fun.(Pair.snd >> guard_module_declaration))
+      Fun.(Pair.snd >> guard_module_declaration)
       top_module tail_module_names base_name
 
 let guarded_declaration_lookup guard signature qualified_name =
