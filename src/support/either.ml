@@ -41,7 +41,7 @@ let to_option = function
   | Right x -> Some x
   | Left _ -> None
 
-let ( $ ) e k = bind k e
+let ( >>= ) e k = bind k e
 
 let ( $> ) e f = rmap f e
 

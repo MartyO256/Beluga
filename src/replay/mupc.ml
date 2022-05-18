@@ -446,10 +446,10 @@ module Make (P : ParserInfo) = struct
         let open Either in
         let (s, e) = peek.run s in
         ( s,
-          e $
+          e >>=
             (Option.eliminate
-              (fun _ -> Left (error_of_state "unexpected end of input" s))
-              (fun x -> pure x))
+              (fun () -> Either.left (error_of_state "unexpected end of input" s))
+              Either.pure)
         )
     }
 

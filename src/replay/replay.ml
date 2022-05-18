@@ -237,15 +237,12 @@ module TranscriptRunner = struct
                  ^ "actual output:\n"
                  ^ res )
         )
-    let rec run_interactions (ints : interaction list) (e : env) :
-          (string, env) Either.t =
+
+  let rec run_interactions (ints : interaction list) (e : env) : (string, env) Either.t =
     let open Either in
     match ints with
     | [] -> pure e
-    | (i :: ints) ->
-       run_interaction i e $
-         fun e' ->
-         run_interactions ints e'
+    | (i :: ints) -> run_interaction i e >>= run_interactions ints
 
   let run_transcript (transcript : transcript) (e : env) : (string, env) Either.t =
     write_file "input.bel" transcript.input_file;
@@ -268,8 +265,8 @@ let main () =
       lmap
         (fun e ->
           TranscriptParser.Parser.string_of_parse_error e |>
-            fun x -> ParseError x) $
-      fun transcript ->
+            fun x -> ParseError x)
+      >>= fun transcript ->
       let open TranscriptRunner in
       let env = create_env exe in
       run_transcript transcript env |>
