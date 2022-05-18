@@ -1,10 +1,13 @@
 open Support
 
-(** The type for implicit, explicit or inductive values. *)
+(** The type of flag for implicit, explicit or inductive parameters. *)
 type depend = private
-  | Implicit
+  | Implicit  (** The flag for reconstructed parameters. *)
   | Explicit
+      (** The flag for parameters explicitly specified by the user. *)
   | Inductive
+      (** The flag for parameters generating induction hypotheses when split
+          on. *)
 
 (** Alias of [depend]. *)
 type t = depend
