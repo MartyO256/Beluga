@@ -1,5 +1,35 @@
 (** Beluga signatures.
 
+    A Beluga signature is an append-only database for declarations. It is an
+    immutable data structure, meaning that a mutation to a signature creates
+    a new signature. Significant data sharing is in place to ensure good
+    performance.
+
+    {1 Scope-Safe Lookups}
+
+    Lookups in a Beluga signature respect scoping information if the
+    signature is kept local to the function making the lookup. To jump at an
+    earlier point in a signature, an added declaration is stored along with
+    the signature up to and including that added declaration.
+
+    {1 Freezable Declarations}
+
+    Grouped declarations are defined in two stages: unfrozen and frozen.
+
+    - An unfrozen declaration may have additions made to it in derived
+      signatures.
+    - A frozen declaration may not have such additions.
+
+    Grouped declarations include LF type constants {!Typ},
+    computational-level data type constants {!CompTyp}, computational-level
+    codata type constants {!CompCotyp}, and namespaces {!Module}.
+
+    Freezable declarations are frozen whenever:
+
+    - the freezable declaration goes out of scope,
+    - a module declaration is added, or
+    - a theorem is added.
+
     @author Marc-Antoine Ouimet *)
 
 open Support
