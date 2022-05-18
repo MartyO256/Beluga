@@ -1,7 +1,4 @@
-(** Nonempty list. *)
 type 'a t = 'a * 'a list
-
-type 'a nonempty = 'a t
 
 let from x l = (x, l)
 
@@ -9,19 +6,19 @@ let singleton x = (x, [])
 
 let cons element (h, l) = (element, h :: l)
 
-let uncons : 'a t -> 'a * 'a list = Fun.id
+let uncons = Fun.id
 
 let head = Pair.fst
 
 let tail = Pair.snd
 
-let unsnoc l =
+let unsnoc =
   let rec unsnoc (h, t) return =
     match t with
     | [] -> return ([], h)
     | x :: xs -> unsnoc (x, xs) (fun (t', last) -> return (h :: t', last))
   in
-  unsnoc l Fun.id
+  fun l -> unsnoc l Fun.id
 
 let rec last (h, t) =
   match t with
@@ -32,9 +29,9 @@ let to_list (x, l) = x :: l
 
 let length (_, l) = 1 + List.length l
 
-let iter f l : unit = List.iter f (to_list l)
+let iter f l = List.iter f (to_list l)
 
-let map (f : 'a -> 'b) ((x, l) : 'a t) : 'b t =
+let map f (x, l) =
   let h = f x in
   let t = List.map f l in
   (h, t)
@@ -53,9 +50,9 @@ let filter_map f (h, t) =
   let rest = List.filter_map f t in
   f h |> Option.fold ~none:rest ~some:(fun h -> h :: rest)
 
-let for_all f l : bool = List.for_all f (to_list l)
+let for_all f l = List.for_all f (to_list l)
 
-let rec all_equal ((x, l) : 'a t) : 'a option =
+let rec all_equal (x, l) =
   match l with
   | [] -> Some x
   | x' :: xs when x = x' -> all_equal (x, xs)
@@ -77,7 +74,7 @@ exception Empty
 
 (** Converts the list to a nonempty list. Raises the exception Empty if the
     list was empty. *)
-let unsafe_of_list (l : 'a list) : 'a t = Option.get' Empty (of_list l)
+let unsafe_of_list l = Option.get' Empty (of_list l)
 
 let find_opt p l = l |> to_list |> List.find_opt p
 
@@ -92,7 +89,7 @@ let partition f (h, l) =
   let l1, l2 = List.partition f l in
   if f h then (h :: l1, l2) else (l1, h :: l2)
 
-let group_by (p : 'a -> 'key) (l : 'a list) : ('key * 'a t) list =
+let group_by p l =
   let h = Hashtbl.create 32 in
   let () =
     let insert k x =
@@ -120,7 +117,7 @@ let combine (a, l1) (b, l2) = ((a, b), List.combine l1 l2)
 
 let ap xs = map2 Fun.apply xs
 
-let ap_one x = map (fun f -> f x)
+let ap_one x = map (Fun.apply x)
 
 let pp ?(pp_sep = Format.pp_print_cut) pp_v ppf (h, t) =
   pp_v ppf h;
@@ -131,5 +128,5 @@ let pp ?(pp_sep = Format.pp_print_cut) pp_v ppf (h, t) =
     t
 
 module Syntax = struct
-  let ( $> ) (p : 'a t) (f : 'a -> 'b) : 'b t = map f p
+  let ( $> ) p f = map f p
 end

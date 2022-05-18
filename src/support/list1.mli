@@ -1,8 +1,5 @@
-(** The type of non-empty lists. *)
+(** The type of lists of length at least [1]. *)
 type 'a t
-
-(** Type alias for {!t}. *)
-type 'a nonempty = 'a t
 
 (** {1 Constructors} *)
 
