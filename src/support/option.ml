@@ -78,27 +78,6 @@ let cat_options l = List.filter_map Fun.id l
 (** Specialized effectful eliminator for option types. *)
 let when_some l f = eliminate (Fun.const ()) f l
 
-type 'a all_or_none =
-  [ `all of 'a list
-  | `mixed of 'a list
-  | `none
-  | `empty
-  ]
-
-(** Checks whether all or none of the list of options has a value. *)
-let rec all_or_none = function
-  | None :: xs -> (
-    match all_or_none xs with
-    | `all xs | `mixed xs -> `mixed xs
-    | `none | `empty -> `none)
-  | Some x :: xs -> (
-    match all_or_none xs with
-    | `all xs -> `all (x :: xs)
-    | `empty -> `all [ x ]
-    | `mixed xs -> `mixed (x :: xs)
-    | `none -> `mixed [ x ])
-  | [] -> `empty
-
 (** Eliminate the option into a printer. *)
 let print' none some ppf m = eliminate (none ppf) (some ppf) m
 
