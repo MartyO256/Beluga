@@ -15,7 +15,7 @@ module type ORD = sig
 
       - {b Comparability}: [(compare a b <= 0 || compare b a >= 0) = true]
       - {b Transitivity}: if [(compare a b <= 0) = true] and
-        [(compare b c <= 0) = true], then [compare a c <= 0 = true]
+        [(compare b c <= 0) = true], then [(compare a c <= 0) = true]
       - {b Reflexivity}: [(compare a a = 0) = true]
       - {b Antisymmetry}: if [(compare a b <= 0) = true] and
         [(compare a b >= 0) = true] then [(compare a b = 0) = true] *)
