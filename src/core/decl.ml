@@ -1,6 +1,5 @@
 open Support
-
-type t = int
+include Int
 
 let counter () =
   let count = ref 0 in
@@ -9,5 +8,3 @@ let counter () =
     !count
 
 let next = counter ()
-
-include (Ord.Make (Int) : Ord.ORD with type t := t)
