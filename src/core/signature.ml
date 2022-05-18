@@ -49,8 +49,8 @@ module Name = struct
   let rec names_seq : string -> int -> t Seq.t =
    fun base i ->
     Seq.cons
-      (base ^ string_of_int i)
-      (if Int.equal i Int.max_int then Seq.empty
+      (base ^ Int.show i)
+      (if Int.(i = max_int) then Seq.empty
       else fun () -> names_seq base (i + 1) ())
 
   let prefixed_fresh_name_supplier base =
@@ -775,6 +775,12 @@ module Typ = struct
       }
 
     module Kind = struct
+      (** [arguments tK] is [(i, e, t)] where
+
+          - [i] is the number of implicit arguments in [tK]
+          - [e] is the number of explicit and inductive arguments in [tK]
+          - [t] is the total number of implicit, explicit and inductive
+            arguments in [tK] *)
       let arguments =
         let rec arguments (implicit, explicit) tK =
           match tK with
@@ -2200,10 +2206,11 @@ module Subordination = struct
           Fun.(Id.Typ.Set.mem tB >> Option.some >> return)
 
   type subordinations =
-    { term_subordinations : Id.Typ.Set.t Id.Typ.Map.t
+    { term_subordinates : Id.Typ.Set.t Id.Typ.Map.t
           (** The mapping from LF families to their term-level subordinates. *)
-    ; type_subordinations : Id.Typ.Set.t Id.Typ.Map.t
-          (** The mapping from LF families to their type-level subordinates. *)
+    ; type_subordinated_to : Id.Typ.Set.t Id.Typ.Map.t
+          (** The mapping from LF families to the LF families they are
+              subordinate to. *)
     }
 
   let compute_subordinations : Id.Typ.t -> state -> subordinations =
@@ -2215,27 +2222,21 @@ end
 
 let empty_subordination_state : t -> Subordination.state =
  fun signature ->
-  let lookup_kind =
-    Fun.(lookup_typ_by_id_exn signature >> Pair.snd >> Typ.kind)
-  in
+  let lookup_kind = Fun.(lookup_typ_by_id_exn' signature >> Typ.kind) in
   let lookup_constructors =
     Fun.(
-      lookup_typ_by_id_exn signature
-      >> Pair.snd >> Typ.constructors >> Name.Hamt.values
-      >> List.map
-           (lookup_constructor_by_id_exn signature >> Pair.snd >> Const.typ))
+      lookup_typ_by_id_exn' signature
+      >> Typ.constructors >> Name.Hamt.values
+      >> List.map (lookup_constructor_by_id_exn' signature >> Const.typ))
   in
   let is_term_subordinate_known =
-    Fun.(
-      lookup_typ_by_id_exn signature >> Pair.snd >> Typ.is_term_subordinate)
+    Fun.(lookup_typ_by_id_exn' signature >> Typ.is_term_subordinate)
   in
   let is_term_subordinate_known_opt tA tB =
     is_term_subordinate_known tA tB |> Result.to_option
   in
   let is_type_subordinate_to_known =
-    Fun.(
-      lookup_typ_by_id_exn signature
-      >> Pair.snd >> Typ.is_type_subordinate_to)
+    Fun.(lookup_typ_by_id_exn' signature >> Typ.is_type_subordinate_to)
   in
   let is_type_subordinate_to_known_opt tA tB =
     is_type_subordinate_to_known tA tB |> Result.to_option
@@ -2250,12 +2251,12 @@ let is_path_to_entry signature id path =
   declaration |> id_of_declaration_with_id |> Id.equal id |> Option.of_bool
   $> Fun.const (signature', declaration)
 
-let all_paths_to_entry signature id =
+let all_paths_to_entry signature id' =
   let open Result in
-  signature |> paths |> Id.Hamt.find_opt id
-  |> Option.to_result ~none:(`Unbound_id (id, signature))
-  $> QualifiedName.Set.filter (fun path ->
-         path |> is_path_to_entry signature id |> Option.is_some)
+  signature |> paths |> Id.Hamt.find_opt id'
+  |> Option.to_result ~none:(`Unbound_id (id', signature))
+  $> QualifiedName.Set.filter
+       Fun.(is_path_to_entry signature id' >> Option.is_some)
 
 let all_paths_to_entry_exn signature id =
   all_paths_to_entry signature id
