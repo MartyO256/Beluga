@@ -30,3 +30,10 @@ val swap : 'a * 'b -> 'b * 'a
 val uncurry : ('a -> 'b -> 'c) -> 'a * 'b -> 'c
 
 val curry : ('a * 'b -> 'c) -> 'a -> 'b -> 'c
+
+val equal :
+     ('a -> 'a -> bool)
+  -> ('b -> 'b -> bool)
+  -> ('a, 'b) t
+  -> ('a, 'b) t
+  -> bool

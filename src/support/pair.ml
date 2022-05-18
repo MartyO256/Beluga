@@ -21,3 +21,5 @@ let swap (x, y) = (y, x)
 let curry f x y = f (x, y)
 
 let uncurry f (x, y) = f x y
+
+let equal eqx eqy (x1, y1) (x2, y2) = eqx x1 x2 && eqy y1 y2
