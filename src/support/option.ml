@@ -112,3 +112,26 @@ let show f ppf =
   eliminate
     (fun () -> fprintf ppf "None")
     (fun x -> fprintf ppf "Some (@[%a@])" f x)
+
+module MakeEq (E : Eq.EQ) : Eq.EQ with type t = E.t t = Eq.Make (struct
+  type nonrec t = E.t t
+
+  let equal x y =
+    match (x, y) with
+    | None, None -> true
+    | Some x, Some y when x == y -> true (* Optimization *)
+    | Some x, Some y -> E.equal x y
+    | _ -> false
+end)
+
+module MakeOrd (O : Ord.ORD) : Ord.ORD with type t = O.t t = Ord.Make (struct
+  type nonrec t = O.t t
+
+  let compare x y =
+    match (x, y) with
+    | None, None -> 0
+    | Some x, Some y when x == y -> 0 (* Optimization *)
+    | Some x, Some y -> O.compare x y
+    | None, Some _ -> -1
+    | Some _, None -> 1
+end)

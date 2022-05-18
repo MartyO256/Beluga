@@ -89,3 +89,10 @@ include Monad.MONAD with type 'a t := 'a t
 include Functor.FUNCTOR with type 'a t := 'a t
 
 include Apply.APPLY with type 'a t := 'a t
+
+(** Functor for an instance of {!Eq.EQ} over option values. *)
+module MakeEq (E : Eq.EQ) : Eq.EQ with type t = E.t t
+
+(** Functor for an instance of {!Ord.ORD} over option values. [None] is
+    consided to be less than any [Some v] value. *)
+module MakeOrd (O : Ord.ORD) : Ord.ORD with type t = O.t t
