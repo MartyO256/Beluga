@@ -1455,36 +1455,53 @@ val lookup_mquery : t -> QualifiedName.t -> (t * MQuery.t) Option.t
     [signature] if such a declaration exists. *)
 val lookup_typ_by_id : t -> Id.Typ.t -> (t * Typ.t) Option.t
 
+val lookup_typ_by_id' : t -> Id.Typ.t -> Typ.t Option.t
+
 (** [lookup_constructor_by_id signature id] is the LF type constructor having
     ID [id] in [signature] if such a declaration exists. *)
 val lookup_constructor_by_id : t -> Id.Const.t -> (t * Const.t) Option.t
 
+val lookup_constructor_by_id' : t -> Id.Const.t -> Const.t Option.t
+
 (** [lookup_comp_typ_by_id signature id] is the computational type having ID
     [id] in [signature] if such a declaration exists. *)
 val lookup_comp_typ_by_id : t -> Id.CompTyp.t -> (t * CompTyp.t) Option.t
+
+val lookup_comp_typ_by_id' : t -> Id.CompTyp.t -> CompTyp.t Option.t
 
 (** [lookup_comp_constructor_by_id signature id] is the computational type
     constructor having ID [id] in [signature] if such a declaration exists. *)
 val lookup_comp_constructor_by_id :
   t -> Id.CompConst.t -> (t * CompConst.t) Option.t
 
+val lookup_comp_constructor_by_id' :
+  t -> Id.CompConst.t -> CompConst.t Option.t
+
 (** [lookup_comp_cotyp_by_id signature id] is the computational cotype having
     ID [id] in [signature] if such a declaration exists. *)
 val lookup_comp_cotyp_by_id :
   t -> Id.CompCotyp.t -> (t * CompCotyp.t) Option.t
+
+val lookup_comp_cotyp_by_id' : t -> Id.CompCotyp.t -> CompCotyp.t Option.t
 
 (** [lookup_comp_destructor_by_id signature id] is the computational cotype
     destructor having ID [id] in [signature] if such a declaration exists. *)
 val lookup_comp_destructor_by_id :
   t -> Id.CompDest.t -> (t * CompDest.t) Option.t
 
+val lookup_comp_destructor_by_id' : t -> Id.CompDest.t -> CompDest.t Option.t
+
 (** [lookup_comp_by_id signature id] is the computation having ID [id] in
     [signature] if such a declaration exists. *)
 val lookup_comp_by_id : t -> Id.Comp.t -> (t * Comp.t) Option.t
 
+val lookup_comp_by_id' : t -> Id.Comp.t -> Comp.t Option.t
+
 (** [lookup_schema_by_id signature id] is the schema having ID [id] in
     [signature] if such a declaration exists. *)
 val lookup_schema_by_id : t -> Id.Schema.t -> (t * Schema.t) Option.t
+
+val lookup_schema_by_id' : t -> Id.Schema.t -> Schema.t Option.t
 
 (** [lookup_module_by_id signature id] is the module having ID [id] in
     [signature] if such a declaration exists. *)
@@ -1493,13 +1510,20 @@ val lookup_module_by_id :
   -> Id.Module.t
   -> (t * (t, declaration, declaration_with_id) Module.t) Option.t
 
+val lookup_module_by_id' :
+  t -> Id.Module.t -> (t, declaration, declaration_with_id) Module.t Option.t
+
 (** [lookup_query_by_id signature id] is the logic programming query having
     ID [id] in [signature] if such a declaration exists. *)
 val lookup_query_by_id : t -> Id.Query.t -> (t * Query.t) Option.t
 
+val lookup_query_by_id' : t -> Id.Query.t -> Query.t Option.t
+
 (** [lookup_query_by_id signature id] is the logic programming meta-query
     having ID [id] in [signature] if such a declaration exists. *)
 val lookup_mquery_by_id : t -> Id.MQuery.t -> (t * MQuery.t) Option.t
+
+val lookup_mquery_by_id' : t -> Id.MQuery.t -> MQuery.t Option.t
 
 (** {1 Unsafe lookups by ID} *)
 
@@ -1537,6 +1561,8 @@ exception IdKindMismatch of id_kind_mismatch
       family. *)
 val lookup_typ_by_id_exn : t -> Id.Typ.t -> t * Typ.t
 
+val lookup_typ_by_id_exn' : t -> Id.Typ.t -> Typ.t
+
 (** [lookup_constructor_by_id_exn signature id] is the LF type constructor
     having ID [id] in [signature].
 
@@ -1546,6 +1572,8 @@ val lookup_typ_by_id_exn : t -> Id.Typ.t -> t * Typ.t
       constructor. *)
 val lookup_constructor_by_id_exn : t -> Id.Const.t -> t * Const.t
 
+val lookup_constructor_by_id_exn' : t -> Id.Const.t -> Const.t
+
 (** [lookup_comp_typ_by_id_exn signature id] is the computational type having
     ID [id] in [signature].
 
@@ -1554,6 +1582,8 @@ val lookup_constructor_by_id_exn : t -> Id.Const.t -> t * Const.t
       If the entry having the ID [id] in [signature] is not a computational
       type. *)
 val lookup_comp_typ_by_id_exn : t -> Id.CompTyp.t -> t * CompTyp.t
+
+val lookup_comp_typ_by_id_exn' : t -> Id.CompTyp.t -> CompTyp.t
 
 (** [lookup_comp_constructor_by_id_exn signature id] is the computational
     type constructor having ID [id] in [signature].
@@ -1565,6 +1595,8 @@ val lookup_comp_typ_by_id_exn : t -> Id.CompTyp.t -> t * CompTyp.t
 val lookup_comp_constructor_by_id_exn :
   t -> Id.CompConst.t -> t * CompConst.t
 
+val lookup_comp_constructor_by_id_exn' : t -> Id.CompConst.t -> CompConst.t
+
 (** [lookup_comp_cotyp_by_id_exn signature id] is the computational cotype
     having ID [id] in [signature].
 
@@ -1573,6 +1605,8 @@ val lookup_comp_constructor_by_id_exn :
       If the entry having the ID [id] in [signature] is not a computational
       cotype. *)
 val lookup_comp_cotyp_by_id_exn : t -> Id.CompCotyp.t -> t * CompCotyp.t
+
+val lookup_comp_cotyp_by_id_exn' : t -> Id.CompCotyp.t -> CompCotyp.t
 
 (** [lookup_comp_destructor_by_id_exn signature id] is the computational
     cotype destructor having ID [id] in [signature].
@@ -1583,6 +1617,8 @@ val lookup_comp_cotyp_by_id_exn : t -> Id.CompCotyp.t -> t * CompCotyp.t
       cotype destructor. *)
 val lookup_comp_destructor_by_id_exn : t -> Id.CompDest.t -> t * CompDest.t
 
+val lookup_comp_destructor_by_id_exn' : t -> Id.CompDest.t -> CompDest.t
+
 (** [lookup_comp_by_id_exn signature id] is the computation having ID [id] in
     [signature].
 
@@ -1591,6 +1627,8 @@ val lookup_comp_destructor_by_id_exn : t -> Id.CompDest.t -> t * CompDest.t
       If the entry having the ID [id] in [signature] is not a computation. *)
 val lookup_comp_by_id_exn : t -> Id.Comp.t -> t * Comp.t
 
+val lookup_comp_by_id_exn' : t -> Id.Comp.t -> Comp.t
+
 (** [lookup_schema_by_id_exn signature id] is the schema having ID [id] in
     [signature].
 
@@ -1598,6 +1636,8 @@ val lookup_comp_by_id_exn : t -> Id.Comp.t -> t * Comp.t
     @raise IdKindMismatch
       If the entry having the ID [id] in [signature] is not a schema. *)
 val lookup_schema_by_id_exn : t -> Id.Schema.t -> t * Schema.t
+
+val lookup_schema_by_id_exn' : t -> Id.Schema.t -> Schema.t
 
 (** [lookup_module_by_id_exn signature id] is the module having ID [id] in
     [signature].
@@ -1608,6 +1648,9 @@ val lookup_schema_by_id_exn : t -> Id.Schema.t -> t * Schema.t
 val lookup_module_by_id_exn :
   t -> Id.Query.t -> t * (t, declaration, declaration_with_id) Module.t
 
+val lookup_module_by_id_exn' :
+  t -> Id.Query.t -> (t, declaration, declaration_with_id) Module.t
+
 (** [lookup_query_by_id_exn signature id] is the logic programming query
     having ID [id] in [signature].
 
@@ -1617,6 +1660,8 @@ val lookup_module_by_id_exn :
       programming query. *)
 val lookup_query_by_id_exn : t -> Id.Query.t -> t * Query.t
 
+val lookup_query_by_id_exn' : t -> Id.Query.t -> Query.t
+
 (** [lookup_query_by_id_exn signature id] is the logic programming meta-query
     having ID [id] in [signature].
 
@@ -1625,6 +1670,8 @@ val lookup_query_by_id_exn : t -> Id.Query.t -> t * Query.t
       If the entry having the ID [id] in [signature] is not a logic
       programming meta-query. *)
 val lookup_mquery_by_id_exn : t -> Id.MQuery.t -> t * MQuery.t
+
+val lookup_mquery_by_id_exn' : t -> Id.MQuery.t -> MQuery.t
 
 (** {1 Declarations} *)
 

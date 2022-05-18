@@ -1849,6 +1849,36 @@ let lookup_query_by_id =
 let lookup_mquery_by_id =
   guarded_lookup_by_id Id.lift_mquery_id guard_mquery_declaration
 
+let extract_entry_from_lookup lookup signature id =
+  let open Option in
+  lookup signature id $> Pair.snd
+
+let lookup_typ_by_id' = extract_entry_from_lookup lookup_typ_by_id
+
+let lookup_constructor_by_id' =
+  extract_entry_from_lookup lookup_constructor_by_id
+
+let lookup_comp_typ_by_id' = extract_entry_from_lookup lookup_comp_typ_by_id
+
+let lookup_comp_constructor_by_id' =
+  extract_entry_from_lookup lookup_comp_constructor_by_id
+
+let lookup_comp_cotyp_by_id' =
+  extract_entry_from_lookup lookup_comp_cotyp_by_id
+
+let lookup_comp_destructor_by_id' =
+  extract_entry_from_lookup lookup_comp_destructor_by_id
+
+let lookup_comp_by_id' = extract_entry_from_lookup lookup_comp_by_id
+
+let lookup_schema_by_id' = extract_entry_from_lookup lookup_schema_by_id
+
+let lookup_module_by_id' = extract_entry_from_lookup lookup_module_by_id
+
+let lookup_query_by_id' = extract_entry_from_lookup lookup_query_by_id
+
+let lookup_mquery_by_id' = extract_entry_from_lookup lookup_mquery_by_id
+
 (** Unsafe Lookups by ID *)
 
 (** [id_of_declaration_with_id declaration] is the lifted ID of
@@ -1936,6 +1966,42 @@ let lookup_query_by_id_exn =
 
 let lookup_mquery_by_id_exn =
   lookup_by_id_exn Id.lift_mquery_id guard_mquery_declaration
+
+let extract_entry_from_lookup_exn lookup signature id =
+  lookup signature id |> Pair.snd
+
+let lookup_typ_by_id_exn' =
+  extract_entry_from_lookup_exn lookup_typ_by_id_exn
+
+let lookup_constructor_by_id_exn' =
+  extract_entry_from_lookup_exn lookup_constructor_by_id_exn
+
+let lookup_comp_typ_by_id_exn' =
+  extract_entry_from_lookup_exn lookup_comp_typ_by_id_exn
+
+let lookup_comp_constructor_by_id_exn' =
+  extract_entry_from_lookup_exn lookup_comp_constructor_by_id_exn
+
+let lookup_comp_cotyp_by_id_exn' =
+  extract_entry_from_lookup_exn lookup_comp_cotyp_by_id_exn
+
+let lookup_comp_destructor_by_id_exn' =
+  extract_entry_from_lookup_exn lookup_comp_destructor_by_id_exn
+
+let lookup_comp_by_id_exn' =
+  extract_entry_from_lookup_exn lookup_comp_by_id_exn
+
+let lookup_schema_by_id_exn' =
+  extract_entry_from_lookup_exn lookup_schema_by_id_exn
+
+let lookup_module_by_id_exn' =
+  extract_entry_from_lookup_exn lookup_module_by_id_exn
+
+let lookup_query_by_id_exn' =
+  extract_entry_from_lookup_exn lookup_query_by_id_exn
+
+let lookup_mquery_by_id_exn' =
+  extract_entry_from_lookup_exn lookup_mquery_by_id_exn
 
 (** Lookups by Qualified Name *)
 
