@@ -14,7 +14,7 @@ val get_or_else : (unit -> 'a) -> 'a option -> 'a
     abort a monadic computation on account of a boolean check. *)
 val of_bool : bool -> unit option
 
-(** Named, flipped version of ($). *)
+(** Named, flipped version of {!( >>= )}. *)
 val flat_map : ('a -> 'b option) -> 'a option -> 'b option
 
 val lazy_alt : 'a option Lazy.t -> 'a option Lazy.t -> 'a option Lazy.t
@@ -23,7 +23,7 @@ val lazy_alt : 'a option Lazy.t -> 'a option Lazy.t -> 'a option Lazy.t
     computes [Some x]. *)
 val choice : 'a option Lazy.t list -> 'a option Lazy.t
 
-(** Returns the first option that isn't None, if any. *)
+(** Returns the first option that isn't [None], if any. *)
 val alt : 'a option -> 'a option -> 'a option
 
 (** Maps a function that may fail over a list, and eagerly fails as soon as
