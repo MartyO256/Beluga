@@ -23,8 +23,6 @@ let get' e o = eliminate (Misc.throw e) Fun.id o
 
 let get_or_else default = eliminate default Fun.id
 
-let get_default default o = value ~default o
-
 let of_bool = function
   | true -> Some ()
   | false -> None

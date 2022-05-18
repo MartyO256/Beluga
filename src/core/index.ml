@@ -437,7 +437,7 @@ and shunting_yard' (l : Ext.LF.normal list) : Ext.LF.normal =
          Option.lazy_alt
            (lazy (Typ.args_of_name_opt name))
            (lazy (Term.args_of_name_opt name))
-         |> Lazy.map @@ Option.get_default (-1)
+         |> Lazy.map @@ Option.value ~default:(-1)
          |> Lazy.force
        in
        Store.OpPragmas.pragmaExists name && args_expected > 0

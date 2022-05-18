@@ -974,12 +974,12 @@ module Typ = struct
 
   let fresh_var_name entry ?(default_base_name = "x") =
     entry |> var_name_base |> Option.map Name.show
-    |> Option.get_default default_base_name
+    |> Option.value ~default:default_base_name
     |> Name.prefixed_fresh_name_supplier
 
   let fresh_mvar_name entry ?(default_base_name = "X") =
     entry |> mvar_name_base |> Option.map Name.show
-    |> Option.get_default default_base_name
+    |> Option.value ~default:default_base_name
     |> Name.prefixed_fresh_name_supplier
 
   let set_var_naming_convention var = function

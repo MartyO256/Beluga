@@ -427,7 +427,10 @@ module Comp = struct
        end
 
   let apply_unbox_modifier_opt cD modifier_opt =
-    Option.(get_default (fun x -> (x, S.LF.id)) (modifier_opt $> apply_unbox_modifier cD))
+    let open Option in
+    Option.value
+      ~default:(Pair.right S.LF.id)
+      (modifier_opt $> apply_unbox_modifier cD)
 
   (** Marks the variable at index k in cD as Inductive. *)
   let mark_ind cD k =

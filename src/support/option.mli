@@ -2,10 +2,6 @@ include module type of Stdlib.Option
 
 val eliminate : (unit -> 'b) -> ('a -> 'b) -> 'a option -> 'b
 
-(** [get_default o default] is [v] if [o] is [Some v] and [default]
-    otherwise. *)
-val get_default : 'a -> 'a option -> 'a
-
 (** Gets the value from an option if it exists. Otherwise raises the given
     exception. *)
 val get' : exn -> 'a option -> 'a

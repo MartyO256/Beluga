@@ -156,7 +156,7 @@ let peek_at (s : state) : T.t locd option =
   (*
 (** Like `peek_at` but forgets the location. *)
 let next_token s =
-  Option.(peek_at s $> Pair.snd |> get_default T.EOI)
+  Option.(peek_at s $> Pair.snd |> value ~default:T.EOI)
    *)
 
 (***** ERROR HANDLING *****)
@@ -305,7 +305,7 @@ let push_label (l : string) : error -> error =
 let push_label_option (l : string option) (e : error) : error =
   let open Option in
   l $> (fun l -> push_label l e)
-  |> get_default e
+  |> value ~default:e
           *)
 
 exception Error of state * error
@@ -771,7 +771,7 @@ let maybe (p : 'a parser) : 'a option parser =
 
 (** Tries a parser, and if it fails uses a default value. *)
 let maybe_default (p : 'a parser) (x : 'a) : 'a parser =
-  maybe p $> Option.get_default x
+  maybe p $> Option.value ~default:x
 
 (** Internal implementation of `many` that doesn't label. *)
 let rec many' (p : 'a parser) : 'a list parser =
