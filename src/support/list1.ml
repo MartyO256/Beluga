@@ -60,8 +60,8 @@ let rec all_equal (x, l) =
 
 let traverse f (x, l) =
   Option.(
-    f x $ fun y ->
-    traverse f l $ fun ys -> Some (y, ys))
+    f x >>= fun y ->
+    traverse f l >>= fun ys -> Some (y, ys))
 
 let map2 f (h1, t1) (h2, t2) = (f h1 h2, List.map2 f t1 t2)
 

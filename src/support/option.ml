@@ -27,8 +27,6 @@ let of_bool = function
   | true -> Some ()
   | false -> None
 
-let ( $ ) x f = bind f x
-
 let flat_map k o = o >>= k
 
 (** Prioritized choice between options. *)

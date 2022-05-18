@@ -416,14 +416,14 @@ let rec lookup' ctx k =
 let lookup_dep (cD : LF.mctx) k =
   let open Option in
   lookup' cD k
-  $ function
+  >>= function
     | LF.Decl (_, tau, dep) -> Some (tau, dep)
     | _ -> None
 
 let lookup cG k =
   let open Option in
   lookup' cG k
-  $ function
+  >>= function
     | Comp.CTypDecl (_, tau, _) -> Some tau
     | _ -> None
 
