@@ -110,6 +110,30 @@ val partitioni : (int -> 'a -> bool) -> 'a list -> 'a list * 'a list
     [(\[x_1; x_2; ...; x_n\], \[\])] is returned. *)
 val partition_take : int -> 'a list -> 'a list * 'a list
 
+(** {1 Printing} *)
+
+(** [pp ?pp_sep pp_v ppf l] prints the items of the list [l] using [pp_v] to
+    print each item and calling [pp_sep] between items on the formatter
+    [ppf]. *)
+val pp :
+     ?pp_sep:(Format.formatter -> unit -> unit)
+  -> (Format.formatter -> 'a -> unit)
+  -> Format.formatter
+  -> 'a t
+  -> unit
+
+(** [show ?pp_sep pp_v l] shows as a string the items of the list [l] using
+    [pp_v] to show each item and calling [pp_sep] between items. *)
+val show :
+     ?pp_sep:(Format.formatter -> unit -> unit)
+  -> (Format.formatter -> 'a -> unit)
+  -> 'a t
+  -> string
+
+(** {1 Instances} *)
+
+module MakeEq (E : Eq.EQ) : Eq.EQ with type t = E.t t
+
 (** Functor building an implementation of {!Ord} given a totally ordered
     type. The ordering between two lists of totally ordered types is as
     follows with respect to [compare l r]:
@@ -120,3 +144,5 @@ val partition_take : int -> 'a list -> 'a list * 'a list
       [l] be greater than the element in [r], or [l] starts with [r].
     - [compare l r = 0] if all elements in [l] and [r] are pairwise equal. *)
 module MakeOrd (O : Ord.ORD) : Ord.ORD with type t = O.t t
+
+module MakeShow (S : Show.SHOW) : Show.SHOW with type t = S.t t

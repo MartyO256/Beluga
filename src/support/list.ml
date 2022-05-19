@@ -67,6 +67,20 @@ let rec equal eq l1 l2 =
   | x :: xs, y :: ys when eq x y -> equal eq xs ys
   | _ -> false
 
+let rec compare cmp x y =
+  match (x, y) with
+  | [], [] -> 0
+  | [], _ :: _ -> 1
+  | _ :: _, [] -> -1
+  | x :: xs, y :: ys ->
+    let comparison = cmp x y in
+    if comparison = 0 then compare cmp xs ys else comparison
+
+let pp = Format.pp_print_list
+
+let show ?(pp_sep = Format.pp_print_cut) pp_v l =
+  Format.asprintf "%a" (pp ~pp_sep pp_v) l
+
 let hd_opt = function
   | [] -> None
   | x :: _ -> Some x
@@ -156,19 +170,21 @@ let partition_take k l =
   in
   partition_take k l []
 
-module MakeOrd (O : Ord.ORD) : Ord.ORD with type t = O.t list =
-Ord.Make (struct
-  type t = O.t list
+module MakeEq (E : Eq.EQ) : Eq.EQ with type t = E.t t = Eq.Make (struct
+  type nonrec t = E.t t
 
-  let compare x y =
-    let rec compare x y =
-      match (x, y) with
-      | [], [] -> 0
-      | [], _ :: _ -> 1
-      | _ :: _, [] -> -1
-      | x :: xs, y :: ys ->
-        let comparison = O.compare x y in
-        if comparison = 0 then compare xs ys else comparison
-    in
-    compare x y
+  let equal = equal E.equal
+end)
+
+module MakeOrd (O : Ord.ORD) : Ord.ORD with type t = O.t t = Ord.Make (struct
+  type nonrec t = O.t t
+
+  let compare = compare O.compare
+end)
+
+module MakeShow (S : Show.SHOW) : Show.SHOW with type t = S.t t =
+Show.Make (struct
+  type nonrec t = S.t t
+
+  let pp = pp S.pp
 end)
