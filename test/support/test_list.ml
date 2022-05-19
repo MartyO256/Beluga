@@ -61,14 +61,14 @@ let tests =
                ; ((Int.equal, [ 1; 2; 3 ], [ 1; 3; 2 ]), false)
                ; ((Int.equal, [ 1; 3; 2 ], [ 1; 2; 3 ]), false)
                ]
-              |> List.map Fun.(test_equal >> test_case))
+              |> List.map Fun.(test_equal >> OUnit2.test_case))
        ; "last"
          >::: ( "raises `Invalid_argument \"List.last\"` on empty list"
               >:: fun _ ->
                 assert_raises (Invalid_argument "List.last") (fun () ->
                     List.last []) )
               :: ([ ([ 1 ], 1); ([ 1; 2 ], 2); ([ 1; 2; 3 ], 3) ]
-                 |> List.map Fun.(test_last >> test_case))
+                 |> List.map Fun.(test_last >> OUnit2.test_case))
        ; "pairs"
          >::: ([ ([], [])
                ; ([ 1 ], [])
@@ -76,14 +76,14 @@ let tests =
                ; ([ 1; 2; 3 ], [ (1, 2); (2, 3) ])
                ; ([ 1; 2; 3; 4 ], [ (1, 2); (2, 3); (3, 4) ])
                ]
-              |> List.map Fun.(test_pairs >> test_case))
+              |> List.map Fun.(test_pairs >> OUnit2.test_case))
        ; "concat_map"
          >::: ([ (((fun _ -> []), [ 1; 2; 3 ]), [])
                ; (((fun x -> [ x; x + 1 ]), []), [])
                ; ( ((fun x -> [ x; x + 1 ]), [ 1; 3; 5 ])
                  , [ 1; 2; 3; 4; 5; 6 ] )
                ]
-              |> List.map Fun.(test_concat_map >> test_case))
+              |> List.map Fun.(test_concat_map >> OUnit2.test_case))
        ; "concat_mapi"
          >::: ([ (((fun _ _ -> []), [ 1; 2; 3 ]), [])
                ; (((fun _ x -> [ x; x + 1 ]), []), [])
@@ -91,20 +91,20 @@ let tests =
                  , [ 1; 2; 3; 4; 5; 6 ] )
                ; (((fun i _ -> [ i ]), [ 0; 0; 0; 0 ]), [ 0; 1; 2; 3 ])
                ]
-              |> List.map Fun.(test_concat_mapi >> test_case))
+              |> List.map Fun.(test_concat_mapi >> OUnit2.test_case))
        ; "index_of"
          >::: ([ (((fun x -> x mod 2 = 0), [ 1; 2; 3 ]), Option.some 1)
                ; (((fun x -> x mod 2 = 0), [ 1; 3 ]), Option.none)
                ; (((fun x -> x mod 2 != 0), [ 1; 3 ]), Option.some 0)
                ; ((Fun.const true, []), Option.none)
                ]
-              |> List.map Fun.(test_index_of >> test_case))
+              |> List.map Fun.(test_index_of >> OUnit2.test_case))
        ; "index"
          >::: ([ ([ 1; 2; 3 ], [ (0, 1); (1, 2); (2, 3) ])
                ; ([ 1 ], [ (0, 1) ])
                ; ([], [])
                ]
-              |> List.map Fun.(test_index >> test_case))
+              |> List.map Fun.(test_index >> OUnit2.test_case))
        ; "mapi2"
          >::: ("raises `Invalid_argument \"List.mapi2\"` on lists of \
                 different lengths"
@@ -114,16 +114,16 @@ let tests =
                     ; ((fun _ _ _ -> ()), [ 1 ], [])
                     ]
                    |> List.map (fun (f, l1, l2) ->
-                          test_case (fun _ ->
+                          OUnit2.test_case (fun _ ->
                               assert_raises (Invalid_argument "List.mapi2")
                                 (fun () -> List.mapi2 f l1 l2)))))
               :: ([ (((fun i _ _ -> i), [ 1; 2 ], [ 1; 2 ]), [ 0; 1 ])
                   ; (((fun _ -> ( + )), [ 1; 2 ], [ 3; 4 ]), [ 4; 6 ])
                   ]
-                 |> List.map Fun.(test_mapi2 >> test_case))
+                 |> List.map Fun.(test_mapi2 >> OUnit2.test_case))
        ; "ap"
          >::: ([ (([ 1; 2; 3 ], [ Fun.id; Fun.id; Fun.id ]), [ 1; 2; 3 ])
                ; (([ 1; 2; 3 ], [ ( + ) 1; ( + ) 2; ( + ) 3 ]), [ 2; 4; 6 ])
                ]
-              |> List.map Fun.(test_ap >> test_case))
+              |> List.map Fun.(test_ap >> OUnit2.test_case))
        ]
