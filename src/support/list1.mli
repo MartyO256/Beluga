@@ -36,6 +36,34 @@ val last : 'a t -> 'a
 (** [length l] the number of elements in [l]. *)
 val length : 'a t -> int
 
+(** {1 Comparison} *)
+
+(** [compare l1 l2] is equivalent to [compare (length l1) (length l2)],
+    except that the computation stops after reaching the end of the shortest
+    list. *)
+val compare_lengths : 'a t -> 'b t -> int
+
+(** [equal eq (a1, \[a2; ...; an\]) (b1, \[b2; ...; bm\])] holds when the two
+    input lists have the same length, and for each pair of elements [ai],
+    [bi] at the same position we have [eq ai bi].
+
+    Note: the [eq] function may be called even if the lists have different
+    lengths. If you know your equality function is costly, you may want to
+    check {!List1.compare_lengths} first. *)
+val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
+
+(** [compare cmp \[a1; ...; an\] \[b1; ...; bm\]] performs a lexicographic
+    comparison of the two input lists, using the same ['a -> 'a -> int]
+    interface as {!Stdlib.compare}:
+
+    - [a1 :: l1] is smaller than [a2 :: l2] (negative result) if [a1] is
+      smaller than [a2], or if they are equal (0 result) and [l1] is smaller
+      than [l2]
+    - the empty list [\[\]] is strictly smaller than non-empty lists Note:
+      the [cmp] function will be called even if the lists have different
+      lengths. *)
+val compare : ('a -> 'a -> int) -> 'a t -> 'a t -> int
+
 (** {1 Iterators} *)
 
 (** [iter f (a1, \[a2; ...; an\])] applies function [f] in turn to
@@ -143,13 +171,22 @@ val ap_one : 'a -> ('a -> 'b) t -> 'b t
 (** {1 Printing} *)
 
 (** [pp ?pp_sep pp_v ppf l] prints the items of the non-empty list [l] using
-    [pp_v] to print each item and calling [pp_sep] between items. *)
+    [pp_v] to print each item and calling [pp_sep] between items on the
+    formatter [ppf]. *)
 val pp :
      ?pp_sep:(Format.formatter -> unit -> unit)
   -> (Format.formatter -> 'a -> unit)
   -> Format.formatter
   -> 'a t
   -> unit
+
+(** [show ?pp_sep pp_v l] shows as a string the items of the non-empty list
+    [l] using [pp_v] to show each item and calling [pp_sep] between items. *)
+val show :
+     ?pp_sep:(Format.formatter -> unit -> unit)
+  -> (Format.formatter -> 'a -> unit)
+  -> 'a t
+  -> string
 
 (** {1 Interoperability} *)
 
@@ -164,3 +201,11 @@ val to_list : 'a t -> 'a list
 module Syntax : sig
   val ( $> ) : 'a t -> ('a -> 'b) -> 'b t
 end
+
+(** {1 Instances} *)
+
+module MakeEq (E : Eq.EQ) : Eq.EQ with type t = E.t t
+
+module MakeOrd (O : Ord.ORD) : Ord.ORD with type t = O.t t
+
+module MakeShow (S : Show.SHOW) : Show.SHOW with type t = S.t t

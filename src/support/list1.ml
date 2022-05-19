@@ -29,6 +29,15 @@ let to_list (x, l) = x :: l
 
 let length (_, l) = 1 + List.length l
 
+let equal eq (h1, t1) (h2, t2) = eq h1 h2 && List.equal eq t1 t2
+
+let compare_lengths (_, t1) (_, t2) = List.compare_lengths t1 t2
+
+let compare cmp (h1, t1) (h2, t2) =
+  match cmp h1 h2 with
+  | 0 -> List.compare cmp t1 t2
+  | x -> x
+
 let iter f l = List.iter f (to_list l)
 
 let map f (x, l) =
@@ -127,6 +136,28 @@ let pp ?(pp_sep = Format.pp_print_cut) pp_v ppf (h, t) =
       pp_v ppf v)
     t
 
+let show ?(pp_sep = Format.pp_print_cut) pp_v l =
+  Format.asprintf "%a" (pp ~pp_sep pp_v) l
+
 module Syntax = struct
   let ( $> ) p f = map f p
 end
+
+module MakeEq (E : Eq.EQ) : Eq.EQ with type t = E.t t = Eq.Make (struct
+  type nonrec t = E.t t
+
+  let equal = equal E.equal
+end)
+
+module MakeOrd (O : Ord.ORD) : Ord.ORD with type t = O.t t = Ord.Make (struct
+  type nonrec t = O.t t
+
+  let compare = compare O.compare
+end)
+
+module MakeShow (S : Show.SHOW) : Show.SHOW with type t = S.t t =
+Show.Make (struct
+  type nonrec t = S.t t
+
+  let pp = pp S.pp
+end)
