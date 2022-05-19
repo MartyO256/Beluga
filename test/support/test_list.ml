@@ -2,7 +2,7 @@ open OUnit2
 open Support
 
 let test_equal ((eq, l1, l2), expected) _ =
-  assert_equal (List.equal eq l1 l2) expected
+  assert_equal expected (List.equal eq l1 l2)
 
 let pp_print_list ppv ppf =
   Format.fprintf ppf "[%a]"
@@ -25,30 +25,30 @@ let assert_int_pair_list_equal =
     ~cmp:(List.equal @@ Pair.equal Int.equal Int.equal)
     ~printer:int_pair_list_printer
 
-let test_last (input, expected) _ = assert_equal (List.last input) expected
+let test_last (input, expected) _ = assert_equal expected (List.last input)
 
 let test_pairs (input, expected) _ =
-  assert_int_pair_list_equal (List.pairs input) expected
+  assert_int_pair_list_equal expected (List.pairs input)
 
 let test_concat_map ((f, input), expected) _ =
-  assert_int_list_equal (List.concat_map f input) expected
+  assert_int_list_equal expected (List.concat_map f input)
 
 let test_concat_mapi ((f, input), expected) _ =
-  assert_int_list_equal (List.concat_mapi f input) expected
+  assert_int_list_equal expected (List.concat_mapi f input)
 
 let test_index_of ((p, input), expected) _ =
-  assert_equal ~cmp:(Option.equal Int.equal) (List.index_of p input) expected
+  assert_equal ~cmp:(Option.equal Int.equal) expected (List.index_of p input)
 
 let test_index (input, expected) _ =
   assert_equal
     ~cmp:(List.equal @@ Pair.equal Int.equal Int.equal)
-    (List.index input) expected
+    expected (List.index input)
 
 let test_mapi2 ((f, l1, l2), expected) _ =
-  assert_int_list_equal (List.mapi2 f l1 l2) expected
+  assert_int_list_equal expected (List.mapi2 f l1 l2)
 
 let test_ap ((xs, fs), expected) _ =
-  assert_int_list_equal (List.ap xs fs) expected
+  assert_int_list_equal expected (List.ap xs fs)
 
 let tests =
   "list"
