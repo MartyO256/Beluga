@@ -6,16 +6,12 @@ let test_equal ((eq, l1, l2), expected) _ =
 
 let pp_print_list ppv ppf =
   Format.fprintf ppf "[%a]"
-    (Format.pp_print_list
-       ~pp_sep:(fun ppf () -> Format.pp_print_string ppf "; ")
-       ppv)
+    (List.pp ~pp_sep:(fun ppf () -> Format.pp_print_string ppf "; ") ppv)
 
-let int_list_printer =
-  Format.asprintf "%a" (pp_print_list Format.pp_print_int)
+let int_list_printer = Format.asprintf "%a" (pp_print_list Int.pp)
 
 let int_pair_list_printer =
-  Format.asprintf "%a"
-    (pp_print_list (fun ppf (a, b) -> Format.fprintf ppf "(%d, %d)" a b))
+  Format.asprintf "%a" (pp_print_list (Pair.pp Int.pp Int.pp))
 
 let assert_int_list_equal =
   assert_equal ~cmp:(List.equal Int.equal) ~printer:int_list_printer
@@ -26,6 +22,9 @@ let assert_int_pair_list_equal =
     ~printer:int_pair_list_printer
 
 let test_last (input, expected) _ = assert_equal expected (List.last input)
+
+let test_rev (input, expected) _ =
+  assert_int_list_equal expected (List.rev input)
 
 let test_pairs (input, expected) _ =
   assert_int_pair_list_equal expected (List.pairs input)
@@ -43,6 +42,11 @@ let test_index (input, expected) _ =
   assert_equal
     ~cmp:(List.equal @@ Pair.equal Int.equal Int.equal)
     expected (List.index input)
+
+let test_iter input _ =
+  let call_reverse_order = ref [] in
+  List.iter (fun x -> call_reverse_order := x :: !call_reverse_order) input;
+  assert_int_list_equal input (List.rev !call_reverse_order)
 
 let test_mapi2 ((f, l1, l2), expected) _ =
   assert_int_list_equal expected (List.mapi2 f l1 l2)
@@ -69,6 +73,14 @@ let tests =
                     List.last []) )
               :: ([ ([ 1 ], 1); ([ 1; 2 ], 2); ([ 1; 2; 3 ], 3) ]
                  |> List.map Fun.(test_last >> OUnit2.test_case))
+       ; "rev"
+         >::: ([ ([], [])
+               ; ([ 1 ], [ 1 ])
+               ; ([ 1; 2 ], [ 2; 1 ])
+               ; ([ 1; 2; 3 ], [ 3; 2; 1 ])
+               ; ([ 1; 2; 3; 4 ], [ 4; 3; 2; 1 ])
+               ]
+              |> List.map Fun.(test_rev >> OUnit2.test_case))
        ; "pairs"
          >::: ([ ([], [])
                ; ([ 1 ], [])
@@ -95,7 +107,7 @@ let tests =
        ; "index_of"
          >::: ([ (((fun x -> x mod 2 = 0), [ 1; 2; 3 ]), Option.some 1)
                ; (((fun x -> x mod 2 = 0), [ 1; 3 ]), Option.none)
-               ; (((fun x -> x mod 2 != 0), [ 1; 3 ]), Option.some 0)
+               ; (((fun x -> x mod 2 <> 0), [ 1; 3 ]), Option.some 0)
                ; ((Fun.const true, []), Option.none)
                ]
               |> List.map Fun.(test_index_of >> OUnit2.test_case))
@@ -105,6 +117,9 @@ let tests =
                ; ([], [])
                ]
               |> List.map Fun.(test_index >> OUnit2.test_case))
+       ; "iter"
+         >::: ([ [ 1; 2; 3 ]; [ 1 ]; [] ]
+              |> List.map Fun.(test_iter >> OUnit2.test_case))
        ; "mapi2"
          >::: ("raises `Invalid_argument \"List.mapi2\"` on lists of \
                 different lengths"

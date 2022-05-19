@@ -12,6 +12,14 @@ let head = Pair.fst
 
 let tail = Pair.snd
 
+let rev =
+  let rec rev l ((hd, tl) as acc) =
+    match l with
+    | [] -> acc
+    | x :: xs -> rev xs (x, hd :: tl)
+  in
+  fun (hd, tl) -> rev tl (hd, [])
+
 let unsnoc =
   let rec unsnoc (h, t) return =
     match t with
@@ -72,7 +80,9 @@ let traverse f (x, l) =
     f x >>= fun y ->
     traverse f l >>= fun ys -> Some (y, ys))
 
-let map2 f (h1, t1) (h2, t2) = (f h1 h2, List.map2 f t1 t2)
+let map2 f (h1, t1) (h2, t2) =
+  try (f h1 h2, List.map2 f t1 t2)
+  with Invalid_argument _ -> invalid_arg "List1.map2"
 
 let of_list l =
   match l with
@@ -122,7 +132,9 @@ let split ((x, y), t) =
   let xs, ys = List.split t in
   ((x, xs), (y, ys))
 
-let combine (a, l1) (b, l2) = ((a, b), List.combine l1 l2)
+let combine (a, l1) (b, l2) =
+  try ((a, b), List.combine l1 l2)
+  with Invalid_argument _ -> invalid_arg "List1.combine"
 
 let ap xs = map2 Fun.apply xs
 

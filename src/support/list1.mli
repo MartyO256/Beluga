@@ -13,6 +13,9 @@ val singleton : 'a -> 'a t
 (** [cons e l] is the non-empty list obtained by prepending [e] onto [l]. *)
 val cons : 'a -> 'a t -> 'a t
 
+(** [rev l] is [l] in reverse order. *)
+val rev : 'a t -> 'a t
+
 (** {1 Destructors} *)
 
 (** [uncons l] is [(head l, tail l)]. *)
