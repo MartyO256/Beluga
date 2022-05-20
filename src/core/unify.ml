@@ -3220,3 +3220,12 @@ end
 
 module EmptyTrail = Make (EmptyTrail)
 module StdTrail = Make (StdTrail)
+
+let reset () =
+  EmptyTrail.reset ();
+  EmptyTrail.resetDelayedCnstrs ();
+  EmptyTrail.resetGlobalCnstrs ();
+
+  StdTrail.reset ();
+  StdTrail.resetDelayedCnstrs ();
+  StdTrail.resetGlobalCnstrs ();

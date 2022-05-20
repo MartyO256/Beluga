@@ -161,7 +161,8 @@ end
 let clear_all () : unit =
   LF.clear ();
   Comp.clear ();
-  Annot.clear ()
+  Annot.clear ();
+  Sgn.clear ()
 
 let print_annot (name : string) : unit =
   let pp = open_out (String.sub name 0 (String.rindex name '.') ^ ".annot") in

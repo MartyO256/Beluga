@@ -10,6 +10,7 @@ module Make () = struct
     let x = !counter in
     incr counter;
     x
+  let reset () = counter := 0
 end
 
 let string_of_hole_id = string_of_int

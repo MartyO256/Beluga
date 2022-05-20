@@ -16,6 +16,7 @@ val string_of_hole_id : t -> string
 module Make () : sig
   (** Generates the next hole ID. *)
   val next : unit -> t
+  val reset : unit -> unit
 end
 
 (** Converts an option type to a name. *)

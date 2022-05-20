@@ -151,6 +151,19 @@ let load_one ppf path =
        end;
      raise e
 
+let reset_global_mutable_state () =
+  Abstract.reset ();
+  Coverage.reset ();
+  Gensym.reset ();
+  Store.clear ();
+  Typeinfo.clear_all ();
+  Holes.clear ();
+  Unify.reset ();
+  Lfrecon.reset ();
+  Error.reset ();
+  Holes.reset ();
+  Total.reset ()
+
 let load ppf f =
   let all_paths = resolve_path f in
   dprintf begin fun p ->
@@ -162,10 +175,7 @@ let load ppf f =
          (fun ppf x -> Format.fprintf ppf "%s" x))
       all_paths
     end;
-  Gensym.reset ();
-  Store.clear ();
-  Typeinfo.clear_all ();
-  Holes.clear ();
+  reset_global_mutable_state ();
   List.iter
     (load_one ppf)
     all_paths;

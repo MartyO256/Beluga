@@ -64,3 +64,5 @@ val resetInformation : unit -> unit
 val getInformation : unit -> string
 
 val addInformation : string -> unit
+
+val reset : unit -> unit

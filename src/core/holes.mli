@@ -140,3 +140,5 @@ val add_harpoon_subgoal : Location.t * Comp.open_subgoal -> unit
 
 (** Gets the list of Harpoon subgoals. *)
 val get_harpoon_subgoals : unit -> (Location.t * Comp.open_subgoal) list
+
+val reset : unit -> unit

@@ -3046,3 +3046,8 @@ let solve_constraints cD' =
 
 let solve_fvarCnstr rectyp =
   solve_fvarCnstr rectyp Int.LF.Empty !fvar_cnstr
+
+let reset () =
+  strengthen := true;
+  reset_fvarCnstr ();
+  reset_fcvarCnstr ()

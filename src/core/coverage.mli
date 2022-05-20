@@ -27,6 +27,7 @@ exception Error of Syntax.Loc.t * error
 val enableCoverage : bool ref
 val warningOnly : bool ref
 val no_covers : int ref
+val reset : unit -> unit
 
 type problem
 

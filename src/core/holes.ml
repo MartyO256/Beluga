@@ -260,3 +260,6 @@ let assign id h =
   | None ->
      check_hole_uniqueness h;
      Hashtbl.add holes id h
+
+let reset () =
+  ID.reset ()

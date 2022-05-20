@@ -138,3 +138,6 @@ let _ =
         Format.pp_print_string msg
       end
     end
+
+let reset () =
+  resetInformation ()

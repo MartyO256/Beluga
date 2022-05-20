@@ -143,7 +143,7 @@ type open_cov_problem = LF.mctx * Comp.gctx * Comp.pattern
 
 type open_cov_problems = open_cov_problem list
 
-let open_cov_problems = ref ([] : open_cov_problems)
+let open_cov_problems : open_cov_problems ref = ref []
 
 let reset_open_cov_problems () =
   open_cov_problems := []
@@ -3544,3 +3544,10 @@ let map f =
 
 let iter (f : coverage_result -> unit) : unit =
   List.iter (fun problem -> f (covers problem None)) (List.rev !problems)
+
+let reset () =
+  reset_open_cov_problems ();
+  enableCoverage := false;
+  warningOnly := false;
+  no_covers := 0;
+  problems := []

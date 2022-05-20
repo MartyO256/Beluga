@@ -1214,7 +1214,12 @@ let clear () =
   Cid.CompDest.clear ();
   Cid.CompTypDef.clear ();
   Cid.Comp.clear ();
-  OpPragmas.clear ()
+  Modules.reset ();
+  OpPragmas.clear ();
+  OpPragmas.default := Syntax.Ext.Sgn.None;
+  FVar.clear ();
+  FPatVar.clear ();
+  FCVar.clear ()
 
 let _ = Error.register_printer
   (fun (Error (loc, err)) ->

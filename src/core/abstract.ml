@@ -1849,3 +1849,6 @@ let exp = abstrExp
 let pattern_spine = abstrPatSpine
 let patobj = abstrPatObj
 let thm = abstrThm
+
+let reset () =
+  pat_flag := false

@@ -1426,3 +1426,7 @@ let drop_args n =
 
 (** Drops one argument from all recursive calls in a given ihctx. *)
 let drop_arg = drop_args 1
+
+let reset () =
+  enabled := false;
+  stratNum := 0

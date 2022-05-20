@@ -62,3 +62,5 @@ val closedTyp : (LF.dctx * LF.typ) -> bool
 val printFreeMVars : LF.dctx_hat -> LF.normal -> unit
 
 val fmt_ppr_collection : Format.formatter -> fctx -> unit
+
+val reset : unit -> unit
