@@ -10,6 +10,14 @@ val pack : char list -> string
     characters. *)
 val drop : int -> string -> string
 
+(** {1 Predicates} *)
+
+(** [is_empty s] is [true] if and only if [s = ""]. *)
+val is_empty : t -> bool
+
+(** [is_non_empty s] is true if and only if [s <> ""]. *)
+val is_non_empty : t -> bool
+
 (** {1 Collections} *)
 
 module Set : Set.S with type elt = t

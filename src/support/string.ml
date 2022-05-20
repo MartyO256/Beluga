@@ -41,3 +41,7 @@ module Hamt = HamtMisc.Make (struct
   include Ord
   include Hash
 end)
+
+let is_empty = ( = ) empty
+
+let is_non_empty = ( <> ) empty
