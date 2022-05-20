@@ -27,6 +27,8 @@ let of_bool = function
   | true -> Some ()
   | false -> None
 
+let from_predicate p a = if p a then some a else none
+
 let flat_map k o = o >>= k
 
 (** Prioritized choice between options. *)

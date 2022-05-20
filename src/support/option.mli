@@ -14,6 +14,9 @@ val get_or_else : (unit -> 'a) -> 'a option -> 'a
     abort a monadic computation on account of a boolean check. *)
 val of_bool : bool -> unit option
 
+(** [from_predicate p a] is [Some a] if [p a], and [None] otherwise. *)
+val from_predicate : ('a -> bool) -> 'a -> 'a option
+
 (** Named, flipped version of {!( >>= )}. *)
 val flat_map : ('a -> 'b option) -> 'a option -> 'b option
 
