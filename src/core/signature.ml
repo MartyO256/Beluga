@@ -2065,7 +2065,7 @@ let lookup_mquery = guarded_declaration_lookup guard_mquery_declaration
 module Subordination = struct
   open Syntax.Int
 
-  type state' =
+  type state =
     { lookup_kind : Id.Typ.t -> LF.kind
           (** [lookup_kind tA_id] is the kind corresponding to the LF family
               having ID [tA_id]. *)
@@ -2116,9 +2116,11 @@ module Subordination = struct
               {!lookup_is_type_subordinate}. *)
     }
 
-  include State.Make (struct
-    type t = state'
-  end)
+  include (
+    State.Make (struct
+      type t = state
+    end) :
+      State.STATE with type state := state)
 
   let[@inline] lookup_kind { lookup_kind; _ } = lookup_kind
 
