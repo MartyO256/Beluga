@@ -1,0 +1,8 @@
+(test
+ (name test_beluga)
+ (libraries beluga support ounit2)
+ (deps
+  (glob_files_rec %{project_root}/examples/*)
+  (glob_files_rec %{project_root}/t/code/success/*)
+  (glob_files_rec %{project_root}/t/code/error/*)
+  %{project_root}/.admissible-fail))

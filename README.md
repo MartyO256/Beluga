@@ -76,7 +76,7 @@ You can run a Harpoon session using the compiled development version of `harpoon
 dune exec harpoon -- --sig path/to/program.bel
 ```
 
-See the [`MakeFile`](./MakeFile) for other available development commands.
+See the [`Makefile`](./Makefile) for other available development commands.
 
 ## Interactive Mode
 
