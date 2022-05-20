@@ -11,6 +11,12 @@ module LF = struct
 
   exception NotComposable of string
 
+  let rec nth s =
+    function
+    | (Last u, 1) -> (u, s)
+    | (Cons (u, _), 1) -> (u, s)
+    | (Cons (u, tuple), n) -> nth (Dot (Obj u, s)) (tuple, n - 1)
+
   (**************************)
   (* Explicit Substitutions *)
   (**************************)
@@ -150,23 +156,9 @@ module LF = struct
           Head (Proj (h, k))
 
        | Obj (Tuple (_, tuple)) ->
-          let rec nth s =
-            function
-            | (Last u, 1) -> (u, s)
-            | (Cons (u, _), 1) -> (u, s)
-            | (Cons (u, tuple), n) -> nth (Dot (Obj u, s)) (tuple, n - 1)
-          in
-          (*              Obj (Clo (nth s (tuple, k))) *)
           Obj (Pair.fst (nth s (tuple, k)))
        | Obj (Lam _ ) -> failwith "Found Lam - should be tuple"
        | Obj (Clo (Tuple (_, tuple), s')) ->
-          let rec nth s =
-            function
-            | (Last u, 1) -> (u, s)
-            | (Cons (u, _), 1) -> (u, s)
-            | (Cons (u, tuple), n) -> nth (Dot (Obj u, s)) (tuple, n - 1)
-          in
-          (*              Obj (Clo (nth s (tuple, k))) *)
           Obj (Clo (Pair.fst (nth s (tuple, k)), s'))
 
        | Obj (Clo ((Root (_, (PVar _ ), Nil, _)), _ )) -> failwith "Found Clo - PVar "
@@ -192,13 +184,6 @@ module LF = struct
           Head (Proj (h', k))
 
        | Obj (Tuple (_, tuple)) ->
-          let rec nth s =
-            function
-            | (Last u, 1) -> (u, s)
-            | (Cons (u, _), 1) -> (u, s)
-            | (Cons (u, tuple), n) -> nth (Dot (Obj u, s)) (tuple, n - 1)
-          in
-          (*              Obj (Clo (nth s (tuple, k))) *)
           Obj (Pair.fst (nth s (tuple, k)))
        end
 
