@@ -1397,6 +1397,28 @@ and declaration_with_id =
   | `MQuery_declaration of MQuery.t
   ]
 
+(** {1 Constructors} *)
+
+(** The empty Beluga signature. *)
+val empty : t
+
+val add_typ :
+     t
+  -> Typ.t
+  -> (t, [> `Bound_id of Id.t * (t * declaration_with_id) * t ]) Result.t
+
+val add_const :
+     t
+  -> Const.t
+  -> ( t
+     , [> `Bound_id of Id.t * (t * declaration_with_id) * t
+       | `Constructor_name_collision of Name.t * Id.Const.t * Typ.t
+       | `Frozen_typ_declaration_error of Id.Typ.t
+       | `Kind_name_collision of Name.t * Id.Const.t * Typ.t
+       | `Unbound_typ_id of Id.Typ.t
+       ] )
+     Result.t
+
 (** {1 Lookups by Qualified Name} *)
 
 (** Lookups by qualified name allow for looking up the entry currently in
@@ -1414,6 +1436,8 @@ and declaration_with_id =
     to and including [declaration] and [declaration] is the latest
     declaration in [signature] having name [name]. *)
 val lookup : t -> QualifiedName.t -> (t * declaration_with_id) Option.t
+
+val lookup' : t -> QualifiedName.t -> declaration_with_id Option.t
 
 (** [lookup_typ signature qualified_name] is the latest LF type family
     declared at [qualified_name] in [signature] if such a declaration exists. *)

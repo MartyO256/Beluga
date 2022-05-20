@@ -2314,6 +2314,11 @@ let lookup_name : t -> Name.t -> (t * declaration_with_id) Option.t =
   signature |> declarations_by_name |> Name.Hamt.find_opt name $> List1.head
   >>= lookup_by_id signature
 
+let lookup_name' : t -> Name.t -> declaration_with_id Option.t =
+ fun signature name ->
+  let open Option in
+  lookup_name signature name $> Pair.snd
+
 let lookup signature qualified_name =
   let base_name = QualifiedName.name qualified_name in
   match QualifiedName.modules qualified_name with
@@ -2329,6 +2334,10 @@ let lookup signature qualified_name =
     Module.deep_lookup
       Fun.(Pair.snd >> guard_module_declaration)
       top_module tail_module_names base_name
+
+let lookup' signature qualified_name =
+  let open Option in
+  lookup signature qualified_name $> Pair.snd
 
 let guarded_declaration_lookup guard signature qualified_name =
   let open Option in
@@ -2560,3 +2569,142 @@ let all_paths_to_entry signature id' =
 let all_paths_to_entry_exn signature id =
   all_paths_to_entry signature id
   |> Result.get_or_else (fun _ -> raise @@ UnboundId (id, signature))
+
+let guard_unbound_id signature id unbound_continuation =
+  lookup_by_id signature id
+  |> Option.eliminate unbound_continuation (fun declaration ->
+         Result.error @@ `Bound_id (id, declaration, signature))
+
+let guard_bound_id signature id bound_continuation =
+  lookup_by_id signature id
+  |> Option.eliminate
+       (fun () -> Result.error @@ `Unbound_id (id, signature))
+       bound_continuation
+
+let is_declaration_unfrozen_by_id : Id.t -> t -> bool =
+ fun id signature -> unfrozen_declarations signature |> Id.Set.mem id
+
+let is_declaration_frozen_by_id : Id.t -> t -> bool =
+ fun id signature -> Bool.not @@ is_declaration_unfrozen_by_id id signature
+
+let freeze_typ_declaration : Id.Typ.t -> mutation =
+ fun tA_id signature signature' ->
+  if Typ.is_frozen @@ lookup_typ_by_id_exn' signature tA_id then
+    lazy signature
+  else
+    let { Subordination.term_subordinates; type_subordinated_to } =
+      Subordination.compute_subordinations tA_id
+        (empty_subordination_state signature)
+    in
+    let replacements =
+      Id.Typ.Map.merge
+        (fun tA_id term_subordinates type_subordinated_to ->
+          tA_id
+          |> lookup_typ_by_id_exn' signature
+          |> Typ.freeze
+               ~term_subordinates:
+                 (Option.value ~default:Id.Typ.Set.empty term_subordinates)
+               ~type_subordinated_to:
+                 (Option.value ~default:Id.Typ.Set.empty type_subordinated_to)
+          |> Result.to_option)
+        term_subordinates type_subordinated_to
+      |> Id.Typ.Map.fold (fun key entry ->
+             Id.Hamt.add (Id.lift_typ_id key) (`Typ_declaration entry))
+      |> Fun.apply Id.Hamt.empty
+    in
+    let newly_frozen_declarations =
+      replacements |> Id.Hamt.keys |> Id.Set.of_list
+    in
+    sequence_mutations
+      [ update_declarations_by_id replacements
+      ; remove_unfrozen_declarations newly_frozen_declarations
+      ]
+      signature signature'
+
+let freeze_comp_typ_declaration : Id.CompTyp.t -> mutation =
+ fun id signature signature' ->
+  id
+  |> lookup_comp_typ_by_id_exn' signature
+  |> CompTyp.freeze
+  |> Result.fold
+       ~error:(Fun.const (lazy signature))
+       ~ok:(fun cA ->
+         let cA_id = CompTyp.lifted_id cA in
+         sequence_mutations
+           [ update_declaration_by_id (cA_id, `Comp_typ_declaration cA)
+           ; remove_unfrozen_declaration cA_id
+           ]
+           signature signature')
+
+let freeze_comp_cotyp_declaration : Id.CompCotyp.t -> mutation =
+ fun id signature signature' ->
+  id
+  |> lookup_comp_cotyp_by_id_exn' signature
+  |> CompCotyp.freeze
+  |> Result.fold
+       ~error:(Fun.const (lazy signature))
+       ~ok:(fun cA ->
+         let cA_id = CompCotyp.lifted_id cA in
+         sequence_mutations
+           [ update_declaration_by_id (cA_id, `Comp_cotyp_declaration cA)
+           ; remove_unfrozen_declaration cA_id
+           ]
+           signature signature')
+
+let freeze_declaration_by_id : Id.t -> mutation =
+ fun id signature signature' ->
+  match id with
+  | Id.Typ id -> freeze_typ_declaration id signature signature'
+  | Id.CompTyp id -> freeze_comp_typ_declaration id signature signature'
+  | Id.CompCotyp id -> freeze_comp_cotyp_declaration id signature signature'
+  | _ -> lazy signature
+
+let freeze_declaration_by_name : Name.t -> mutation =
+ fun name signature signature' ->
+  let open Option in
+  lookup_name' signature name
+  $> (fun declaration ->
+       freeze_declaration_by_id
+         (id_of_declaration_with_id declaration)
+         signature signature')
+  |> Option.value ~default:(lazy signature)
+
+let add_typ signature tA =
+  let tA_id = tA |> Typ.id |> Id.lift_typ_id in
+  guard_unbound_id signature tA_id (fun () ->
+      let tA_name = Typ.name tA
+      and tA_declaration = `Typ_declaration tA in
+      Result.ok
+      @@ apply_mutations signature
+           [ freeze_declaration_by_name tA_name
+           ; add_declaration (tA_id, tA_name, tA_declaration)
+           ; add_unfrozen_declaration_if (Typ.is_unfrozen tA) tA_id
+           ])
+
+let add_const signature tM =
+  let tM_id = Const.lifted_id tM in
+  guard_unbound_id signature tM_id (fun () ->
+      let tK_id = Const.kind tM in
+      let open Result in
+      tK_id
+      |> lookup_typ_by_id' signature
+      |> Option.to_result ~none:(`Unbound_typ_id tK_id)
+      >>= fun tK ->
+      let tM_name = Const.name tM in
+      Typ.add_constructor tM_name (Const.id tM) tK $> fun tK ->
+      let tM_declaration = `Const_declaration tM in
+      apply_mutations signature
+        [ update_declaration (`Typ_declaration tK)
+        ; freeze_declaration_by_name tM_name
+        ; add_declaration (tM_id, tM_name, tM_declaration)
+        ])
+
+let empty =
+  { declarations = []
+  ; declarations_by_name = Name.Hamt.empty
+  ; declarations_by_id = Id.Hamt.empty
+  ; paths = Id.Hamt.empty
+  ; queries = Id.Query.Set.empty
+  ; mqueries = Id.MQuery.Set.empty
+  ; unfrozen_declarations = Id.Set.empty
+  }
