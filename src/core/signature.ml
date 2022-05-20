@@ -1681,12 +1681,12 @@ and declaration_with_id =
   ]
 
 and t =
-  { declarations : (t * declaration) List.t Lazy.t
+  { declarations : (t * declaration) List.t
         (** The sequence of declarations as they appear in the signature.
 
-            Each entry is also associated with the signature up to and
-            including that entry. This allows for in-order traversal of the
-            signature for pretty-printing.
+            Each declaration is also associated with the signature up to and
+            including that declaration. This allows for in-order traversal of
+            the signature for pretty-printing.
 
             This sequence of declarations is only added to. Hence, freezable
             declarations are likely unfrozen at the position in the sequence
@@ -1697,48 +1697,365 @@ and t =
         (** The bindings of entries by name.
 
             For a given name, only the head element is currently in scope. *)
-  ; declarations_by_id : (t * declaration_with_id) Id.Hamt.t Lazy.t
-        (** An index of the entries mapped by ID.
+  ; declarations_by_id : (t * declaration_with_id) Id.Hamt.t
+        (** The index of the entries mapped by ID.
 
-            Each entry is also associated with the signature up to and
-            including that entry. This allows for looking up shadowed
+            Each declaration is also associated with the signature up to and
+            including that declaration. This allows for looking up shadowed
             declarations. *)
   ; paths : QualifiedName.Set.t Id.Hamt.t
         (** The set of qualified names in the signature mapped by declaration
             ID.
 
-            This allows for determining whether and how an entry is in scope
-            in the presence of aliases. These paths are only added to, so
-            they may have been shadowed. The mappings of declarations by name
-            take precedence over this map to determine declaration scoping. *)
+            This allows for determining whether and how a declaration is in
+            scope in the presence of aliases. These paths are only added to,
+            so they may have been shadowed. The mappings of declarations by
+            name take precedence over this map to determine declaration
+            scoping. *)
   ; queries : Id.Query.Set.t
         (** The set of logic programming queries on LF types. *)
   ; mqueries : Id.MQuery.Set.t
         (** The set of logic programming queries on Comp types. *)
-  ; unfrozen : Id.Set.t
-        (** The set of entry IDs for currently unfrozen entries.
+  ; unfrozen_declarations : Id.Set.t
+        (** The set of declaration IDs for currently unfrozen declarations.
 
-            This allows for keeping track of entries to freeze before
-            programs and at the end of signature reconstruction. *)
+            This allows for keeping track of declarations to freeze before
+            modules, logic programming queries and programs, and at the end
+            of signature reconstruction. *)
   }
 
 (** Destructors *)
 
-let[@inline] declarations { declarations; _ } = declarations |> Lazy.force
+let[@inline] declarations { declarations; _ } = declarations
 
 let[@inline] declarations_by_name { declarations_by_name; _ } =
   declarations_by_name
 
 let[@inline] declarations_by_id { declarations_by_id; _ } =
-  declarations_by_id |> Lazy.force
+  declarations_by_id
 
 let[@inline] paths { paths; _ } = paths
 
-let[@inline] unfrozen_entries { unfrozen; _ } = unfrozen
+let[@inline] unfrozen_declarations { unfrozen_declarations; _ } =
+  unfrozen_declarations
 
 let[@inline] queries { queries; _ } = queries
 
 let[@inline] mqueries { mqueries; _ } = mqueries
+
+(** IDs *)
+
+(** [id_of_declaration_with_id declaration] is the lifted ID of
+    [declaration]. *)
+let id_of_declaration_with_id : [< declaration_with_id ] -> Id.t = function
+  | `Typ_declaration declaration -> Typ.lifted_id declaration
+  | `Const_declaration declaration -> Const.lifted_id declaration
+  | `Comp_typ_declaration declaration -> CompTyp.lifted_id declaration
+  | `Comp_const_declaration declaration -> CompConst.lifted_id declaration
+  | `Comp_cotyp_declaration declaration -> CompCotyp.lifted_id declaration
+  | `Comp_dest_declaration declaration -> CompDest.lifted_id declaration
+  | `Comp_declaration declaration -> Comp.lifted_id declaration
+  | `Module_declaration m -> Module.lifted_id m
+  | `Query_declaration query -> Query.lifted_id query
+  | `MQuery_declaration mquery -> MQuery.lifted_id mquery
+  | `Schema_declaration schema -> Schema.lifted_id schema
+
+let id_of_declaration : [< declaration ] -> Id.t Option.t = function
+  | #declaration_with_id as declaration ->
+    Option.some @@ id_of_declaration_with_id declaration
+  | #declaration -> Option.none
+
+(** Mutations *)
+
+(** The type of mutations to a signature.
+
+    Mutations may lazily refer to the signature resulting from applying the
+    current mutation. *)
+type mutation = t -> t Lazy.t -> t Lazy.t
+
+(** [identity_mutation] performs no mutation on the input signature. *)
+let identity_mutation : mutation = fun signature _ -> lazy signature
+
+(** [sequence_mutations mutations] constructs the mutation that performs the
+    mutations in [mutations] in order. *)
+let sequence_mutations : mutation List.t -> mutation =
+ fun mutations signature signature' ->
+  lazy
+    (List.fold_left
+       (fun signature mutation ->
+         Lazy.force @@ mutation signature signature')
+       signature mutations)
+
+(** [apply_mutation signature mutation] calls [mutation] on [signature] and
+    on the mutation result recursively. *)
+let apply_mutation : t -> mutation -> t =
+ fun signature mutation ->
+  let rec signature' = lazy (Lazy.force @@ mutation signature signature') in
+  Lazy.force signature'
+
+(** [apply_mutations signature mutations] sequences the mutations [mutations]
+    and applies them on [signature]. *)
+let apply_mutations : t -> mutation List.t -> t =
+ fun signature mutations ->
+  sequence_mutations mutations |> apply_mutation signature
+
+(** Simple mutations *)
+
+(** [add_declaration_to_list declaration] is the mutation that adds
+    [declaration] to the signature's {!recfield:declarations} field. *)
+let add_declaration_to_list : [< declaration ] -> mutation =
+ fun new_declaration signature signature' ->
+  lazy
+    { signature with
+      declarations =
+        declarations signature
+        |> List.cons (Lazy.force signature', new_declaration)
+    }
+
+(** [add_declarations_to_list declaration] is the mutation that sequentially
+    adds the declarations in [declarations] to the signature's
+    {!recfield:declarations} field. *)
+let add_declarations_to_list : [< declaration ] List.t -> mutation =
+ fun new_declarations signature signature' ->
+  lazy
+    { signature with
+      declarations =
+        declarations signature
+        |> List.append
+             (new_declarations
+             |> List.map (Pair.left (Lazy.force signature')))
+    }
+
+(** [add_declaration_by_name (name, id)] is the mutation that adds the
+    declaration having name [name] and ID [id] to the signature's
+    {!recfield:declarations_by_name} field. *)
+let add_declaration_by_name : Name.t * Id.t -> mutation =
+ fun (name, declaration_id) signature _ ->
+  lazy
+    { signature with
+      declarations_by_name =
+        declarations_by_name signature
+        |> Name.Hamt.alter name
+             (Option.eliminate
+                (fun () -> Option.some @@ List1.singleton declaration_id)
+                Fun.(List1.cons declaration_id >> Option.some))
+    }
+
+(** [add_declaration_by_name declarations] is the mutation that adds the
+    declaration IDs [declarations] mapped by name to the signature's
+    {!recfield:declarations_by_name} field. *)
+let add_declarations_by_name : Id.t Name.Hamt.t -> mutation =
+ fun declarations signature signature' ->
+  lazy
+    (Name.Hamt.fold
+       (fun name declaration_id signature ->
+         Lazy.force
+         @@ add_declaration_by_name (name, declaration_id) signature
+              signature')
+       declarations signature)
+
+(** [add_declaration_by_id (id, declaration)] is the mutation that adds the
+    declaration [declaration] having ID [id] to the signature's
+    {!recfield:declarations_by_id} field. *)
+let add_declaration_by_id : Id.t * [< declaration_with_id ] -> mutation =
+ fun (id, declaration) signature signature' ->
+  lazy
+    { signature with
+      declarations_by_id =
+        declarations_by_id signature
+        |> Id.Hamt.add id (Lazy.force signature', declaration)
+    }
+
+(** [add_declarations_by_id declarations] is the mutation that adds the
+    declarations [declarations] mapped by ID to the signature's
+    {!recfield:declarations_by_id} field. *)
+let add_declarations_by_id : [< declaration_with_id ] Id.Hamt.t -> mutation =
+ fun declarations signature signature' ->
+  lazy
+    (Id.Hamt.fold
+       (fun id declaration signature ->
+         Lazy.force
+         @@ add_declaration_by_id (id, declaration) signature signature')
+       declarations signature)
+
+(** [update_declaration declarations] is the mutation that replaces the
+    declaration [declaration] in the signature's
+    {!recfield:declarations_by_id} field. *)
+let update_declaration : [< declaration_with_id ] -> mutation =
+ fun declaration signature signature' ->
+  lazy
+    { signature with
+      declarations_by_id =
+        declarations_by_id signature
+        |> Id.Hamt.alter (id_of_declaration_with_id declaration)
+           @@ Fun.const
+           @@ Option.some (Lazy.force signature', declaration)
+    }
+
+(** [update_declaration_by_id (id, declaration)] is functionally equivalent
+    to {!update_declaration} excepth that the ID of [declaration] is not
+    looked up. *)
+let update_declaration_by_id : Id.t * [< declaration_with_id ] -> mutation =
+ fun (id, declaration) signature signature' ->
+  lazy
+    { signature with
+      declarations_by_id =
+        declarations_by_id signature
+        |> Id.Hamt.alter id @@ Fun.const
+           @@ Option.some (Lazy.force signature', declaration)
+    }
+
+(** [update_declarations_by_id declarations] is the mutation that replaces
+    the declarations [declarations] mapped by ID in the signature's
+    {!recfield:declarations_by_id} field. *)
+let update_declarations_by_id :
+    [< declaration_with_id ] Id.Hamt.t -> mutation =
+ fun declarations signature signature' ->
+  lazy
+    (Id.Hamt.fold
+       (fun id declaration signature ->
+         Lazy.force
+         @@ update_declaration_by_id (id, declaration) signature signature')
+       declarations signature)
+
+(** [add_path (id, path)] is the mutation that adds the path [path] to the
+    declaration having ID [id] in the signature's {!recfield:paths} field. *)
+let add_path : Id.t * QualifiedName.t -> mutation =
+ fun (id, path) signature _ ->
+  lazy
+    { signature with
+      paths =
+        paths signature
+        |> Id.Hamt.alter id
+             (Option.eliminate
+                (fun () -> Option.some @@ QualifiedName.Set.singleton path)
+                Fun.(QualifiedName.Set.add path >> Option.some))
+    }
+
+(** [add_query id] is the mutation that adds the query with ID [id] in the
+    signature's {!recfield:queries} field. *)
+let add_query : Id.Query.t -> mutation =
+ fun query_id signature _ ->
+  lazy
+    { signature with
+      queries = queries signature |> Id.Query.Set.add query_id
+    }
+
+(** [add_mquery id] is the mutation that adds the meta-query with ID [id] in
+    the signature's {!recfield:mqueries} field. *)
+let add_mquery : Id.MQuery.t -> mutation =
+ fun mquery_id signature _ ->
+  lazy
+    { signature with
+      mqueries = mqueries signature |> Id.MQuery.Set.add mquery_id
+    }
+
+(** [add_unfrozen_declaration id] is the mutation that adds the declaration
+    with ID [id] in the signature's {!recfield:unfrozen_declarations} field. *)
+let add_unfrozen_declaration : Id.t -> mutation =
+ fun id signature _ ->
+  lazy
+    { signature with
+      unfrozen_declarations = Id.Set.add id (unfrozen_declarations signature)
+    }
+
+(** [add_unfrozen_declaration ids] is the mutation that adds the declarations
+    with IDs [ids] in the signature's {!recfield:unfrozen_declarations}
+    field. *)
+let add_unfrozen_declarations : Id.Set.t -> mutation =
+ fun ids signature _ ->
+  lazy
+    { signature with
+      unfrozen_declarations =
+        Id.Set.union ids (unfrozen_declarations signature)
+    }
+
+(** [add_unfrozen_declaration_if cond id] is the mutation that adds the
+    declaration with ID [id] in the signature's
+    {!recfield:unfrozen_declarations} field only if [cond = true]. *)
+let add_unfrozen_declaration_if : bool -> Id.t -> mutation =
+ fun frozen id ->
+  if frozen then identity_mutation else add_unfrozen_declaration id
+
+(** [remove_unfrozen_declaration id] is the mutation that removes the
+    declaration with ID [id] in the signature's
+    {!recfield:unfrozen_declarations} field. *)
+let remove_unfrozen_declaration : Id.t -> mutation =
+ fun id_to_remove signature _ ->
+  lazy
+    { signature with
+      unfrozen_declarations =
+        Id.Set.remove id_to_remove (unfrozen_declarations signature)
+    }
+
+(** [remove_unfrozen_declarations ids] is the mutation that removes the
+    declarations with IDs [ids] in the signature's
+    {!recfield:unfrozen_declarations} field. *)
+let remove_unfrozen_declarations : Id.Set.t -> mutation =
+ fun ids_to_remove signature _ ->
+  lazy
+    { signature with
+      unfrozen_declarations =
+        Id.Set.diff (unfrozen_declarations signature) ids_to_remove
+    }
+
+(** Composite Mutations *)
+
+(** [lift_declaration_with_id declaration] is [declaration].
+
+    This is a weird workaround for an expression in {!val:add_declaration}
+    where a value of type {!type:declaration_with_id} cannot be used in place
+    of type {!type:declaration} despite having that
+    [declaration_with_id <: declaration]. *)
+let lift_declaration_with_id : declaration_with_id -> declaration = function
+  | ( `Typ_declaration _
+    | `Const_declaration _
+    | `Comp_typ_declaration _
+    | `Comp_const_declaration _
+    | `Comp_cotyp_declaration _
+    | `Comp_dest_declaration _
+    | `Comp_declaration _
+    | `Module_declaration _
+    | `Query_declaration _
+    | `MQuery_declaration _
+    | `Schema_declaration _ ) as x -> x
+
+(** [add_declaration (id, name, declaration)] is the composite mutation that
+    adds
+
+    - [declaration] to the list of declarations,
+    - [(id, declaration)] to the index of declarations by id,
+    - [(name, id)] to the index of declarations by name, and
+    - [(id, QualifiedName.make name)] to the index of paths by declaration
+      ID.
+
+    This is an optimization to avoid intermediary memory allocations for
+    performing those mutations in sequence. *)
+let add_declaration : Id.t * Name.t * [< declaration_with_id ] -> mutation =
+ fun (declaration_id, declaration_name, declaration) signature signature' ->
+  lazy
+    { signature with
+      declarations =
+        declarations signature
+        |> List.cons
+             (Lazy.force signature', lift_declaration_with_id declaration)
+    ; declarations_by_name =
+        declarations_by_name signature
+        |> Name.Hamt.alter declaration_name
+             (Option.eliminate
+                (fun () -> Option.some @@ List1.singleton declaration_id)
+                Fun.(List1.cons declaration_id >> Option.some))
+    ; declarations_by_id =
+        declarations_by_id signature
+        |> Id.Hamt.add declaration_id (Lazy.force signature', declaration)
+    ; paths =
+        (let path = QualifiedName.make declaration_name in
+         paths signature
+         |> Id.Hamt.alter declaration_id
+              (Option.eliminate
+                 (fun () -> Option.some @@ QualifiedName.Set.singleton path)
+                 Fun.(QualifiedName.Set.add path >> Option.some)))
+    }
 
 (** Declaration Guards *)
 
@@ -1886,26 +2203,6 @@ let lookup_query_by_id' = extract_entry_from_lookup lookup_query_by_id
 let lookup_mquery_by_id' = extract_entry_from_lookup lookup_mquery_by_id
 
 (** Unsafe Lookups by ID *)
-
-(** [id_of_declaration_with_id declaration] is the lifted ID of
-    [declaration]. *)
-let id_of_declaration_with_id : [< declaration_with_id ] -> Id.t = function
-  | `Typ_declaration declaration -> Typ.lifted_id declaration
-  | `Const_declaration declaration -> Const.lifted_id declaration
-  | `Comp_typ_declaration declaration -> CompTyp.lifted_id declaration
-  | `Comp_const_declaration declaration -> CompConst.lifted_id declaration
-  | `Comp_cotyp_declaration declaration -> CompCotyp.lifted_id declaration
-  | `Comp_dest_declaration declaration -> CompDest.lifted_id declaration
-  | `Comp_declaration declaration -> Comp.lifted_id declaration
-  | `Module_declaration m -> Module.lifted_id m
-  | `Query_declaration query -> Query.lifted_id query
-  | `MQuery_declaration mquery -> MQuery.lifted_id mquery
-  | `Schema_declaration schema -> Schema.lifted_id schema
-
-let id_of_declaration : [< declaration ] -> Id.t Option.t = function
-  | #declaration_with_id as declaration ->
-    Option.some @@ id_of_declaration_with_id declaration
-  | #declaration -> Option.none
 
 exception DeclarationWithoutId of declaration
 
