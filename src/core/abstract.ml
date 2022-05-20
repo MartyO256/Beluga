@@ -1177,8 +1177,8 @@ let abstrKind tK =
   let empty_phat = (None, 0) in
   let (cQ, tK') = collectKind 0 I.Empty empty_phat (tK, LF.id) in
   match cQ with
-  | Int.LF.Empty -> (tK', 0)
-  | _ ->
+  | Int.LF.Empty -> (tK', 0) (* Optimization *)
+  | cQ ->
      let cQ' = abstractCtx cQ in
      let tK'' = abstractKind cQ' 0 (tK', LF.id) in
      let cPsi = ctxToCtx cQ' in
