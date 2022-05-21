@@ -34,8 +34,7 @@ let forget e = eliminate (fun _ -> None) Option.some e
 
 let of_option o = Option.eliminate (fun () -> Left ()) pure o
 
-let of_option' f o =
-  Option.eliminate (fun () -> f () |> left) (fun x -> x |> pure) o
+let of_option' f o = Option.eliminate (fun () -> f () |> left) pure o
 
 let to_option = function
   | Right x -> Some x
