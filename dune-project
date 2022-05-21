@@ -37,6 +37,8 @@
   (ocaml
    (>= 4.08))
   sedlex
+  (ounit2 :with-test)
+  (bisect_ppx :with-test)
   (ocamlformat :dev)
   (ocaml-lsp-server :dev)
   hamt))
