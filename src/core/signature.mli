@@ -978,7 +978,12 @@ module CompTyp : sig
        Name.t
     -> Id.CompConst.t
     -> t
-    -> (t, [> `Frozen_comp_typ_declaration_error of Id.CompTyp.t ]) result
+    -> ( t
+       , [> `Kind_name_collision of Name.t * Id.CompConst.t * t
+         | `Comp_constructor_name_collision of Name.t * Id.CompConst.t * t
+         | `Frozen_comp_typ_declaration_error of Id.CompTyp.t
+         ] )
+       result
 
   val constructors : t -> Id.CompConst.t Name.Hamt.t
 
@@ -1072,7 +1077,10 @@ module CompCotyp : sig
     -> Id.CompDest.t
     -> t
     -> ( t
-       , [> `Frozen_comp_cotyp_declaration_error of Id.CompCotyp.t ] )
+       , [> `Kind_name_collision of Name.t * Id.CompDest.t * t
+         | `Comp_destructor_name_collision of Name.t * Id.CompDest.t * t
+         | `Frozen_comp_cotyp_declaration_error of Id.CompCotyp.t
+         ] )
        result
 
   val destructors : t -> Id.CompDest.t Name.Hamt.t
@@ -1402,11 +1410,26 @@ and declaration_with_id =
 (** The empty Beluga signature. *)
 val empty : t
 
+(** [add_typ signature tA] constructs the signature derived from [signature]
+    with the addition of the LF type constant [tA] as a top-level
+    declaration.
+
+    In the resultant signature, the declaration having the same name as [tA]
+    in [signature] is shadowed if there is any, and frozen if applicable, and
+    [tA] is added as unfrozen if it is unfrozen. *)
 val add_typ :
      t
   -> Typ.t
   -> (t, [> `Bound_id of Id.t * (t * declaration_with_id) * t ]) Result.t
 
+(** [add_const signature tM] constructs the signature derived from
+    [signature] with the addition of the LF term constant [tM] as a top-level
+    declaration.
+
+    In the resultant signature, the declaration having the same name as [tM]
+    in [signature] is shadowed if there is any, and frozen if applicable, and
+    the target LF type-level constant for [tM] is updated to have [tM] as
+    additional constructor. *)
 val add_const :
      t
   -> Const.t
@@ -1416,6 +1439,72 @@ val add_const :
        | `Frozen_typ_declaration_error of Id.Typ.t
        | `Kind_name_collision of Name.t * Id.Const.t * Typ.t
        | `Unbound_typ_id of Id.Typ.t
+       ] )
+     Result.t
+
+(** [add_comp_typ signature cA] constructs the signature derived from
+    [signature] with the addition of the computational type constant [cA] as
+    a top-level declaration.
+
+    In the resultant signature, the declaration having the same name as [cA]
+    in [signature] is shadowed if there is any, and frozen if applicable, and
+    [cA] is added as unfrozen if it is unfrozen. *)
+val add_comp_typ :
+     t
+  -> CompTyp.t
+  -> (t, [> `Bound_id of Id.t * (t * declaration_with_id) * t ]) Result.t
+
+(** [add_comp_const signature cM] constructs the signature derived from
+    [signature] with the addition of the computational constructor constant
+    [cM] as a top-level declaration.
+
+    In the resultant signature, the declaration having the same name as [cM]
+    in [signature] is shadowed if there is any, and frozen if applicable, and
+    the target computational type constant for [cM] is updated to have [cM]
+    as additional constructor. *)
+val add_comp_const :
+     t
+  -> CompConst.t
+  -> ( t
+     , [> `Bound_id of Id.t * (t * declaration_with_id) * t
+       | `Comp_constructor_name_collision of
+         Name.t * Id.CompConst.t * CompTyp.t
+       | `Frozen_comp_typ_declaration_error of Id.CompTyp.t
+       | `Kind_name_collision of Name.t * Id.CompConst.t * CompTyp.t
+       | `Unbound_comp_typ_id of Id.CompTyp.t
+       ] )
+     Result.t
+
+(** [add_comp_cotyp signature cA] constructs the signature derived from
+    [signature] with the addition of the computational cotype constant [cA]
+    as a top-level declaration.
+
+    In the resultant signature, the declaration having the same name as [cA]
+    in [signature] is shadowed if there is any, and frozen if applicable, and
+    [cA] is added as unfrozen if it is unfrozen. *)
+val add_comp_cotyp :
+     t
+  -> CompCotyp.t
+  -> (t, [> `Bound_id of Id.t * (t * declaration_with_id) * t ]) Result.t
+
+(** [add_comp_dest signature cM] constructs the signature derived from
+    [signature] with the addition of the computational destructor constant
+    [cM] as a top-level declaration.
+
+    In the resultant signature, the declaration having the same name as [cM]
+    in [signature] is shadowed if there is any, and frozen if applicable, and
+    the target computational cotype constant for [cM] is updated to have [cM]
+    as additional destructor. *)
+val add_comp_dest :
+     t
+  -> CompDest.t
+  -> ( t
+     , [> `Bound_id of Id.t * (t * declaration_with_id) * t
+       | `Comp_destructor_name_collision of
+         Name.t * Id.CompDest.t * CompCotyp.t
+       | `Frozen_comp_cotyp_declaration_error of Id.CompDest.t
+       | `Kind_name_collision of Name.t * Id.CompDest.t * CompCotyp.t
+       | `Unbound_comp_cotyp_id of Id.CompCotyp.t
        ] )
      Result.t
 

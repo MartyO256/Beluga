@@ -929,8 +929,8 @@ module Typ = struct
     | Unfrozen { Unfrozen.id; _ } ->
       Result.error @@ `Unfrozen_typ_declaration_error id
 
-  let has_constructor_with_name name entry =
-    entry |> constructors |> Name.Hamt.mem name
+  let has_constructor_with_name name =
+    Fun.(constructors >> Name.Hamt.mem name)
 
   let add_constructor tM_name tM tA =
     let tA_name = name tA in
@@ -1146,11 +1146,22 @@ module CompTyp = struct
     | Unfrozen { Unfrozen.id; _ } ->
       Result.error @@ `Unfrozen_comp_typ_declaration_error id
 
-  let add_constructor name const =
-    if_unfrozen (fun x -> Unfrozen (Unfrozen.add_constructor x name const))
+  let has_constructor_with_name name =
+    Fun.(constructors >> Name.Hamt.mem name)
 
-  let has_constructor_with_name name entry =
-    entry |> constructors |> Name.Hamt.mem name
+  let add_constructor cM_name cM cA =
+    let cA_name = name cA in
+    let open Result in
+    Result.of_bool
+      Name.(cA_name <> cM_name)
+      (fun () -> `Kind_name_collision (cM_name, cM, cA))
+    >>= fun () ->
+    Result.of_bool (has_constructor_with_name cM_name cA) (fun () ->
+        `Comp_constructor_name_collision (cM_name, cM, cA))
+    >>= fun () ->
+    cA
+    |> if_unfrozen (fun x ->
+           Unfrozen (Unfrozen.add_constructor x cM_name cM))
 
   let frozen
       { Unfrozen.id
@@ -1313,11 +1324,20 @@ module CompCotyp = struct
     | Unfrozen { Unfrozen.id; _ } ->
       Result.error @@ `Unfrozen_comp_cotyp_declaration_error id
 
-  let add_destructor name dest =
-    if_unfrozen (fun x -> Unfrozen (Unfrozen.add_destructor x name dest))
+  let has_destructor_with_name name = Fun.(destructors >> Name.Hamt.mem name)
 
-  let has_destructor_with_name name entry =
-    entry |> destructors |> Name.Hamt.mem name
+  let add_destructor cM_name cM cA =
+    let cA_name = name cA in
+    let open Result in
+    Result.of_bool
+      Name.(cA_name <> cM_name)
+      (fun () -> `Kind_name_collision (cM_name, cM, cA))
+    >>= fun () ->
+    Result.of_bool (has_destructor_with_name cM_name cA) (fun () ->
+        `Comp_destructor_name_collision (cM_name, cM, cA))
+    >>= fun () ->
+    cA
+    |> if_unfrozen (fun x -> Unfrozen (Unfrozen.add_destructor x cM_name cM))
 
   let frozen
       { Unfrozen.id
@@ -2670,7 +2690,7 @@ let freeze_declaration_by_name : Name.t -> mutation =
   |> Option.value ~default:(lazy signature)
 
 let add_typ signature tA =
-  let tA_id = tA |> Typ.id |> Id.lift_typ_id in
+  let tA_id = Typ.lifted_id tA in
   guard_unbound_id signature tA_id (fun () ->
       let tA_name = Typ.name tA
       and tA_declaration = `Typ_declaration tA in
@@ -2697,6 +2717,66 @@ let add_const signature tM =
         [ update_declaration (`Typ_declaration tK)
         ; freeze_declaration_by_name tM_name
         ; add_declaration (tM_id, tM_name, tM_declaration)
+        ])
+
+let add_comp_typ signature cA =
+  let cA_id = CompTyp.lifted_id cA in
+  guard_unbound_id signature cA_id (fun () ->
+      let cA_name = CompTyp.name cA
+      and cA_declaration = `Comp_typ_declaration cA in
+      Result.ok
+      @@ apply_mutations signature
+           [ freeze_declaration_by_name cA_name
+           ; add_declaration (cA_id, cA_name, cA_declaration)
+           ; add_unfrozen_declaration_if (CompTyp.is_unfrozen cA) cA_id
+           ])
+
+let add_comp_const signature cM =
+  let cM_id = CompConst.lifted_id cM in
+  guard_unbound_id signature cM_id (fun () ->
+      let cA_id = CompConst.kind cM in
+      let open Result in
+      cA_id
+      |> lookup_comp_typ_by_id' signature
+      |> Option.to_result ~none:(`Unbound_comp_typ_id cA_id)
+      >>= fun cA ->
+      let cM_name = CompConst.name cM in
+      CompTyp.add_constructor cM_name (CompConst.id cM) cA $> fun cA ->
+      let cM_declaration = `Comp_const_declaration cM in
+      apply_mutations signature
+        [ update_declaration (`Comp_typ_declaration cA)
+        ; freeze_declaration_by_name cM_name
+        ; add_declaration (cM_id, cM_name, cM_declaration)
+        ])
+
+let add_comp_cotyp signature cA =
+  let cA_id = CompCotyp.lifted_id cA in
+  guard_unbound_id signature cA_id (fun () ->
+      let cA_name = CompCotyp.name cA
+      and cA_declaration = `Comp_cotyp_declaration cA in
+      Result.ok
+      @@ apply_mutations signature
+           [ freeze_declaration_by_name cA_name
+           ; add_declaration (cA_id, cA_name, cA_declaration)
+           ; add_unfrozen_declaration_if (CompCotyp.is_unfrozen cA) cA_id
+           ])
+
+let add_comp_dest signature cM =
+  let cM_id = CompDest.lifted_id cM in
+  guard_unbound_id signature cM_id (fun () ->
+      let cA_id = CompDest.kind cM in
+      let open Result in
+      cA_id
+      |> lookup_comp_cotyp_by_id' signature
+      |> Option.to_result ~none:(`Unbound_comp_cotyp_id cA_id)
+      >>= fun cA ->
+      let cM_name = CompDest.name cM in
+      CompCotyp.add_destructor cM_name (CompDest.id cM) cA $> fun cA ->
+      let cM_declaration = `Comp_dest_declaration cM in
+      apply_mutations signature
+        [ update_declaration (`Comp_cotyp_declaration cA)
+        ; freeze_declaration_by_name cM_name
+        ; add_declaration (cM_id, cM_name, cM_declaration)
         ])
 
 let empty =
