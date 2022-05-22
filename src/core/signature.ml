@@ -1485,8 +1485,8 @@ module Module = struct
   let add_entry ({ entries; _ } as m) entry =
     { m with entries = List.cons entry entries }
 
-  let add_declaration_to_index_by_name
-      ({ entries; declarations_by_name; _ } as m) name declaration =
+  let add_declaration_to_index_by_name ({ declarations_by_name; _ } as m)
+      name declaration =
     { m with
       declarations_by_name =
         declarations_by_name
@@ -1707,7 +1707,7 @@ and declaration =
   ]
 
 and t =
-  { entries : (t * entry) List.t
+  { entries : (t Lazy.t * entry) List.t
         (** The sequence of entries as they appear in the signature.
 
             Each declaration is also associated with the signature up to and
@@ -1726,7 +1726,7 @@ and t =
 
             Declarations in modules require looking up each part of the
             declaration's qualified name sequentially. *)
-  ; declarations_by_id : (t * declaration) Id.Hamt.t
+  ; declarations_by_id : (t Lazy.t * declaration) Id.Hamt.t
         (** The signature's declarations indexed by ID.
 
             Each declaration is also associated with the signature up to and
@@ -1800,7 +1800,7 @@ let id_of_entry : [< entry ] -> Id.t Option.t = function
 (** The type of mutations to a signature.
 
     Mutations may lazily refer to the signature resulting from applying the
-    current mutation. *)
+    current mutation. They must not force their second argument. *)
 type mutation = t -> t Lazy.t -> t Lazy.t
 
 (** [identity_mutation] performs no mutation on the input signature. *)
@@ -1837,9 +1837,7 @@ let add_entry : [< entry ] -> mutation =
  fun new_declaration signature signature' ->
   lazy
     { signature with
-      entries =
-        entries signature
-        |> List.cons (Lazy.force signature', new_declaration)
+      entries = entries signature |> List.cons (signature', new_declaration)
     }
 
 (** [add_entries entries] is the mutation that sequentially adds the
@@ -1850,9 +1848,7 @@ let add_entries : [< entry ] List.t -> mutation =
     { signature with
       entries =
         entries signature
-        |> List.append
-             (new_declarations
-             |> List.map (Pair.left (Lazy.force signature')))
+        |> List.append (new_declarations |> List.map (Pair.left signature'))
     }
 
 (** [add_declaration_by_name (name, id)] is the mutation that adds the
@@ -1892,7 +1888,7 @@ let add_declaration_by_id : Id.t * [< declaration ] -> mutation =
     { signature with
       declarations_by_id =
         declarations_by_id signature
-        |> Id.Hamt.add id (Lazy.force signature', declaration)
+        |> Id.Hamt.add id (signature', declaration)
     }
 
 (** [add_declarations_by_id declarations] is the mutation that adds the
@@ -1918,7 +1914,7 @@ let update_declaration : [< declaration ] -> mutation =
         declarations_by_id signature
         |> Id.Hamt.alter (id_of_declaration declaration)
            @@ Fun.const
-           @@ Option.some (Lazy.force signature', declaration)
+           @@ Option.some (signature', declaration)
     }
 
 (** [update_declaration_by_id (id, declaration)] is functionally equivalent
@@ -1931,7 +1927,7 @@ let update_declaration_by_id : Id.t * [< declaration ] -> mutation =
       declarations_by_id =
         declarations_by_id signature
         |> Id.Hamt.alter id @@ Fun.const
-           @@ Option.some (Lazy.force signature', declaration)
+           @@ Option.some (signature', declaration)
     }
 
 (** [update_declarations_by_id declarations] is the mutation that replaces
@@ -2045,8 +2041,7 @@ let add_declaration : Id.t * Name.t * [< declaration ] -> mutation =
   lazy
     { signature with
       entries =
-        entries signature
-        |> List.cons (Lazy.force signature', (declaration :> entry))
+        entries signature |> List.cons (signature', (declaration :> entry))
     ; declarations_by_name =
         declarations_by_name signature
         |> Name.Hamt.alter declaration_name
@@ -2055,7 +2050,7 @@ let add_declaration : Id.t * Name.t * [< declaration ] -> mutation =
                 Fun.(List1.cons declaration_id >> Option.some))
     ; declarations_by_id =
         declarations_by_id signature
-        |> Id.Hamt.add declaration_id (Lazy.force signature', declaration)
+        |> Id.Hamt.add declaration_id (signature', declaration)
     ; paths =
         (let path = QualifiedName.make declaration_name in
          paths signature
@@ -2138,7 +2133,10 @@ let extract_declaration guard (signature, declaration_opt) =
     to and including [declaration]. Declarations looked up by ID may not be
     in scope. *)
 let lookup_by_id : t -> Id.t -> (t * declaration) Option.t =
- fun signature id -> signature |> declarations_by_id |> Id.Hamt.find_opt id
+ fun signature id ->
+  let open Option in
+  signature |> declarations_by_id |> Id.Hamt.find_opt id
+  $> fun (signature', declaration) -> (Lazy.force signature', declaration)
 
 let guarded_lookup_by_id lift_id guard signature id =
   let open Option in
