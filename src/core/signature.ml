@@ -159,7 +159,7 @@ end = struct
 
   let max_value = max_int
 
-  let[@inline] next x = x + 1
+  let next = ( + ) 1
 end
 
 module Id = struct
@@ -759,6 +759,28 @@ end
 module Typ = struct
   open Syntax.Int
 
+  module Kind = struct
+    (** [arguments tK] is [(i, e, t)] where
+
+        - [i] is the number of implicit arguments in [tK]
+        - [e] is the number of explicit and inductive arguments in [tK]
+        - [t] is the total number of implicit, explicit and inductive
+          arguments in [tK] *)
+    let arguments =
+      let rec arguments (implicit, explicit) tK =
+        match tK with
+        | LF.Typ -> (implicit, explicit)
+        | LF.PiKind ((_, Depend.Explicit), tK')
+        | LF.PiKind ((_, Depend.Inductive), tK') ->
+          arguments (implicit, 1 + explicit) tK'
+        | LF.PiKind ((_, Depend.Implicit), tK') ->
+          arguments (1 + implicit, explicit) tK'
+      in
+      fun tK ->
+        let implicit, explicit = arguments (0, 0) tK in
+        (implicit, explicit, implicit + explicit)
+  end
+
   module Unfrozen = struct
     type t =
       { id : Id.Typ.t
@@ -773,28 +795,6 @@ module Typ = struct
       ; constructors : Id.Const.t Name.Hamt.t
       ; documentation_comment : DocumentationComment.t Option.t
       }
-
-    module Kind = struct
-      (** [arguments tK] is [(i, e, t)] where
-
-          - [i] is the number of implicit arguments in [tK]
-          - [e] is the number of explicit and inductive arguments in [tK]
-          - [t] is the total number of implicit, explicit and inductive
-            arguments in [tK] *)
-      let arguments =
-        let rec arguments (implicit, explicit) tK =
-          match tK with
-          | LF.Typ -> (implicit, explicit)
-          | LF.PiKind ((_, Depend.Explicit), tK')
-          | LF.PiKind ((_, Depend.Inductive), tK') ->
-            arguments (implicit, 1 + explicit) tK'
-          | LF.PiKind ((_, Depend.Implicit), tK') ->
-            arguments (1 + implicit, explicit) tK'
-        in
-        fun tK ->
-          let implicit, explicit = arguments (0, 0) tK in
-          (implicit, explicit, implicit + explicit)
-    end
 
     let make ~id ~name ~location ?var_name_base ?mvar_name_base
         ?(constructors = Name.Hamt.empty)
@@ -910,7 +910,8 @@ module Typ = struct
     let id' = id in
     Fun.(id' >> Id.lift_typ_id)
 
-  let make_initial_entry ~id ~name ~location ?documentation_comment kind =
+  let make_initial_declaration ~id ~name ~location ?documentation_comment
+      kind =
     Unfrozen (Unfrozen.make ~id ~name ~location ~documentation_comment kind)
 
   let is_frozen = function
@@ -1124,8 +1125,8 @@ module CompTyp = struct
     let id' = id in
     Fun.(id' >> Id.lift_comp_typ_id)
 
-  let make_initial_entry ~id ~name ~location ~implicit_arguments ~positivity
-      ?documentation_comment kind =
+  let make_initial_declaration ~id ~name ~location ~implicit_arguments
+      ~positivity ?documentation_comment kind =
     Unfrozen
       (Unfrozen.make ~id ~name ~location ~implicit_arguments ~positivity
          ~documentation_comment kind)
@@ -1302,7 +1303,7 @@ module CompCotyp = struct
     let id' = id in
     Fun.(id' >> Id.lift_comp_cotyp_id)
 
-  let make_initial_entry ~id ~name ~location ~implicit_arguments
+  let make_initial_declaration ~id ~name ~location ~implicit_arguments
       ?documentation_comment kind =
     Unfrozen
       (Unfrozen.make ~id ~name ~location ~implicit_arguments
@@ -1463,13 +1464,12 @@ module Comp = struct
 end
 
 module Module = struct
-  type ('signature, 'declaration, 'declaration_with_id) t =
+  type ('signature, 'entry, 'declaration) t =
     { id : Id.Module.t
     ; name : Name.t
     ; location : Location.t
-    ; declarations : ('signature * 'declaration) List.t
-    ; declarations_by_name :
-        ('signature * 'declaration_with_id) List1.t Name.Hamt.t
+    ; entries : ('signature * 'entry) List.t
+    ; declarations_by_name : ('signature * 'declaration) List1.t Name.Hamt.t
     ; documentation_comment : DocumentationComment.t Option.t
     }
 
@@ -1477,24 +1477,30 @@ module Module = struct
     { id
     ; name
     ; location
-    ; declarations = []
+    ; entries = []
     ; declarations_by_name = Name.Hamt.empty
     ; documentation_comment
     }
 
-  let add_declaration ({ declarations; _ } as m) declaration =
-    { m with declarations = List.cons declaration declarations }
+  let add_entry ({ entries; _ } as m) entry =
+    { m with entries = List.cons entry entries }
 
-  let add_to_name_index ({ declarations; declarations_by_name; _ } as m) name
-      declaration =
+  let add_declaration_to_index_by_name
+      ({ entries; declarations_by_name; _ } as m) name declaration =
     { m with
       declarations_by_name =
         declarations_by_name
         |> Name.Hamt.alter name (fun bindings ->
                bindings
                |> Option.eliminate
-                    (fun () -> List1.from declaration [])
-                    (fun declarations -> List1.cons declaration declarations)
+                    (fun () ->
+                      List1.from
+                        (declaration :> 'signature * 'declaration)
+                        [])
+                    (fun declarations ->
+                      List1.cons
+                        (declaration :> 'signature * 'declaration)
+                        declarations)
                |> Option.some)
     }
 
@@ -1504,7 +1510,7 @@ module Module = struct
 
   let[@inline] name { name; _ } = name
 
-  let[@inline] declarations { declarations; _ } = declarations
+  let[@inline] entries { entries; _ } = entries
 
   let[@inline] declarations_by_name { declarations_by_name; _ } =
     declarations_by_name
@@ -1526,8 +1532,8 @@ module Module = struct
       lookup current_module head_module_name >>= extract >>= fun m' ->
       deep_lookup extract m' tail_module_names base_name
 
-  let fold_declarations f init m =
-    m |> declarations |> List.fold_right (Fun.flip f) |> Fun.apply init
+  let fold_entries f init m =
+    m |> entries |> List.fold_right (Fun.flip f) |> Fun.apply init
 end
 
 module Schema = struct
@@ -1666,7 +1672,7 @@ type mutually_recursive_comp_typs =
 
 type mutually_recursive_programs = [ `Programs of Comp.t Name.LinkedHamt1.t ]
 
-type declaration =
+type entry =
   [ `Typ_declaration of Typ.t
   | `Const_declaration of Const.t
   | `Comp_typ_declaration of CompTyp.t
@@ -1675,7 +1681,7 @@ type declaration =
   | `Comp_dest_declaration of CompDest.t
   | `Comp_declaration of Comp.t
   | `Schema_declaration of Schema.t
-  | `Module_declaration of (t, declaration, declaration_with_id) Module.t
+  | `Module_declaration of (t, entry, declaration) Module.t
   | `Documentation_comment of DocumentationComment.t
   | `Mutually_recursive_declaration of
     [ mutually_recursive_typs
@@ -1686,7 +1692,7 @@ type declaration =
   | `MQuery_declaration of MQuery.t
   ]
 
-and declaration_with_id =
+and declaration =
   [ `Typ_declaration of Typ.t
   | `Const_declaration of Const.t
   | `Comp_typ_declaration of CompTyp.t
@@ -1695,34 +1701,39 @@ and declaration_with_id =
   | `Comp_dest_declaration of CompDest.t
   | `Comp_declaration of Comp.t
   | `Schema_declaration of Schema.t
-  | `Module_declaration of (t, declaration, declaration_with_id) Module.t
+  | `Module_declaration of (t, entry, declaration) Module.t
   | `Query_declaration of Query.t
   | `MQuery_declaration of MQuery.t
   ]
 
 and t =
-  { declarations : (t * declaration) List.t
-        (** The sequence of declarations as they appear in the signature.
+  { entries : (t * entry) List.t
+        (** The sequence of entries as they appear in the signature.
 
             Each declaration is also associated with the signature up to and
             including that declaration. This allows for in-order traversal of
             the signature for pretty-printing.
 
-            This sequence of declarations is only added to. Hence, freezable
+            This sequence of entries is only added to. Hence, freezable
             declarations are likely unfrozen at the position in the sequence
-            in which they are added. Looking ahead in the sequence of
-            declarations is then required to find the first signature that
-            contains the declaration as frozen. *)
+            in which they are added. Looking ahead in the sequence of entries
+            is then required to find the first signature that contains the
+            declaration as frozen. *)
   ; declarations_by_name : Id.t List1.t Name.Hamt.t
-        (** The bindings of entries by name.
+        (** The signature's top-level declarations indexed by name.
 
-            For a given name, only the head element is currently in scope. *)
-  ; declarations_by_id : (t * declaration_with_id) Id.Hamt.t
-        (** The index of the entries mapped by ID.
+            For a given name, only the head element is currently in scope.
+
+            Declarations in modules require looking up each part of the
+            declaration's qualified name sequentially. *)
+  ; declarations_by_id : (t * declaration) Id.Hamt.t
+        (** The signature's declarations indexed by ID.
 
             Each declaration is also associated with the signature up to and
             including that declaration. This allows for looking up shadowed
-            declarations. *)
+            declarations.
+
+            Declarations nested in modules are also part of this index. *)
   ; paths : QualifiedName.Set.t Id.Hamt.t
         (** The set of qualified names in the signature mapped by declaration
             ID.
@@ -1746,7 +1757,7 @@ and t =
 
 (** Destructors *)
 
-let[@inline] declarations { declarations; _ } = declarations
+let[@inline] entries { entries; _ } = entries
 
 let[@inline] declarations_by_name { declarations_by_name; _ } =
   declarations_by_name
@@ -1765,9 +1776,8 @@ let[@inline] mqueries { mqueries; _ } = mqueries
 
 (** IDs *)
 
-(** [id_of_declaration_with_id declaration] is the lifted ID of
-    [declaration]. *)
-let id_of_declaration_with_id : [< declaration_with_id ] -> Id.t = function
+(** [id_of_declaration declaration] is the lifted ID of [declaration]. *)
+let id_of_declaration : [< declaration ] -> Id.t = function
   | `Typ_declaration declaration -> Typ.lifted_id declaration
   | `Const_declaration declaration -> Const.lifted_id declaration
   | `Comp_typ_declaration declaration -> CompTyp.lifted_id declaration
@@ -1780,10 +1790,10 @@ let id_of_declaration_with_id : [< declaration_with_id ] -> Id.t = function
   | `MQuery_declaration mquery -> MQuery.lifted_id mquery
   | `Schema_declaration schema -> Schema.lifted_id schema
 
-let id_of_declaration : [< declaration ] -> Id.t Option.t = function
-  | #declaration_with_id as declaration ->
-    Option.some @@ id_of_declaration_with_id declaration
-  | #declaration -> Option.none
+let id_of_entry : [< entry ] -> Id.t Option.t = function
+  | #declaration as declaration ->
+    Option.some @@ id_of_declaration declaration
+  | #entry -> Option.none
 
 (** Mutations *)
 
@@ -1821,26 +1831,25 @@ let apply_mutations : t -> mutation List.t -> t =
 
 (** Simple mutations *)
 
-(** [add_declaration_to_list declaration] is the mutation that adds
-    [declaration] to the signature's {!recfield:declarations} field. *)
-let add_declaration_to_list : [< declaration ] -> mutation =
+(** [add_entry entry] is the mutation that adds [entry] to the signature's
+    {!recfield:entries} field. *)
+let add_entry : [< entry ] -> mutation =
  fun new_declaration signature signature' ->
   lazy
     { signature with
-      declarations =
-        declarations signature
+      entries =
+        entries signature
         |> List.cons (Lazy.force signature', new_declaration)
     }
 
-(** [add_declarations_to_list declaration] is the mutation that sequentially
-    adds the declarations in [declarations] to the signature's
-    {!recfield:declarations} field. *)
-let add_declarations_to_list : [< declaration ] List.t -> mutation =
+(** [add_entries entries] is the mutation that sequentially adds the
+    declarations in [entries] to the signature's {!recfield:entries} field. *)
+let add_entries : [< entry ] List.t -> mutation =
  fun new_declarations signature signature' ->
   lazy
     { signature with
-      declarations =
-        declarations signature
+      entries =
+        entries signature
         |> List.append
              (new_declarations
              |> List.map (Pair.left (Lazy.force signature')))
@@ -1877,7 +1886,7 @@ let add_declarations_by_name : Id.t Name.Hamt.t -> mutation =
 (** [add_declaration_by_id (id, declaration)] is the mutation that adds the
     declaration [declaration] having ID [id] to the signature's
     {!recfield:declarations_by_id} field. *)
-let add_declaration_by_id : Id.t * [< declaration_with_id ] -> mutation =
+let add_declaration_by_id : Id.t * [< declaration ] -> mutation =
  fun (id, declaration) signature signature' ->
   lazy
     { signature with
@@ -1889,7 +1898,7 @@ let add_declaration_by_id : Id.t * [< declaration_with_id ] -> mutation =
 (** [add_declarations_by_id declarations] is the mutation that adds the
     declarations [declarations] mapped by ID to the signature's
     {!recfield:declarations_by_id} field. *)
-let add_declarations_by_id : [< declaration_with_id ] Id.Hamt.t -> mutation =
+let add_declarations_by_id : [< declaration ] Id.Hamt.t -> mutation =
  fun declarations signature signature' ->
   lazy
     (Id.Hamt.fold
@@ -1901,13 +1910,13 @@ let add_declarations_by_id : [< declaration_with_id ] Id.Hamt.t -> mutation =
 (** [update_declaration declarations] is the mutation that replaces the
     declaration [declaration] in the signature's
     {!recfield:declarations_by_id} field. *)
-let update_declaration : [< declaration_with_id ] -> mutation =
+let update_declaration : [< declaration ] -> mutation =
  fun declaration signature signature' ->
   lazy
     { signature with
       declarations_by_id =
         declarations_by_id signature
-        |> Id.Hamt.alter (id_of_declaration_with_id declaration)
+        |> Id.Hamt.alter (id_of_declaration declaration)
            @@ Fun.const
            @@ Option.some (Lazy.force signature', declaration)
     }
@@ -1915,7 +1924,7 @@ let update_declaration : [< declaration_with_id ] -> mutation =
 (** [update_declaration_by_id (id, declaration)] is functionally equivalent
     to {!update_declaration} excepth that the ID of [declaration] is not
     looked up. *)
-let update_declaration_by_id : Id.t * [< declaration_with_id ] -> mutation =
+let update_declaration_by_id : Id.t * [< declaration ] -> mutation =
  fun (id, declaration) signature signature' ->
   lazy
     { signature with
@@ -1928,8 +1937,7 @@ let update_declaration_by_id : Id.t * [< declaration_with_id ] -> mutation =
 (** [update_declarations_by_id declarations] is the mutation that replaces
     the declarations [declarations] mapped by ID in the signature's
     {!recfield:declarations_by_id} field. *)
-let update_declarations_by_id :
-    [< declaration_with_id ] Id.Hamt.t -> mutation =
+let update_declarations_by_id : [< declaration ] Id.Hamt.t -> mutation =
  fun declarations signature signature' ->
   lazy
     (Id.Hamt.fold
@@ -2021,25 +2029,6 @@ let remove_unfrozen_declarations : Id.Set.t -> mutation =
 
 (** Composite Mutations *)
 
-(** [lift_declaration_with_id declaration] is [declaration].
-
-    This is a weird workaround for an expression in {!val:add_declaration}
-    where a value of type {!type:declaration_with_id} cannot be used in place
-    of type {!type:declaration} despite having that
-    [declaration_with_id <: declaration]. *)
-let lift_declaration_with_id : declaration_with_id -> declaration = function
-  | ( `Typ_declaration _
-    | `Const_declaration _
-    | `Comp_typ_declaration _
-    | `Comp_const_declaration _
-    | `Comp_cotyp_declaration _
-    | `Comp_dest_declaration _
-    | `Comp_declaration _
-    | `Module_declaration _
-    | `Query_declaration _
-    | `MQuery_declaration _
-    | `Schema_declaration _ ) as x -> x
-
 (** [add_declaration (id, name, declaration)] is the composite mutation that
     adds
 
@@ -2051,14 +2040,13 @@ let lift_declaration_with_id : declaration_with_id -> declaration = function
 
     This is an optimization to avoid intermediary memory allocations for
     performing those mutations in sequence. *)
-let add_declaration : Id.t * Name.t * [< declaration_with_id ] -> mutation =
+let add_declaration : Id.t * Name.t * [< declaration ] -> mutation =
  fun (declaration_id, declaration_name, declaration) signature signature' ->
   lazy
     { signature with
-      declarations =
-        declarations signature
-        |> List.cons
-             (Lazy.force signature', lift_declaration_with_id declaration)
+      entries =
+        entries signature
+        |> List.cons (Lazy.force signature', (declaration :> entry))
     ; declarations_by_name =
         declarations_by_name signature
         |> Name.Hamt.alter declaration_name
@@ -2123,11 +2111,8 @@ let guard_schema_declaration :
   | _ -> Option.none
 
 let guard_module_declaration :
-       [> `Module_declaration of
-          ('signature, 'declaration, 'declaration_with_id) Module.t
-       ]
-    -> ('signature, 'declaration, 'declaration_with_id) Module.t Option.t =
-  function
+       [> `Module_declaration of ('signature, 'entry, 'declaration) Module.t ]
+    -> ('signature, 'entry, 'declaration) Module.t Option.t = function
   | `Module_declaration declaration -> Option.some declaration
   | _ -> Option.none
 
@@ -2152,7 +2137,7 @@ let extract_declaration guard (signature, declaration_opt) =
     [Some (signature', declaration)] where [signature'] is the signature up
     to and including [declaration]. Declarations looked up by ID may not be
     in scope. *)
-let lookup_by_id : t -> Id.t -> (t * declaration_with_id) Option.t =
+let lookup_by_id : t -> Id.t -> (t * declaration) Option.t =
  fun signature id -> signature |> declarations_by_id |> Id.Hamt.find_opt id
 
 let guarded_lookup_by_id lift_id guard signature id =
@@ -2224,12 +2209,11 @@ let lookup_mquery_by_id' = extract_entry_from_lookup lookup_mquery_by_id
 
 (** Unsafe Lookups by ID *)
 
-exception DeclarationWithoutId of declaration
+exception EntryWithoutId of entry
 
-let id_of_declaration_exn : [< declaration ] -> Id.t = function
-  | #declaration_with_id as declaration ->
-    id_of_declaration_with_id declaration
-  | #declaration as declaration -> raise @@ DeclarationWithoutId declaration
+let id_of_entry_exn : [< entry ] -> Id.t = function
+  | #declaration as declaration -> id_of_declaration declaration
+  | #entry as declaration -> raise @@ EntryWithoutId declaration
 
 exception UnboundId of Id.t * t
 
@@ -2251,7 +2235,7 @@ let lookup_by_id_exn lift_id guard_declaration signature id =
        (fun () ->
          raise
          @@ IdKindMismatch
-              { bound = id_of_declaration_exn declaration
+              { bound = id_of_entry_exn declaration
               ; expected = lifted_id
               ; signature
               })
@@ -2328,13 +2312,13 @@ let lookup_mquery_by_id_exn' =
 
 (** Lookups by Qualified Name *)
 
-let lookup_name : t -> Name.t -> (t * declaration_with_id) Option.t =
+let lookup_name : t -> Name.t -> (t * declaration) Option.t =
  fun signature name ->
   let open Option in
   signature |> declarations_by_name |> Name.Hamt.find_opt name $> List1.head
   >>= lookup_by_id signature
 
-let lookup_name' : t -> Name.t -> declaration_with_id Option.t =
+let lookup_name' : t -> Name.t -> declaration Option.t =
  fun signature name ->
   let open Option in
   lookup_name signature name $> Pair.snd
@@ -2573,21 +2557,21 @@ let empty_subordination_state : t -> Subordination.state =
     ~is_term_subordinate_known:is_term_subordinate_known_opt
     ~is_type_subordinate_to_known:is_type_subordinate_to_known_opt
 
-let is_path_to_entry signature id path =
+let is_path_to_declaration signature id path =
   let open Option in
   path |> lookup signature >>= fun (signature', declaration) ->
-  declaration |> id_of_declaration_with_id |> Id.equal id |> Option.of_bool
+  declaration |> id_of_declaration |> Id.equal id |> Option.of_bool
   $> Fun.const (signature', declaration)
 
-let all_paths_to_entry signature id' =
+let all_paths_to_declaration signature id' =
   let open Result in
   signature |> paths |> Id.Hamt.find_opt id'
   |> Option.to_result ~none:(`Unbound_id (id', signature))
   $> QualifiedName.Set.filter
-       Fun.(is_path_to_entry signature id' >> Option.is_some)
+       Fun.(is_path_to_declaration signature id' >> Option.is_some)
 
-let all_paths_to_entry_exn signature id =
-  all_paths_to_entry signature id
+let all_paths_to_declaration_exn signature id =
+  all_paths_to_declaration signature id
   |> Result.get_or_else (fun _ -> raise @@ UnboundId (id, signature))
 
 let guard_unbound_id signature id unbound_continuation =
@@ -2685,7 +2669,7 @@ let freeze_declaration_by_name : Name.t -> mutation =
   lookup_name' signature name
   $> (fun declaration ->
        freeze_declaration_by_id
-         (id_of_declaration_with_id declaration)
+         (id_of_declaration declaration)
          signature signature')
   |> Option.value ~default:(lazy signature)
 
@@ -2780,7 +2764,7 @@ let add_comp_dest signature cM =
         ])
 
 let empty =
-  { declarations = []
+  { entries = []
   ; declarations_by_name = Name.Hamt.empty
   ; declarations_by_id = Id.Hamt.empty
   ; paths = Id.Hamt.empty
