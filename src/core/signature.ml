@@ -1800,27 +1800,26 @@ let id_of_entry : [< entry ] -> Id.t Option.t = function
 (** The type of mutations to a signature.
 
     Mutations may lazily refer to the signature resulting from applying the
-    current mutation. They must not force their second argument. *)
-type mutation = t -> t Lazy.t -> t Lazy.t
+    current mutation. Mutations must not force their second argument since in
+    {!val:apply_mutation}, that argument is analogous to a null reference. *)
+type mutation = t -> t Lazy.t -> t
 
 (** [identity_mutation] performs no mutation on the input signature. *)
-let identity_mutation : mutation = fun signature _ -> lazy signature
+let identity_mutation : mutation = fun signature _ -> signature
 
 (** [sequence_mutations mutations] constructs the mutation that performs the
     mutations in [mutations] in order. *)
 let sequence_mutations : mutation List.t -> mutation =
  fun mutations signature signature' ->
-  lazy
-    (List.fold_left
-       (fun signature mutation ->
-         Lazy.force @@ mutation signature signature')
-       signature mutations)
+  List.fold_left
+    (fun signature mutation -> mutation signature signature')
+    signature mutations
 
 (** [apply_mutation signature mutation] calls [mutation] on [signature] and
     on the mutation result recursively. *)
 let apply_mutation : t -> mutation -> t =
  fun signature mutation ->
-  let rec signature' = lazy (Lazy.force @@ mutation signature signature') in
+  let rec signature' = lazy (mutation signature signature') in
   Lazy.force signature'
 
 (** [apply_mutations signature mutations] sequences the mutations [mutations]
@@ -1835,164 +1834,143 @@ let apply_mutations : t -> mutation List.t -> t =
     {!recfield:entries} field. *)
 let add_entry : [< entry ] -> mutation =
  fun new_declaration signature signature' ->
-  lazy
-    { signature with
-      entries = entries signature |> List.cons (signature', new_declaration)
-    }
+  { signature with
+    entries = entries signature |> List.cons (signature', new_declaration)
+  }
 
 (** [add_entries entries] is the mutation that sequentially adds the
     declarations in [entries] to the signature's {!recfield:entries} field. *)
 let add_entries : [< entry ] List.t -> mutation =
  fun new_declarations signature signature' ->
-  lazy
-    { signature with
-      entries =
-        entries signature
-        |> List.append (new_declarations |> List.map (Pair.left signature'))
-    }
+  { signature with
+    entries =
+      entries signature
+      |> List.append (new_declarations |> List.map (Pair.left signature'))
+  }
 
 (** [add_declaration_by_name (name, id)] is the mutation that adds the
     declaration having name [name] and ID [id] to the signature's
     {!recfield:declarations_by_name} field. *)
 let add_declaration_by_name : Name.t * Id.t -> mutation =
  fun (name, declaration_id) signature _ ->
-  lazy
-    { signature with
-      declarations_by_name =
-        declarations_by_name signature
-        |> Name.Hamt.alter name
-             (Option.eliminate
-                (fun () -> Option.some @@ List1.singleton declaration_id)
-                Fun.(List1.cons declaration_id >> Option.some))
-    }
+  { signature with
+    declarations_by_name =
+      declarations_by_name signature
+      |> Name.Hamt.alter name
+           (Option.eliminate
+              (fun () -> Option.some @@ List1.singleton declaration_id)
+              Fun.(List1.cons declaration_id >> Option.some))
+  }
 
 (** [add_declaration_by_name declarations] is the mutation that adds the
     declaration IDs [declarations] mapped by name to the signature's
     {!recfield:declarations_by_name} field. *)
 let add_declarations_by_name : Id.t Name.Hamt.t -> mutation =
  fun declarations signature signature' ->
-  lazy
-    (Name.Hamt.fold
-       (fun name declaration_id signature ->
-         Lazy.force
-         @@ add_declaration_by_name (name, declaration_id) signature
-              signature')
-       declarations signature)
+  Name.Hamt.fold
+    (fun name declaration_id signature ->
+      add_declaration_by_name (name, declaration_id) signature signature')
+    declarations signature
 
 (** [add_declaration_by_id (id, declaration)] is the mutation that adds the
     declaration [declaration] having ID [id] to the signature's
     {!recfield:declarations_by_id} field. *)
 let add_declaration_by_id : Id.t * [< declaration ] -> mutation =
  fun (id, declaration) signature signature' ->
-  lazy
-    { signature with
-      declarations_by_id =
-        declarations_by_id signature
-        |> Id.Hamt.add id (signature', declaration)
-    }
+  { signature with
+    declarations_by_id =
+      declarations_by_id signature |> Id.Hamt.add id (signature', declaration)
+  }
 
 (** [add_declarations_by_id declarations] is the mutation that adds the
     declarations [declarations] mapped by ID to the signature's
     {!recfield:declarations_by_id} field. *)
 let add_declarations_by_id : [< declaration ] Id.Hamt.t -> mutation =
  fun declarations signature signature' ->
-  lazy
-    (Id.Hamt.fold
-       (fun id declaration signature ->
-         Lazy.force
-         @@ add_declaration_by_id (id, declaration) signature signature')
-       declarations signature)
+  Id.Hamt.fold
+    (fun id declaration signature ->
+      add_declaration_by_id (id, declaration) signature signature')
+    declarations signature
 
 (** [update_declaration declarations] is the mutation that replaces the
     declaration [declaration] in the signature's
     {!recfield:declarations_by_id} field. *)
 let update_declaration : [< declaration ] -> mutation =
  fun declaration signature signature' ->
-  lazy
-    { signature with
-      declarations_by_id =
-        declarations_by_id signature
-        |> Id.Hamt.alter (id_of_declaration declaration)
-           @@ Fun.const
-           @@ Option.some (signature', declaration)
-    }
+  { signature with
+    declarations_by_id =
+      declarations_by_id signature
+      |> Id.Hamt.alter (id_of_declaration declaration)
+         @@ Fun.const
+         @@ Option.some (signature', declaration)
+  }
 
 (** [update_declaration_by_id (id, declaration)] is functionally equivalent
     to {!update_declaration} excepth that the ID of [declaration] is not
     looked up. *)
 let update_declaration_by_id : Id.t * [< declaration ] -> mutation =
  fun (id, declaration) signature signature' ->
-  lazy
-    { signature with
-      declarations_by_id =
-        declarations_by_id signature
-        |> Id.Hamt.alter id @@ Fun.const
-           @@ Option.some (signature', declaration)
-    }
+  { signature with
+    declarations_by_id =
+      declarations_by_id signature
+      |> Id.Hamt.alter id @@ Fun.const
+         @@ Option.some (signature', declaration)
+  }
 
 (** [update_declarations_by_id declarations] is the mutation that replaces
     the declarations [declarations] mapped by ID in the signature's
     {!recfield:declarations_by_id} field. *)
 let update_declarations_by_id : [< declaration ] Id.Hamt.t -> mutation =
  fun declarations signature signature' ->
-  lazy
-    (Id.Hamt.fold
-       (fun id declaration signature ->
-         Lazy.force
-         @@ update_declaration_by_id (id, declaration) signature signature')
-       declarations signature)
+  Id.Hamt.fold
+    (fun id declaration signature ->
+      update_declaration_by_id (id, declaration) signature signature')
+    declarations signature
 
 (** [add_path (id, path)] is the mutation that adds the path [path] to the
     declaration having ID [id] in the signature's {!recfield:paths} field. *)
 let add_path : Id.t * QualifiedName.t -> mutation =
  fun (id, path) signature _ ->
-  lazy
-    { signature with
-      paths =
-        paths signature
-        |> Id.Hamt.alter id
-             (Option.eliminate
-                (fun () -> Option.some @@ QualifiedName.Set.singleton path)
-                Fun.(QualifiedName.Set.add path >> Option.some))
-    }
+  { signature with
+    paths =
+      paths signature
+      |> Id.Hamt.alter id
+           (Option.eliminate
+              (fun () -> Option.some @@ QualifiedName.Set.singleton path)
+              Fun.(QualifiedName.Set.add path >> Option.some))
+  }
 
 (** [add_query id] is the mutation that adds the query with ID [id] in the
     signature's {!recfield:queries} field. *)
 let add_query : Id.Query.t -> mutation =
  fun query_id signature _ ->
-  lazy
-    { signature with
-      queries = queries signature |> Id.Query.Set.add query_id
-    }
+  { signature with queries = queries signature |> Id.Query.Set.add query_id }
 
 (** [add_mquery id] is the mutation that adds the meta-query with ID [id] in
     the signature's {!recfield:mqueries} field. *)
 let add_mquery : Id.MQuery.t -> mutation =
  fun mquery_id signature _ ->
-  lazy
-    { signature with
-      mqueries = mqueries signature |> Id.MQuery.Set.add mquery_id
-    }
+  { signature with
+    mqueries = mqueries signature |> Id.MQuery.Set.add mquery_id
+  }
 
 (** [add_unfrozen_declaration id] is the mutation that adds the declaration
     with ID [id] in the signature's {!recfield:unfrozen_declarations} field. *)
 let add_unfrozen_declaration : Id.t -> mutation =
  fun id signature _ ->
-  lazy
-    { signature with
-      unfrozen_declarations = Id.Set.add id (unfrozen_declarations signature)
-    }
+  { signature with
+    unfrozen_declarations = Id.Set.add id (unfrozen_declarations signature)
+  }
 
 (** [add_unfrozen_declaration ids] is the mutation that adds the declarations
     with IDs [ids] in the signature's {!recfield:unfrozen_declarations}
     field. *)
 let add_unfrozen_declarations : Id.Set.t -> mutation =
  fun ids signature _ ->
-  lazy
-    { signature with
-      unfrozen_declarations =
-        Id.Set.union ids (unfrozen_declarations signature)
-    }
+  { signature with
+    unfrozen_declarations =
+      Id.Set.union ids (unfrozen_declarations signature)
+  }
 
 (** [add_unfrozen_declaration_if cond id] is the mutation that adds the
     declaration with ID [id] in the signature's
@@ -2006,22 +1984,20 @@ let add_unfrozen_declaration_if : bool -> Id.t -> mutation =
     {!recfield:unfrozen_declarations} field. *)
 let remove_unfrozen_declaration : Id.t -> mutation =
  fun id_to_remove signature _ ->
-  lazy
-    { signature with
-      unfrozen_declarations =
-        Id.Set.remove id_to_remove (unfrozen_declarations signature)
-    }
+  { signature with
+    unfrozen_declarations =
+      Id.Set.remove id_to_remove (unfrozen_declarations signature)
+  }
 
 (** [remove_unfrozen_declarations ids] is the mutation that removes the
     declarations with IDs [ids] in the signature's
     {!recfield:unfrozen_declarations} field. *)
 let remove_unfrozen_declarations : Id.Set.t -> mutation =
  fun ids_to_remove signature _ ->
-  lazy
-    { signature with
-      unfrozen_declarations =
-        Id.Set.diff (unfrozen_declarations signature) ids_to_remove
-    }
+  { signature with
+    unfrozen_declarations =
+      Id.Set.diff (unfrozen_declarations signature) ids_to_remove
+  }
 
 (** Composite Mutations *)
 
@@ -2038,27 +2014,26 @@ let remove_unfrozen_declarations : Id.Set.t -> mutation =
     performing those mutations in sequence. *)
 let add_declaration : Id.t * Name.t * [< declaration ] -> mutation =
  fun (declaration_id, declaration_name, declaration) signature signature' ->
-  lazy
-    { signature with
-      entries =
-        entries signature |> List.cons (signature', (declaration :> entry))
-    ; declarations_by_name =
-        declarations_by_name signature
-        |> Name.Hamt.alter declaration_name
-             (Option.eliminate
-                (fun () -> Option.some @@ List1.singleton declaration_id)
-                Fun.(List1.cons declaration_id >> Option.some))
-    ; declarations_by_id =
-        declarations_by_id signature
-        |> Id.Hamt.add declaration_id (signature', declaration)
-    ; paths =
-        (let path = QualifiedName.make declaration_name in
-         paths signature
-         |> Id.Hamt.alter declaration_id
-              (Option.eliminate
-                 (fun () -> Option.some @@ QualifiedName.Set.singleton path)
-                 Fun.(QualifiedName.Set.add path >> Option.some)))
-    }
+  { signature with
+    entries =
+      entries signature |> List.cons (signature', (declaration :> entry))
+  ; declarations_by_name =
+      declarations_by_name signature
+      |> Name.Hamt.alter declaration_name
+           (Option.eliminate
+              (fun () -> Option.some @@ List1.singleton declaration_id)
+              Fun.(List1.cons declaration_id >> Option.some))
+  ; declarations_by_id =
+      declarations_by_id signature
+      |> Id.Hamt.add declaration_id (signature', declaration)
+  ; paths =
+      (let path = QualifiedName.make declaration_name in
+       paths signature
+       |> Id.Hamt.alter declaration_id
+            (Option.eliminate
+               (fun () -> Option.some @@ QualifiedName.Set.singleton path)
+               Fun.(QualifiedName.Set.add path >> Option.some)))
+  }
 
 (** Declaration Guards *)
 
@@ -2591,8 +2566,7 @@ let is_declaration_frozen_by_id : Id.t -> t -> bool =
 
 let freeze_typ_declaration : Id.Typ.t -> mutation =
  fun tA_id signature signature' ->
-  if Typ.is_frozen @@ lookup_typ_by_id_exn' signature tA_id then
-    lazy signature
+  if Typ.is_frozen @@ lookup_typ_by_id_exn' signature tA_id then signature
   else
     let { Subordination.term_subordinates; type_subordinated_to } =
       Subordination.compute_subordinations tA_id
@@ -2628,9 +2602,7 @@ let freeze_comp_typ_declaration : Id.CompTyp.t -> mutation =
   id
   |> lookup_comp_typ_by_id_exn' signature
   |> CompTyp.freeze
-  |> Result.fold
-       ~error:(Fun.const (lazy signature))
-       ~ok:(fun cA ->
+  |> Result.fold ~error:(Fun.const signature) ~ok:(fun cA ->
          let cA_id = CompTyp.lifted_id cA in
          sequence_mutations
            [ update_declaration_by_id (cA_id, `Comp_typ_declaration cA)
@@ -2643,9 +2615,7 @@ let freeze_comp_cotyp_declaration : Id.CompCotyp.t -> mutation =
   id
   |> lookup_comp_cotyp_by_id_exn' signature
   |> CompCotyp.freeze
-  |> Result.fold
-       ~error:(Fun.const (lazy signature))
-       ~ok:(fun cA ->
+  |> Result.fold ~error:(Fun.const signature) ~ok:(fun cA ->
          let cA_id = CompCotyp.lifted_id cA in
          sequence_mutations
            [ update_declaration_by_id (cA_id, `Comp_cotyp_declaration cA)
@@ -2659,7 +2629,7 @@ let freeze_declaration_by_id : Id.t -> mutation =
   | Id.Typ id -> freeze_typ_declaration id signature signature'
   | Id.CompTyp id -> freeze_comp_typ_declaration id signature signature'
   | Id.CompCotyp id -> freeze_comp_cotyp_declaration id signature signature'
-  | _ -> lazy signature
+  | _ -> signature
 
 let freeze_declaration_by_name : Name.t -> mutation =
  fun name signature signature' ->
@@ -2669,7 +2639,7 @@ let freeze_declaration_by_name : Name.t -> mutation =
        freeze_declaration_by_id
          (id_of_declaration declaration)
          signature signature')
-  |> Option.value ~default:(lazy signature)
+  |> Option.value ~default:signature
 
 let add_typ signature tA =
   let tA_id = Typ.lifted_id tA in
