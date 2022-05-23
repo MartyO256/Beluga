@@ -1827,11 +1827,19 @@ type mutation = t -> t Lazy.t -> t
 (** [identity_mutation] performs no mutation on the input signature. *)
 let identity_mutation : mutation = fun signature _ -> signature
 
-(** [sequence_mutations mutations] constructs the mutation that performs the
-    mutations in [mutations] in order. *)
-let sequence_mutations : mutation List.t -> mutation =
+(** [sequence_mutations_list mutations] constructs the mutation that performs
+    the mutations in [mutations] in order. *)
+let sequence_mutations_list : mutation List.t -> mutation =
  fun mutations signature signature' ->
   List.fold_left
+    (fun signature mutation -> mutation signature signature')
+    signature mutations
+
+(** [sequence_mutations mutations] constructs the mutation that sequentially
+    performs the mutations in [mutations]. *)
+let sequence_mutations : mutation Seq.t -> mutation =
+ fun mutations signature signature' ->
+  Seq.fold_left
     (fun signature mutation -> mutation signature signature')
     signature mutations
 
@@ -1846,7 +1854,7 @@ let apply_mutation : t -> mutation -> t =
     and applies them on [signature]. *)
 let apply_mutations : t -> mutation List.t -> t =
  fun signature mutations ->
-  sequence_mutations mutations |> apply_mutation signature
+  sequence_mutations_list mutations |> apply_mutation signature
 
 (** Simple mutations *)
 
@@ -1881,6 +1889,15 @@ let add_declaration_by_name : Name.t * Id.t -> mutation =
               (fun () -> Option.some @@ List1.singleton declaration_id)
               Fun.(List1.cons declaration_id >> Option.some))
   }
+
+(** [add_declaration_by_name_opt (name_opt, id)] is the mutation that adds
+    the declaration having name [name] and ID [id] to the signature's
+    {!recfield:declarations_by_name} field only if [name_opt] is [Some name]. *)
+let add_declaration_by_name_opt : Name.t Option.t * Id.t -> mutation =
+ fun (name, declaration_id) ->
+  name
+  |> Option.eliminate (Fun.const identity_mutation) (fun name ->
+         add_declaration_by_name (name, declaration_id))
 
 (** [add_declaration_by_name declarations] is the mutation that adds the
     declaration IDs [declarations] mapped by name to the signature's
@@ -2585,6 +2602,14 @@ let is_declaration_unfrozen_by_id : Id.t -> t -> bool =
 let is_declaration_frozen_by_id : Id.t -> t -> bool =
  fun id signature -> Bool.not @@ is_declaration_unfrozen_by_id id signature
 
+(** [freeze_typ_declaration tA] is the mutation that freezes at least the LF
+    family declaration having ID [tA] only if it is unfrozen. If that
+    declaration is already frozen, then the input signature is returned as
+    is.
+
+    The term-level and type-level subordination relations for [tA] are
+    computed in the process, which may cause other LF family declarations to
+    be frozen as well. *)
 let freeze_typ_declaration : Id.Typ.t -> mutation =
  fun tA_id signature signature' ->
   if Typ.is_frozen @@ lookup_typ_by_id_exn' signature tA_id then signature
@@ -2612,12 +2637,16 @@ let freeze_typ_declaration : Id.Typ.t -> mutation =
     let newly_frozen_declarations =
       replacements |> Id.Hamt.keys |> Id.Set.of_list
     in
-    sequence_mutations
+    sequence_mutations_list
       [ update_declarations_by_id replacements
       ; remove_unfrozen_declarations newly_frozen_declarations
       ]
       signature signature'
 
+(** [freeze_comp_typ_declaration cA] is the mutation that freezes at least
+    the computational-level data type constant declaration having ID [cA]
+    only if it is unfrozen. If that declaration is already frozen, then the
+    input signature is returned as is. *)
 let freeze_comp_typ_declaration : Id.CompTyp.t -> mutation =
  fun id signature signature' ->
   id
@@ -2625,12 +2654,16 @@ let freeze_comp_typ_declaration : Id.CompTyp.t -> mutation =
   |> CompTyp.freeze
   |> Result.fold ~error:(Fun.const signature) ~ok:(fun cA ->
          let cA_id = CompTyp.lifted_id cA in
-         sequence_mutations
+         sequence_mutations_list
            [ update_declaration_by_id (cA_id, `Comp_typ_declaration cA)
            ; remove_unfrozen_declaration cA_id
            ]
            signature signature')
 
+(** [freeze_comp_typ_declaration cA] is the mutation that freezes at least
+    the computational-level codata type constant declaration having ID [cA]
+    only if it is unfrozen. If that declaration is already frozen, then the
+    input signature is returned as is. *)
 let freeze_comp_cotyp_declaration : Id.CompCotyp.t -> mutation =
  fun id signature signature' ->
   id
@@ -2638,20 +2671,34 @@ let freeze_comp_cotyp_declaration : Id.CompCotyp.t -> mutation =
   |> CompCotyp.freeze
   |> Result.fold ~error:(Fun.const signature) ~ok:(fun cA ->
          let cA_id = CompCotyp.lifted_id cA in
-         sequence_mutations
+         sequence_mutations_list
            [ update_declaration_by_id (cA_id, `Comp_cotyp_declaration cA)
            ; remove_unfrozen_declaration cA_id
            ]
            signature signature')
 
+(** [freeze_declaration_by_id id] is the mutation that freezes at least the
+    declaration having ID [id] only if it is unfrozen. If that declaration is
+    already frozen, then the input signature is returned as is. *)
 let freeze_declaration_by_id : Id.t -> mutation =
- fun id signature signature' ->
+ fun id signature ->
   match id with
-  | Id.Typ id -> freeze_typ_declaration id signature signature'
-  | Id.CompTyp id -> freeze_comp_typ_declaration id signature signature'
-  | Id.CompCotyp id -> freeze_comp_cotyp_declaration id signature signature'
-  | _ -> signature
+  | Id.Typ id -> freeze_typ_declaration id signature
+  | Id.CompTyp id -> freeze_comp_typ_declaration id signature
+  | Id.CompCotyp id -> freeze_comp_cotyp_declaration id signature
+  | _ -> identity_mutation signature
 
+(** [freeze_declarations_by_id ids] is the mutation that freezes at least the
+    declarations having ID in [ids] and only if they are unfrozen. *)
+let freeze_declarations_by_id : Id.Set.t -> mutation =
+ fun ids ->
+  sequence_mutations
+  @@ (Id.Set.to_seq ids |> Seq.map freeze_declaration_by_id)
+
+(** [freeze_declaration_by_name name] is the mutation that freezes at least
+    the declaration having name [name] only if it is unfrozen. If that
+    declaration is already frozen, then the input signature is returned as
+    is. *)
 let freeze_declaration_by_name : Name.t -> mutation =
  fun name signature signature' ->
   let open Option in
@@ -2661,6 +2708,19 @@ let freeze_declaration_by_name : Name.t -> mutation =
          (id_of_declaration declaration)
          signature signature')
   |> Option.value ~default:signature
+
+(** [freeze_declaration_by_name_opt name_opt] is the mutation that freezes at
+    least the declaration having name [name] only if it is unfrozen and
+    [name_opt] is [Some name]. If that declaration is already frozen or
+    [name_opt] is [None], then the input signature is returned as is. *)
+let freeze_declaration_by_name_opt : Name.t Option.t -> mutation =
+  Option.eliminate (Fun.const identity_mutation) freeze_declaration_by_name
+
+(** [freeze_all_unfrozen_declarations] is the mutation that freezes all
+    unfrozen declarations in the signature. *)
+let freeze_all_unfrozen_declarations : mutation =
+ fun signature ->
+  freeze_declarations_by_id (unfrozen_declarations signature) signature
 
 let add_typ signature tA =
   let tA_id = Typ.lifted_id tA in
@@ -2752,6 +2812,34 @@ let add_comp_dest signature cM =
         ; add_declaration (cM_id, cM_name, cM_declaration)
         ])
 
+let add_query signature query =
+  let query_id = Query.lifted_id query in
+  guard_unbound_id signature query_id (fun () ->
+      let query_name = Query.name query
+      and query_declaration = `Query_declaration query in
+      Result.ok
+      @@ apply_mutations signature
+           [ freeze_all_unfrozen_declarations
+           ; add_entry query_declaration
+           ; add_declaration_by_id (query_id, query_declaration)
+           ; add_declaration_by_name_opt (query_name, query_id)
+           ; add_query (Query.id query)
+           ])
+
+let add_mquery signature mquery =
+  let mquery_id = MQuery.lifted_id mquery in
+  guard_unbound_id signature mquery_id (fun () ->
+      let mquery_name = MQuery.name mquery
+      and mquery_declaration = `MQuery_declaration mquery in
+      Result.ok
+      @@ apply_mutations signature
+           [ freeze_all_unfrozen_declarations
+           ; add_entry mquery_declaration
+           ; add_declaration_by_id (mquery_id, mquery_declaration)
+           ; add_declaration_by_name_opt (mquery_name, mquery_id)
+           ; add_mquery (MQuery.id mquery)
+           ])
+
 let add_name_pragma signature pragma =
   let tA_id = NamePragma.typ pragma in
   let open Result in
@@ -2765,7 +2853,7 @@ let add_name_pragma signature pragma =
          ~var:(Option.some @@ NamePragma.var_naming_convention pragma)
          ~mvar:(NamePragma.mvar_naming_convention pragma)
   in
-  apply_mutation signature (update_declaration (`Typ_declaration tA))
+  apply_mutation signature @@ update_declaration (`Typ_declaration tA)
 
 let empty =
   { entries = []
@@ -2776,3 +2864,13 @@ let empty =
   ; mqueries = Id.MQuery.Set.empty
   ; unfrozen_declarations = Id.Set.empty
   }
+
+let find_all_queries signature =
+  signature |> queries |> Id.Query.Set.to_seq
+  |> Seq.map (lookup_query_by_id_exn signature)
+  |> Seq.to_list
+
+let find_all_mqueries signature =
+  signature |> mqueries |> Id.MQuery.Set.to_seq
+  |> Seq.map (lookup_mquery_by_id_exn signature)
+  |> Seq.to_list

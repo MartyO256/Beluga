@@ -1530,6 +1530,26 @@ val add_comp_dest :
        ] )
      Result.t
 
+(** [add_query signature query] constructs the signature derived from
+    [signature] with the addition of the logic programming query on [query]
+    as a top-level declaration.
+
+    In the resultant signature, all declarations are frozen. *)
+val add_query :
+     t
+  -> Query.t
+  -> (t, [> `Bound_id of Id.t * (t * declaration) * t ]) Result.t
+
+(** [add_mquery signature mquery] constructs the signature derived from
+    [signature] with the addition of the logic programming query on
+    computational types [mquery] as a top-level declaration.
+
+    In the resultant signature, all declarations are frozen. *)
+val add_mquery :
+     t
+  -> MQuery.t
+  -> (t, [> `Bound_id of Id.t * (t * declaration) * t ]) Result.t
+
 (** [add_name_pragma signature name_pragma] constructs the signature derived
     from [signature] with the addition of the name pragma [name_pragma] for
     setting new variable naming conventions for witnesses to an LF type
@@ -1885,3 +1905,9 @@ val all_paths_to_declaration :
 
     @raise UnboundId If the ID [id] is not in [signature]. *)
 val all_paths_to_declaration_exn : t -> Id.t -> QualifiedName.Set.t
+
+(** {1 Scanning} *)
+
+val find_all_queries : t -> (t * Query.t) List.t
+
+val find_all_mqueries : t -> (t * MQuery.t) List.t
