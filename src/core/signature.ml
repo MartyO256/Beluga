@@ -2024,11 +2024,23 @@ let remove_unfrozen_declarations : Id.Set.t -> mutation =
 (** [add_declaration (id, name, declaration)] is the composite mutation that
     adds
 
-    - [declaration] to the list of declarations,
+    - [declaration] to the list of entries,
     - [(id, declaration)] to the index of declarations by id,
     - [(name, id)] to the index of declarations by name, and
     - [(id, QualifiedName.make name)] to the index of paths by declaration
       ID.
+
+    [add_declaration] is equivalent to:
+
+    {[
+      fun (id, name, declaration) ->
+        sequence_mutations
+          [ add_entry declaration
+          ; add_declaration_by_name (name, declaration)
+          ; add_declaration_by_id (id, declaration)
+          ; add_path (id, QualifiedName.make name)
+          ]
+    ]}
 
     This is an optimization to avoid intermediary memory allocations for
     performing those mutations in sequence. *)

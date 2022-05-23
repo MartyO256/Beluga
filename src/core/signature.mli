@@ -1530,6 +1530,13 @@ val add_comp_dest :
        ] )
      Result.t
 
+(** [add_name_pragma signature name_pragma] constructs the signature derived
+    from [signature] with the addition of the name pragma [name_pragma] for
+    setting new variable naming conventions for witnesses to an LF type
+    family. *)
+val add_name_pragma :
+  t -> NamePragma.t -> (t, [> `Unbound_typ_id of Id.Typ.t ]) Result.t
+
 (** {1 Lookups by Qualified Name} *)
 
 (** Lookups by qualified name allow for looking up the declaration currently
