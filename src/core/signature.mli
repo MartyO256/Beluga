@@ -1352,6 +1352,27 @@ module MQuery : sig
   val documentation_comment : t -> DocumentationComment.t Option.t
 end
 
+(** Pragma for modifying the naming conventions of an LF type constant. *)
+module NamePragma : sig
+  type t
+
+  (** {1 Constructor} *)
+
+  val make :
+       var_naming_convention:string
+    -> mvar_naming_convention:string Option.t
+    -> typ:Id.Typ.t
+    -> t
+
+  (** {1 Destructors} *)
+
+  val typ : t -> Id.Typ.t
+
+  val var_naming_convention : t -> string
+
+  val mvar_naming_convention : t -> string Option.t
+end
+
 (** The type of Beluga signatures. *)
 type t
 
@@ -1387,6 +1408,7 @@ type entry =
     ]
   | `Query_declaration of Query.t
   | `MQuery_declaration of MQuery.t
+  | `Name_pragma of NamePragma.t
   ]
 
 (** The subtype of entries having an ID associated with them.

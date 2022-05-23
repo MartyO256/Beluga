@@ -1657,6 +1657,25 @@ module MQuery = struct
     Fun.(id' >> Id.lift_mquery_id)
 end
 
+module NamePragma = struct
+  type t =
+    { typ : Id.Typ.t
+    ; var_naming_convention : string
+    ; mvar_naming_convention : string Option.t
+    }
+
+  let make ~var_naming_convention ~mvar_naming_convention ~typ =
+    { typ; var_naming_convention; mvar_naming_convention }
+
+  let[@inline] typ { typ; _ } = typ
+
+  let[@inline] var_naming_convention { var_naming_convention; _ } =
+    var_naming_convention
+
+  let[@inline] mvar_naming_convention { mvar_naming_convention; _ } =
+    mvar_naming_convention
+end
+
 (** Beluga Signatures *)
 
 type mutually_recursive_typs =
@@ -1690,6 +1709,7 @@ type entry =
     ]
   | `Query_declaration of Query.t
   | `MQuery_declaration of MQuery.t
+  | `Name_pragma of NamePragma.t
   ]
 
 and declaration =
@@ -2730,6 +2750,21 @@ let add_comp_dest signature cM =
         ; freeze_declaration_by_name cM_name
         ; add_declaration (cM_id, cM_name, cM_declaration)
         ])
+
+let add_name_pragma signature pragma =
+  let tA_id = NamePragma.typ pragma in
+  let open Result in
+  tA_id
+  |> lookup_typ_by_id' signature
+  |> Option.to_result ~none:(`Unbound_typ_id tA_id)
+  $> fun tA ->
+  let tA =
+    tA
+    |> Typ.set_naming_conventions
+         ~var:(Option.some @@ NamePragma.var_naming_convention pragma)
+         ~mvar:(NamePragma.mvar_naming_convention pragma)
+  in
+  apply_mutation signature (update_declaration (`Typ_declaration tA))
 
 let empty =
   { entries = []
