@@ -2380,7 +2380,8 @@ let lookup_mquery = guarded_declaration_lookup guard_mquery_declaration
 module Subordination = struct
   open Syntax.Int
 
-  type state =
+  (** The type of subordination state looked up from the signature. *)
+  type old_subordinations =
     { lookup_kind : Id.Typ.t -> LF.kind
           (** [lookup_kind tA_id] is the kind corresponding to the LF family
               having ID [tA_id]. *)
@@ -2413,23 +2414,17 @@ module Subordination = struct
               This function is constructed from an existing Beluga signature
               when the initial subordination state is created with
               {!initial_state}. *)
-    ; new_term_subordinations : Id.Typ.Set.t Id.Typ.Map.t
-          (** The mapping from LF families to their term-level subordinates.
-
-              These are the term-level subordination relations discovered
-              after the initial state. To check whether an LF family is a
-              term-level subordinate of another LF family using both these
-              new subordination relations and the previously known ones, see
-              {!lookup_is_subordinate}. *)
-    ; new_type_subordinations : Id.Typ.Set.t Id.Typ.Map.t
-          (** The mapping from LF families to their type-level subordinates.
-
-              These are the type-level subordination relations discovered
-              after the initial state. To check whether an LF family is a
-              type-level subordinate of another LF family using both these
-              new subordination relations and the previously known ones, see
-              {!lookup_is_type_subordinate}. *)
     }
+
+  (** The type of newly discovered subordination state. *)
+  type new_subordinations =
+    { new_term_subordinations : Id.Typ.Set.t Id.Typ.Map.t
+          (** The mapping from LF families to their term-level subordinates.*)
+    ; new_type_subordinations : Id.Typ.Set.t Id.Typ.Map.t
+          (** The mapping from LF families to their type-level subordinates. *)
+    }
+
+  type state = old_subordinations * new_subordinations
 
   include (
     State.Make (struct
@@ -2437,22 +2432,23 @@ module Subordination = struct
     end) :
       State.STATE with type state := state)
 
-  let[@inline] lookup_kind { lookup_kind; _ } = lookup_kind
+  let[@inline] lookup_kind ({ lookup_kind; _ }, _) = lookup_kind
 
-  let[@inline] lookup_constructors { lookup_constructors; _ } =
+  let[@inline] lookup_constructors ({ lookup_constructors; _ }, _) =
     lookup_constructors
 
-  let[@inline] is_term_subordinate_known { is_term_subordinate_known; _ } =
+  let[@inline] is_term_subordinate_known ({ is_term_subordinate_known; _ }, _)
+      =
     is_term_subordinate_known
 
   let[@inline] is_type_subordinate_to_known
-      { is_type_subordinate_to_known; _ } =
+      ({ is_type_subordinate_to_known; _ }, _) =
     is_type_subordinate_to_known
 
-  let[@inline] new_term_subordinations { new_term_subordinations; _ } =
+  let[@inline] new_term_subordinations (_, { new_term_subordinations; _ }) =
     new_term_subordinations
 
-  let[@inline] new_type_subordinations { new_type_subordinations; _ } =
+  let[@inline] new_type_subordinations (_, { new_type_subordinations; _ }) =
     new_type_subordinations
 
   let initial_state :
@@ -2463,13 +2459,14 @@ module Subordination = struct
       -> state =
    fun ~lookup_kind ~lookup_constructors ~is_term_subordinate_known
        ~is_type_subordinate_to_known ->
-    { lookup_kind
-    ; lookup_constructors
-    ; is_term_subordinate_known
-    ; is_type_subordinate_to_known
-    ; new_term_subordinations = Id.Typ.Map.empty
-    ; new_type_subordinations = Id.Typ.Map.empty
-    }
+    ( { lookup_kind
+      ; lookup_constructors
+      ; is_term_subordinate_known
+      ; is_type_subordinate_to_known
+      }
+    , { new_term_subordinations = Id.Typ.Map.empty
+      ; new_type_subordinations = Id.Typ.Map.empty
+      } )
 
   let lookup_kind tA = get $> Fun.(lookup_kind >> Fun.apply tA)
 
@@ -2522,16 +2519,8 @@ module Subordination = struct
           (fun () -> lookup_old_type_subordinations tA tB)
           Fun.(Id.Typ.Set.mem tB >> Option.some >> return)
 
-  type subordinations =
-    { term_subordinates : Id.Typ.Set.t Id.Typ.Map.t
-          (** The mapping from LF families to their term-level subordinates. *)
-    ; type_subordinated_to : Id.Typ.Set.t Id.Typ.Map.t
-          (** The mapping from LF families to the LF families they are
-              subordinate to. *)
-    }
-
-  let compute_subordinations : Id.Typ.t -> state -> subordinations =
-    let compute_subordinations : Id.Typ.t -> subordinations t =
+  let compute_subordinations : Id.Typ.t -> state -> new_subordinations =
+    let compute_subordinations : Id.Typ.t -> new_subordinations t =
      fun _ _ -> Error.not_implemented' "[compute_subordinations tA state]"
     in
     fun tA state -> run ~init:state (compute_subordinations tA) |> Pair.snd
@@ -2600,22 +2589,22 @@ let freeze_typ_declaration : Id.Typ.t -> mutation =
  fun tA_id signature signature' ->
   if Typ.is_frozen @@ lookup_typ_by_id_exn' signature tA_id then signature
   else
-    let { Subordination.term_subordinates; type_subordinated_to } =
+    let { Subordination.new_term_subordinations; new_type_subordinations } =
       Subordination.compute_subordinations tA_id
         (empty_subordination_state signature)
     in
     let replacements =
       Id.Typ.Map.merge
-        (fun tA_id term_subordinates type_subordinated_to ->
+        (fun tA_id term_subordinations type_subordinations ->
           tA_id
           |> lookup_typ_by_id_exn' signature
           |> Typ.freeze
                ~term_subordinates:
-                 (Option.value ~default:Id.Typ.Set.empty term_subordinates)
+                 (Option.value ~default:Id.Typ.Set.empty term_subordinations)
                ~type_subordinated_to:
-                 (Option.value ~default:Id.Typ.Set.empty type_subordinated_to)
+                 (Option.value ~default:Id.Typ.Set.empty type_subordinations)
           |> Result.to_option)
-        term_subordinates type_subordinated_to
+        new_term_subordinations new_type_subordinations
       |> Id.Typ.Map.fold (fun key entry ->
              Id.Hamt.add (Id.lift_typ_id key) (`Typ_declaration entry))
       |> Fun.apply Id.Hamt.empty
