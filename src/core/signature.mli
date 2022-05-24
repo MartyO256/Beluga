@@ -1360,8 +1360,8 @@ module NamePragma : sig
 
   val make :
        location:Location.t
-    -> var_naming_convention:string
-    -> mvar_naming_convention:string Option.t
+    -> var_naming_convention:string Option.t
+    -> mvar_naming_convention:string
     -> typ:Id.Typ.t
     -> t
 
@@ -1369,9 +1369,9 @@ module NamePragma : sig
 
   val location : t -> Location.t
 
-  val var_naming_convention : t -> string
+  val var_naming_convention : t -> string Option.t
 
-  val mvar_naming_convention : t -> string Option.t
+  val mvar_naming_convention : t -> string
 
   val typ : t -> Id.Typ.t
 end

@@ -1665,8 +1665,8 @@ end
 module NamePragma = struct
   type t =
     { location : Location.t
-    ; var_naming_convention : string
-    ; mvar_naming_convention : string Option.t
+    ; var_naming_convention : string Option.t
+    ; mvar_naming_convention : string
     ; typ : Id.Typ.t
     }
 
@@ -2875,8 +2875,8 @@ let add_name_pragma signature pragma =
   let tA =
     tA
     |> Typ.set_naming_conventions
-         ~var:(Option.some @@ NamePragma.var_naming_convention pragma)
-         ~mvar:(NamePragma.mvar_naming_convention pragma)
+         ~var:(NamePragma.var_naming_convention pragma)
+         ~mvar:(Option.some @@ NamePragma.mvar_naming_convention pragma)
   in
   apply_mutation signature @@ update_declaration (`Typ_declaration tA)
 
