@@ -249,6 +249,10 @@ module Id = struct
   module Allocator = struct
     type state = { previous_id : BaseId.t }
 
+    let[@inline] previous_id { previous_id; _ } = previous_id
+
+    let[@inline] set_previous_id _ previous_id = { previous_id }
+
     include (
       State.Make (struct
         type t = state
@@ -258,12 +262,13 @@ module Id = struct
     let initial_state = { previous_id = BaseId.min_value }
 
     let next_id =
-      get >>= fun { previous_id; _ } ->
+      get >>= fun state ->
+      let previous_id = previous_id state in
       if BaseId.(previous_id = max_value) then
         raise @@ Invalid_argument "Exhausted sequence of fresh IDs"
       else
         let next = BaseId.next previous_id in
-        put { previous_id = next } $> Fun.const next
+        put (set_previous_id state next) $> Fun.const next
 
     let next_typ_id = next_id
 
