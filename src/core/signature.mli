@@ -1560,6 +1560,11 @@ val add_mquery :
 val add_name_pragma :
   t -> NamePragma.t -> (t, [> `Unbound_typ_id of Id.Typ.t ]) Result.t
 
+(** [add_documentation_comment signature comment] constructs the signature
+    derived from [signature] with the addition of the documentation comment
+    [comment]. *)
+val add_documentation_comment : t -> DocumentationComment.t -> t
+
 (** {1 Lookups by Qualified Name} *)
 
 (** Lookups by qualified name allow for looking up the declaration currently

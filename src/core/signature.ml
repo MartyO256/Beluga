@@ -2875,6 +2875,9 @@ let add_name_pragma signature pragma =
   in
   apply_mutation signature @@ update_declaration (`Typ_declaration tA)
 
+let add_documentation_comment signature comment =
+  apply_mutation signature @@ add_entry (`Documentation_comment comment)
+
 let empty =
   { entries = []
   ; declarations_by_name = Name.Hamt.empty
