@@ -1977,6 +1977,15 @@ let add_path : Id.t * QualifiedName.t -> mutation =
               Fun.(QualifiedName.Set.add path >> Option.some))
   }
 
+(** [add_path_opt (id, path_opt)] is the mutation that adds the path [path]
+    to the declaration having ID [id] in the signature's {!recfield:paths}
+    field only if [path_opt] is [Some path]. *)
+let add_path_opt : Id.t * QualifiedName.t Option.t -> mutation =
+ fun (id, path_opt) ->
+  path_opt
+  |> Option.eliminate (Fun.const identity_mutation) (fun path ->
+         add_path (id, path))
+
 (** [add_query id] is the mutation that adds the query with ID [id] in the
     signature's {!recfield:queries} field. *)
 let add_query : Id.Query.t -> mutation =
@@ -2823,6 +2832,10 @@ let add_query signature query =
            ; add_entry query_declaration
            ; add_declaration_by_id (query_id, query_declaration)
            ; add_declaration_by_name_opt (query_name, query_id)
+           ; add_path_opt
+               ( query_id
+               , let open Option in
+                 query_name $> QualifiedName.make )
            ; add_query (Query.id query)
            ])
 
@@ -2837,6 +2850,10 @@ let add_mquery signature mquery =
            ; add_entry mquery_declaration
            ; add_declaration_by_id (mquery_id, mquery_declaration)
            ; add_declaration_by_name_opt (mquery_name, mquery_id)
+           ; add_path_opt
+               ( mquery_id
+               , let open Option in
+                 mquery_name $> QualifiedName.make )
            ; add_mquery (MQuery.id mquery)
            ])
 
