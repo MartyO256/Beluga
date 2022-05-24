@@ -1359,18 +1359,21 @@ module NamePragma : sig
   (** {1 Constructor} *)
 
   val make :
-       var_naming_convention:string
+       location:Location.t
+    -> var_naming_convention:string
     -> mvar_naming_convention:string Option.t
     -> typ:Id.Typ.t
     -> t
 
   (** {1 Destructors} *)
 
-  val typ : t -> Id.Typ.t
+  val location : t -> Location.t
 
   val var_naming_convention : t -> string
 
   val mvar_naming_convention : t -> string Option.t
+
+  val typ : t -> Id.Typ.t
 end
 
 (** The type of Beluga signatures. *)
