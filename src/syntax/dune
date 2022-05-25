@@ -1,0 +1,11 @@
+(library
+ (name syntax)
+ (modules :standard)
+ (libraries support)
+ (instrumentation
+  (backend bisect_ppx --bisect-silent yes)))
+
+(env
+ (dev
+  (flags
+   (:standard -w -49))))

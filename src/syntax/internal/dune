@@ -1,0 +1,7 @@
+(library
+ (name internal)
+ (modules :standard)
+ (libraries support common beluga)
+ (instrumentation
+  (backend bisect_ppx --bisect-silent yes)))
+

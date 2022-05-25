@@ -1,0 +1,11 @@
+(library
+ (name signature)
+ (modules :standard)
+ (libraries beluga common internal support)
+ (instrumentation
+  (backend bisect_ppx --bisect-silent yes)))
+
+(env
+ (dev
+  (flags
+   (:standard -w -32))))

@@ -1,0 +1,7 @@
+(library
+ (name common)
+ (modules :standard)
+ (libraries support)
+ (instrumentation
+  (backend bisect_ppx --bisect-silent yes)))
+
