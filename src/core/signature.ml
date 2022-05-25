@@ -775,8 +775,8 @@ module Typ = struct
       ; implicit_arguments : int
       ; explicit_arguments : int
       ; kind : LF.kind
-      ; var_name_base : Name.t Option.t
-      ; mvar_name_base : Name.t Option.t
+      ; var_name_base : string Option.t
+      ; mvar_name_base : string Option.t
       ; constructors : Id.Const.t Name.Hamt.t
       ; documentation_comment : DocumentationComment.t Option.t
       }
@@ -822,8 +822,8 @@ module Typ = struct
       ; implicit_arguments : int
       ; explicit_arguments : int
       ; kind : LF.kind
-      ; var_name_base : Name.t Option.t
-      ; mvar_name_base : Name.t Option.t
+      ; var_name_base : string Option.t
+      ; mvar_name_base : string Option.t
       ; constructors : Id.Const.t Name.Hamt.t
       ; term_subordinates : Id.Typ.Set.t
       ; type_subordinated_to : Id.Typ.Set.t
@@ -962,12 +962,12 @@ module Typ = struct
         Frozen (frozen ~term_subordinates ~type_subordinated_to x))
 
   let fresh_var_name entry ?(default_base_name = "x") =
-    entry |> var_name_base |> Option.map Name.show
+    entry |> var_name_base
     |> Option.value ~default:default_base_name
     |> Name.prefixed_fresh_name_supplier
 
   let fresh_mvar_name entry ?(default_base_name = "X") =
-    entry |> mvar_name_base |> Option.map Name.show
+    entry |> mvar_name_base
     |> Option.value ~default:default_base_name
     |> Name.prefixed_fresh_name_supplier
 
@@ -1235,7 +1235,7 @@ module CompCotyp = struct
 
   module Frozen = struct
     type t =
-      { id : Id.CompTyp.t
+      { id : Id.CompCotyp.t
       ; name : Name.t
       ; location : Location.t
       ; implicit_arguments : int
@@ -2558,12 +2558,12 @@ module Mutation = struct
    fun cA signature signature' ->
     { signature with
       comp_typs =
-        Id.Typ.Hamt.alter (CompTyp.id cA)
+        Id.CompTyp.Hamt.alter (CompTyp.id cA)
           (Fun.const @@ Option.some (signature', cA))
           (comp_typs signature)
     }
 
-  let update_comp_typs : CompTyp.t Id.Typ.Hamt.t -> mutation =
+  let update_comp_typs : CompTyp.t Id.CompTyp.Hamt.t -> mutation =
    fun cAs signature signature' ->
     { signature with
       comp_typs =
@@ -2577,16 +2577,16 @@ module Mutation = struct
    fun cA signature signature' ->
     { signature with
       comp_cotyps =
-        Id.Typ.Hamt.alter (CompCotyp.id cA)
+        Id.CompCotyp.Hamt.alter (CompCotyp.id cA)
           (Fun.const @@ Option.some (signature', cA))
           (comp_cotyps signature)
     }
 
-  let update_comp_cotyps : CompCotyp.t Id.Typ.Hamt.t -> mutation =
+  let update_comp_cotyps : CompCotyp.t Id.CompCotyp.Hamt.t -> mutation =
    fun cAs signature signature' ->
     { signature with
       comp_cotyps =
-        Id.CompTyp.Hamt.merge
+        Id.CompCotyp.Hamt.merge
           (fun _ cA' cA ->
             Option.alt Option.(cA' $> Pair.left signature') cA)
           cAs (comp_cotyps signature)
@@ -2601,14 +2601,15 @@ module Mutation = struct
   let freeze_comp_typs : Id.CompTyp.Set.t -> mutation =
    fun cAs signature _ ->
     { signature with
-      unfrozen_comp_typs = Id.Typ.Set.diff (unfrozen_comp_typs signature) cAs
+      unfrozen_comp_typs =
+        Id.CompTyp.Set.diff (unfrozen_comp_typs signature) cAs
     }
 
-  let freeze_comp_cotyps : Id.CompTyp.Set.t -> mutation =
+  let freeze_comp_cotyps : Id.CompCotyp.Set.t -> mutation =
    fun cAs signature _ ->
     { signature with
       unfrozen_comp_cotyps =
-        Id.Typ.Set.diff (unfrozen_comp_cotyps signature) cAs
+        Id.CompCotyp.Set.diff (unfrozen_comp_cotyps signature) cAs
     }
 
   (** [freeze_typ tA] is the mutation that freezes at least the LF family
@@ -2908,7 +2909,7 @@ let empty =
   { entries = []
   ; bindings = Name.Hamt.empty
   ; typs = Id.Typ.Hamt.empty
-  ; consts = Id.Comp.Hamt.empty
+  ; consts = Id.Const.Hamt.empty
   ; comp_typs = Id.CompTyp.Hamt.empty
   ; comp_consts = Id.CompConst.Hamt.empty
   ; comp_cotyps = Id.CompCotyp.Hamt.empty

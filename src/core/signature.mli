@@ -777,12 +777,12 @@ module Typ : sig
   val fresh_mvar_name :
     t -> ?default_base_name:string -> Name.fresh_name_supplier
 
-  val set_var_naming_convention : Name.t Option.t -> t -> t
+  val set_var_naming_convention : string Option.t -> t -> t
 
-  val set_mvar_naming_convention : Name.t Option.t -> t -> t
+  val set_mvar_naming_convention : string Option.t -> t -> t
 
   val set_naming_conventions :
-    var:Name.t Option.t -> mvar:Name.t Option.t -> t -> t
+    var:string Option.t -> mvar:string Option.t -> t -> t
 
   (** {1 Subordination} *)
 
@@ -847,7 +847,7 @@ module Const : sig
 
   val make :
        id:Id.Const.t
-    -> name:string
+    -> name:Name.t
     -> location:Location.t
     -> implicit_arguments:int
     -> kind:Id.Typ.t
@@ -1085,7 +1085,7 @@ module Comp : sig
 
   val make :
        id:Id.Comp.t
-    -> name:string
+    -> name:Name.t
     -> location:Location.t
     -> implicit_arguments:int
     -> typ:Comp.typ
@@ -1218,7 +1218,7 @@ module Query : sig
   val make :
        id:Id.Query.t
     -> location:Location.t
-    -> ?name:string
+    -> ?name:Name.t
     -> ?search_parameters:search_parameters
     -> ?documentation_comment:DocumentationComment.t
     -> LF.mctx * (LF.typ * offset)
@@ -1265,7 +1265,7 @@ module MQuery : sig
   val make :
        id:Id.MQuery.t
     -> location:Location.t
-    -> ?name:string
+    -> ?name:Name.t
     -> ?search_parameters:search_parameters
     -> ?documentation_comment:DocumentationComment.t
     -> Syntax.Int.Comp.typ * offset
@@ -1703,10 +1703,11 @@ val lookup_module_opt :
 val lookup_module_opt' :
   t -> QualifiedName.t -> (t * (t, entry, declaration) Module.t) Option.t
 
-val lookup_module_by_id : t -> Id.Query.t -> (t, entry, declaration) Module.t
+val lookup_module_by_id :
+  t -> Id.Module.t -> (t, entry, declaration) Module.t
 
 val lookup_module_by_id' :
-  t -> Id.Query.t -> t * (t, entry, declaration) Module.t
+  t -> Id.Module.t -> t * (t, entry, declaration) Module.t
 
 val lookup_module_by_id_opt :
   t -> Id.Module.t -> (t, entry, declaration) Module.t Option.t
