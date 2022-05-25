@@ -1185,6 +1185,14 @@ module Module : sig
     -> Name.t
     -> ('signature * 'declaration) Option.t
 
+  val deep_lookup :
+       (   'signature * 'declaration
+        -> ('signature, 'entry, 'declaration) t Option.t)
+    -> ('signature, 'entry, 'declaration) t
+    -> Name.t List.t
+    -> Name.t
+    -> ('signature * 'declaration) Option.t
+
   (** {1 Iterators} *)
 
   val fold_entries :
