@@ -2,7 +2,7 @@
  (name main)
  (public_name beluga)
  (package beluga)
- (libraries rework support beluga dune-build-info)
+ (libraries support beluga dune-build-info)
  (modules main beli version))
 
 (executable
