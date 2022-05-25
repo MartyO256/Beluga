@@ -5,14 +5,14 @@
     a new signature. Significant data sharing is in place to ensure good
     performance.
 
-    {1 Scope-Safe Lookups}
+    {2 Scope-Safe Lookups}
 
     Lookups in a Beluga signature respect scoping information if the
     signature is kept local to the function making the lookup. To jump at an
     earlier point in a signature, an added declaration is stored along with
     the signature up to and including that added declaration.
 
-    {1 Freezable Declarations}
+    {2 Freezable Declarations}
 
     Grouped declarations are defined in two stages: unfrozen and frozen.
 
@@ -27,7 +27,8 @@
     Freezable declarations are frozen whenever:
 
     - the freezable declaration goes out of scope,
-    - a module declaration is added, or
+    - a module declaration is added,
+    - a logic programming query is added, or
     - a theorem is added.
 
     @author Marc-Antoine Ouimet *)
@@ -169,55 +170,6 @@ module Id : sig
 
   module Schema : ID
 
-  (** The tagged union type of Beluga declaration IDs. *)
-  type t =
-    | Typ of Typ.t
-    | Const of Const.t
-    | CompTyp of CompTyp.t
-    | CompConst of CompConst.t
-    | CompCotyp of CompCotyp.t
-    | CompDest of CompDest.t
-    | Comp of Comp.t
-    | Module of Module.t
-    | Query of Query.t
-    | MQuery of MQuery.t
-    | Schema of Schema.t
-
-  (** {1 Constructors} *)
-
-  (** [lift_typ_id id] is [Typ id]. *)
-  val lift_typ_id : Typ.t -> t
-
-  (** [lift_const_id id] is [Const id]. *)
-  val lift_const_id : Const.t -> t
-
-  (** [lift_comp_typ_id id] is [CompTyp id]. *)
-  val lift_comp_typ_id : CompTyp.t -> t
-
-  (** [lift_comp_const_id id] is [CompConst id]. *)
-  val lift_comp_const_id : CompConst.t -> t
-
-  (** [lift_comp_cotyp_id id] is [CompCotyp id]. *)
-  val lift_comp_cotyp_id : CompCotyp.t -> t
-
-  (** [lift_comp_dest_id id] is [CompDest id]. *)
-  val lift_comp_dest_id : CompDest.t -> t
-
-  (** [lift_comp_id id] is [Comp id]. *)
-  val lift_comp_id : Comp.t -> t
-
-  (** [lift_module_id id] is [Module id]. *)
-  val lift_module_id : Module.t -> t
-
-  (** [lift_query_id id] is [Query id]. *)
-  val lift_query_id : Query.t -> t
-
-  (** [lift_mquery_id id] is [MQuery id]. *)
-  val lift_mquery_id : MQuery.t -> t
-
-  (** [lift_schema_id id] is [Schema id]. *)
-  val lift_schema_id : Schema.t -> t
-
   (** {1 ID Allocation} *)
 
   (** Stateful builder pattern for sequentially making distinct IDs. *)
@@ -273,22 +225,6 @@ module Id : sig
     (** [next_schema_id] is an ID allocator whose next ID is a schema ID. *)
     val next_schema_id : Schema.t t
   end
-
-  (** {1 Instances} *)
-
-  include Eq.EQ with type t := t
-
-  include Ord.ORD with type t := t
-
-  include Hash.HASH with type t := t
-
-  (** {1 Collections} *)
-
-  module Set : Set.S with type elt = t
-
-  module Map : Map.S with type key = t
-
-  module Hamt : Hamt.S with type key = t
 end
 
 module Syntax : sig
@@ -780,8 +716,6 @@ module Typ : sig
 
   val id : t -> Id.Typ.t
 
-  val lifted_id : t -> Id.t
-
   val location : t -> Location.t
 
   val name : t -> Name.t
@@ -798,28 +732,38 @@ module Typ : sig
 
   (** {1 Freezing} *)
 
+  exception UnfrozenTyp of t
+
+  exception FrozenTyp of t
+
   val is_frozen : t -> bool
 
   val is_unfrozen : t -> bool
 
+  (** [freeze ~term_subordinates ~type_subordinated_to tA] is the frozen
+      version of [tA] using the input subordination information.
+
+      @raise FrozenTyp If [tA] is frozen. *)
   val freeze :
        term_subordinates:Id.Typ.Set.t
     -> type_subordinated_to:Id.Typ.Set.t
     -> t
-    -> (t, [> `Frozen_typ_declaration_error of Id.Typ.t ]) Result.t
+    -> t
 
   (** {1 LF Constructors} *)
 
-  val add_constructor :
-       Name.t
-    -> Id.Const.t
-    -> t
-    -> ( t
-       , [> `Kind_name_collision of Name.t * Id.Const.t * t
-         | `Constructor_name_collision of Name.t * Id.Const.t * t
-         | `Frozen_typ_declaration_error of Id.Typ.t
-         ] )
-       result
+  exception TypNameCollision of Name.t * Id.Const.t * t
+
+  exception ConstNameCollision of Name.t * Id.Const.t * t
+
+  (** [add_constructor name tM tA] adds the constructor [tM] having name
+      [name] to the type family [tA].
+
+      @raise FrozenTyp If [tA] is frozen.
+      @raise TypNameCollision If [tA] and [tM] have the same name.
+      @raise ConstNameCollision
+        If there exists a constructor in [tA] having the same name as [tM]. *)
+  val add_constructor : Name.t -> Id.Const.t -> t -> t
 
   val constructors : t -> Id.Const.t Name.Hamt.t
 
@@ -846,11 +790,10 @@ module Typ : sig
       having ID [tB_id] is term-level subordinate to [tA].
 
       This is determined using the subordination data passed when [tA] was
-      frozen with {!freeze}. *)
-  val is_term_subordinate :
-       t
-    -> Id.Typ.t
-    -> (bool, [> `Unfrozen_typ_declaration_error of Id.Typ.t ]) Result.t
+      frozen with {!freeze}.
+
+      @raise FrozenTyp If [tA] is frozen. *)
+  val is_term_subordinate : t -> Id.Typ.t -> bool
 
   (** [is_type_subordinate_to tA tB_id] is [true] if and only if the LF
       family [tA] is type-level subordinate to the LF family having ID
@@ -870,29 +813,28 @@ module Typ : sig
 
       We have that:
 
-      - [is_type_subordinate_to list (id nat) = Ok true]
-      - [is_type_subordinate_to t (id list) = Ok true]
-      - [is_type_subordinate_to t' (id list) = Ok true]
-      - [is_type_subordinate_to t' (id nat) = Ok true]
+      - [is_type_subordinate_to list (id nat) = true]
+      - [is_type_subordinate_to t (id list) = true]
+      - [is_type_subordinate_to t' (id list) = true]
+      - [is_type_subordinate_to t' (id nat) = true]
 
       And:
 
-      - [is_type_subordinate_to nat (id nat) = Ok false]
-      - [is_type_subordinate_to nat (id list) = Ok false]
-      - [is_type_subordinate_to nat (id t) = Ok false]
-      - [is_type_subordinate_to nat (id t') = Ok false]
-      - [is_type_subordinate_to list (id t) = Ok false]
-      - [is_type_subordinate_to list (id t') = Ok false]
-      - [is_type_subordinate_to t (id nat) = Ok false]
-      - [is_type_subordinate_to t (id t') = Ok false]
-      - [is_type_subordinate_to t' (id t') = Ok false]
+      - [is_type_subordinate_to nat (id nat) = false]
+      - [is_type_subordinate_to nat (id list) = false]
+      - [is_type_subordinate_to nat (id t) = false]
+      - [is_type_subordinate_to nat (id t') = false]
+      - [is_type_subordinate_to list (id t) = false]
+      - [is_type_subordinate_to list (id t') = false]
+      - [is_type_subordinate_to t (id nat) = false]
+      - [is_type_subordinate_to t (id t') = false]
+      - [is_type_subordinate_to t' (id t') = false]
 
       Type-level subordination is determined using the subordination data
-      passed when [tA] was frozen with {!freeze}. *)
-  val is_type_subordinate_to :
-       t
-    -> Id.Typ.t
-    -> (bool, [> `Unfrozen_typ_declaration_error of Id.Typ.t ]) Result.t
+      passed when [tA] was frozen with {!freeze}.
+
+      @raise FrozenTyp If [tA] is frozen. *)
+  val is_type_subordinate_to : t -> Id.Typ.t -> bool
 end
 
 (** LF type constructor declarations. *)
@@ -916,8 +858,6 @@ module Const : sig
   (** {1 Destructors}*)
 
   val id : t -> Id.Const.t
-
-  val lifted_id : t -> Id.t
 
   val location : t -> Location.t
 
@@ -952,8 +892,6 @@ module CompTyp : sig
 
   val id : t -> Id.CompTyp.t
 
-  val lifted_id : t -> Id.t
-
   val location : t -> Location.t
 
   val name : t -> Name.t
@@ -964,26 +902,33 @@ module CompTyp : sig
 
   (** {1 Freezing} *)
 
+  exception UnfrozenCompTyp of t
+
+  exception FrozenCompTyp of t
+
   val is_frozen : t -> bool
 
   val is_unfrozen : t -> bool
 
-  val freeze :
-       t
-    -> (t, [> `Frozen_comp_typ_declaration_error of Id.CompTyp.t ]) Result.t
+  (** [freeze cK] is the frozen version of [cK].
+
+      @raise FrozenCompTyp If [cK] is frozen. *)
+  val freeze : t -> t
 
   (** {1 Constructors} *)
 
-  val add_constructor :
-       Name.t
-    -> Id.CompConst.t
-    -> t
-    -> ( t
-       , [> `Kind_name_collision of Name.t * Id.CompConst.t * t
-         | `Comp_constructor_name_collision of Name.t * Id.CompConst.t * t
-         | `Frozen_comp_typ_declaration_error of Id.CompTyp.t
-         ] )
-       result
+  exception CompTypNameCollision of Name.t * Id.CompConst.t * t
+
+  exception CompConstNameCollision of Name.t * Id.CompConst.t * t
+
+  (** [add_constructor name cM cK] adds the constructor [cM] having name
+      [name] to the computational type family [cK].
+
+      @raise FrozenCompTyp If [cK] is frozen.
+      @raise CompTypNameCollision If [cK] and [cM] have the same name.
+      @raise CompConstNameCollision
+        If there exists a constructor in [cK] having the same name as [cM]. *)
+  val add_constructor : Name.t -> Id.CompConst.t -> t -> t
 
   val constructors : t -> Id.CompConst.t Name.Hamt.t
 
@@ -1011,8 +956,6 @@ module CompConst : sig
   (** {1 Destructors}*)
 
   val id : t -> Id.CompConst.t
-
-  val lifted_id : t -> Id.t
 
   val location : t -> Location.t
 
@@ -1048,8 +991,6 @@ module CompCotyp : sig
 
   val id : t -> Id.CompCotyp.t
 
-  val lifted_id : t -> Id.t
-
   val location : t -> Location.t
 
   val name : t -> Name.t
@@ -1060,28 +1001,33 @@ module CompCotyp : sig
 
   (** {1 Freezing} *)
 
+  exception UnfrozenCompCotyp of t
+
+  exception FrozenCompCotyp of t
+
   val is_frozen : t -> bool
 
   val is_unfrozen : t -> bool
 
-  val freeze :
-       t
-    -> ( t
-       , [> `Frozen_comp_cotyp_declaration_error of Id.CompCotyp.t ] )
-       Result.t
+  (** [freeze cK] is the frozen version of [cK].
+
+      @raise FrozenCompCotyp If [cK] is frozen. *)
+  val freeze : t -> t
 
   (** {1 Destructors} *)
 
-  val add_destructor :
-       Name.t
-    -> Id.CompDest.t
-    -> t
-    -> ( t
-       , [> `Kind_name_collision of Name.t * Id.CompDest.t * t
-         | `Comp_destructor_name_collision of Name.t * Id.CompDest.t * t
-         | `Frozen_comp_cotyp_declaration_error of Id.CompCotyp.t
-         ] )
-       result
+  exception CompCotypNameCollision of Name.t * Id.CompDest.t * t
+
+  exception CompDestNameCollision of Name.t * Id.CompDest.t * t
+
+  (** [add_destructor name cM cK] adds the destructor [cM] having name [name]
+      to the computational type family [cK].
+
+      @raise FrozenCompCotyp If [cK] is frozen.
+      @raise CompCotypNameCollision If [cK] and [cM] have the same name.
+      @raise CompDestNameCollision
+        If there exists a constructor in [cK] having the same name as [cM]. *)
+  val add_destructor : Name.t -> Id.CompDest.t -> t -> t
 
   val destructors : t -> Id.CompDest.t Name.Hamt.t
 
@@ -1111,8 +1057,6 @@ module CompDest : sig
   (** {1 Destructors}*)
 
   val id : t -> Id.CompDest.t
-
-  val lifted_id : t -> Id.t
 
   val location : t -> Location.t
 
@@ -1154,8 +1098,6 @@ module Comp : sig
 
   val id : t -> Id.Comp.t
 
-  val lifted_id : t -> Id.t
-
   val location : t -> Location.t
 
   val name : t -> Name.t
@@ -1191,8 +1133,6 @@ module Schema : sig
 
   val id : t -> Id.Schema.t
 
-  val lifted_id : t -> Id.t
-
   val name : t -> Name.t
 
   val location : t -> Location.t
@@ -1220,7 +1160,7 @@ module Module : sig
     -> 'signature * 'entry
     -> ('signature, 'entry, 'declaration) t
 
-  val add_declaration_to_index_by_name :
+  val add_binding :
        ('signature, 'entry, 'declaration) t
     -> Name.t
     -> 'signature * 'declaration
@@ -1229,8 +1169,6 @@ module Module : sig
   (** {1 Destructors} *)
 
   val id : (_, _, _) t -> Id.Module.t
-
-  val lifted_id : (_, _, _) t -> Id.t
 
   val location : (_, _, _) t -> Location.t
 
@@ -1290,8 +1228,6 @@ module Query : sig
 
   val id : t -> Id.Query.t
 
-  val lifted_id : t -> Id.t
-
   val location : t -> Location.t
 
   val name : t -> Name.t Option.t
@@ -1339,8 +1275,6 @@ module MQuery : sig
 
   val id : t -> Id.MQuery.t
 
-  val lifted_id : t -> Id.t
-
   val location : t -> Location.t
 
   val name : t -> Name.t Option.t
@@ -1379,58 +1313,84 @@ end
 (** The type of Beluga signatures. *)
 type t
 
-type mutually_recursive_typs =
-  [ `Typs of (Typ.t * Const.t Name.LinkedHamt.t) List1.t ]
-
-type mutually_recursive_comp_typs =
-  [ `Comp_typs of
-    [ `Comp_typ of CompTyp.t * CompConst.t Name.LinkedHamt.t
-    | `Comp_cotyp of CompCotyp.t * CompDest.t Name.LinkedHamt.t
-    ]
-    List1.t
-  ]
-
-type mutually_recursive_programs = [ `Programs of Comp.t Name.LinkedHamt1.t ]
-
 (** The type of entries in Beluga signatures. *)
-type entry =
-  [ `Typ_declaration of Typ.t
-  | `Const_declaration of Const.t
-  | `Comp_typ_declaration of CompTyp.t
-  | `Comp_const_declaration of CompConst.t
-  | `Comp_cotyp_declaration of CompCotyp.t
-  | `Comp_dest_declaration of CompDest.t
-  | `Comp_declaration of Comp.t
-  | `Schema_declaration of Schema.t
-  | `Module_declaration of (t, entry, declaration) Module.t
-  | `Documentation_comment of DocumentationComment.t
-  | `Mutually_recursive_declaration of
-    [ mutually_recursive_typs
-    | mutually_recursive_comp_typs
-    | mutually_recursive_programs
-    ]
-  | `Query_declaration of Query.t
-  | `MQuery_declaration of MQuery.t
-  | `Name_pragma of NamePragma.t
-  ]
+type entry
 
 (** The subtype of entries having an ID associated with them.
 
     Declarations may introduce names in the scope or appear in relationships
     with other declarations. *)
-and declaration =
-  [ `Typ_declaration of Typ.t
-  | `Const_declaration of Const.t
-  | `Comp_typ_declaration of CompTyp.t
-  | `Comp_const_declaration of CompConst.t
-  | `Comp_cotyp_declaration of CompCotyp.t
-  | `Comp_dest_declaration of CompDest.t
-  | `Comp_declaration of Comp.t
-  | `Schema_declaration of Schema.t
-  | `Module_declaration of (t, entry, declaration) Module.t
-  | `Query_declaration of Query.t
-  | `MQuery_declaration of MQuery.t
-  ]
+type declaration
+
+(** {1 Exceptions} *)
+
+exception UnboundDeclaration of QualifiedName.t * t
+
+exception BoundTypId of Id.Typ.t * t
+
+exception UnboundTypId of Id.Typ.t * t
+
+exception UnboundTyp of QualifiedName.t * t
+
+exception BoundConstId of Id.Const.t * t
+
+exception UnboundConstId of Id.Const.t * t
+
+exception UnboundConst of QualifiedName.t * t
+
+exception BoundCompTypId of Id.CompTyp.t * t
+
+exception UnboundCompTypId of Id.CompTyp.t * t
+
+exception UnboundCompTyp of QualifiedName.t * t
+
+exception BoundCompConstId of Id.CompConst.t * t
+
+exception UnboundCompConstId of Id.CompConst.t * t
+
+exception UnboundCompConst of QualifiedName.t * t
+
+exception BoundCompCotypId of Id.CompCotyp.t * t
+
+exception UnboundCompCotypId of Id.CompCotyp.t * t
+
+exception UnboundCompCotyp of QualifiedName.t * t
+
+exception BoundCompDestId of Id.CompDest.t * t
+
+exception UnboundCompDestId of Id.CompDest.t * t
+
+exception UnboundCompDest of QualifiedName.t * t
+
+exception BoundCompId of Id.Comp.t * t
+
+exception UnboundCompId of Id.Comp.t * t
+
+exception UnboundComp of QualifiedName.t * t
+
+exception BoundSchemaId of Id.Schema.t * t
+
+exception UnboundSchemaId of Id.Schema.t * t
+
+exception UnboundSchema of QualifiedName.t * t
+
+exception BoundModuleId of Id.Module.t * t
+
+exception UnboundModuleId of Id.Module.t * t
+
+exception UnboundModule of QualifiedName.t * t
+
+exception BoundQueryId of Id.Query.t * t
+
+exception UnboundQueryId of Id.Query.t * t
+
+exception UnboundQuery of QualifiedName.t * t
+
+exception BoundMQueryId of Id.MQuery.t * t
+
+exception UnboundMQueryId of Id.MQuery.t * t
+
+exception UnboundMQuery of QualifiedName.t * t
 
 (** {1 Constructors} *)
 
@@ -1443,9 +1403,10 @@ val empty : t
 
     In the resultant signature, the declaration having the same name as [tA]
     in [signature] is shadowed if there is any, and frozen if applicable, and
-    [tA] is added as unfrozen if it is unfrozen. *)
-val add_typ :
-  t -> Typ.t -> (t, [> `Bound_id of Id.t * (t * declaration) * t ]) Result.t
+    [tA] is added as unfrozen if it is unfrozen.
+
+    @raise BoundTypId *)
+val add_typ : t -> Typ.t -> t
 
 (** [add_const signature tM] constructs the signature derived from
     [signature] with the addition of the LF term constant [tM] as a top-level
@@ -1454,18 +1415,13 @@ val add_typ :
     In the resultant signature, the declaration having the same name as [tM]
     in [signature] is shadowed if there is any, and frozen if applicable, and
     the target LF type-level constant for [tM] is updated to have [tM] as
-    additional constructor. *)
-val add_const :
-     t
-  -> Const.t
-  -> ( t
-     , [> `Bound_id of Id.t * (t * declaration) * t
-       | `Constructor_name_collision of Name.t * Id.Const.t * Typ.t
-       | `Frozen_typ_declaration_error of Id.Typ.t
-       | `Kind_name_collision of Name.t * Id.Const.t * Typ.t
-       | `Unbound_typ_id of Id.Typ.t
-       ] )
-     Result.t
+    additional constructor.
+
+    @raise BoundConstId
+    @raise FrozenTyp
+    @raise TypNameCollision
+    @raise ConstNameCollision *)
+val add_const : t -> Const.t -> t
 
 (** [add_comp_typ signature cA] constructs the signature derived from
     [signature] with the addition of the computational type constant [cA] as
@@ -1473,11 +1429,10 @@ val add_const :
 
     In the resultant signature, the declaration having the same name as [cA]
     in [signature] is shadowed if there is any, and frozen if applicable, and
-    [cA] is added as unfrozen if it is unfrozen. *)
-val add_comp_typ :
-     t
-  -> CompTyp.t
-  -> (t, [> `Bound_id of Id.t * (t * declaration) * t ]) Result.t
+    [cA] is added as unfrozen if it is unfrozen.
+
+    @raise BoundCompConstId *)
+val add_comp_typ : t -> CompTyp.t -> t
 
 (** [add_comp_const signature cM] constructs the signature derived from
     [signature] with the addition of the computational constructor constant
@@ -1486,19 +1441,13 @@ val add_comp_typ :
     In the resultant signature, the declaration having the same name as [cM]
     in [signature] is shadowed if there is any, and frozen if applicable, and
     the target computational type constant for [cM] is updated to have [cM]
-    as additional constructor. *)
-val add_comp_const :
-     t
-  -> CompConst.t
-  -> ( t
-     , [> `Bound_id of Id.t * (t * declaration) * t
-       | `Comp_constructor_name_collision of
-         Name.t * Id.CompConst.t * CompTyp.t
-       | `Frozen_comp_typ_declaration_error of Id.CompTyp.t
-       | `Kind_name_collision of Name.t * Id.CompConst.t * CompTyp.t
-       | `Unbound_comp_typ_id of Id.CompTyp.t
-       ] )
-     Result.t
+    as additional constructor.
+
+    @raise BoundCompConstId
+    @raise FrozenCompTyp
+    @raise CompTypNameCollision
+    @raise CompConstNameCollision *)
+val add_comp_const : t -> CompConst.t -> t
 
 (** [add_comp_cotyp signature cA] constructs the signature derived from
     [signature] with the addition of the computational cotype constant [cA]
@@ -1506,11 +1455,10 @@ val add_comp_const :
 
     In the resultant signature, the declaration having the same name as [cA]
     in [signature] is shadowed if there is any, and frozen if applicable, and
-    [cA] is added as unfrozen if it is unfrozen. *)
-val add_comp_cotyp :
-     t
-  -> CompCotyp.t
-  -> (t, [> `Bound_id of Id.t * (t * declaration) * t ]) Result.t
+    [cA] is added as unfrozen if it is unfrozen.
+
+    @raise BoundCompCotypId *)
+val add_comp_cotyp : t -> CompCotyp.t -> t
 
 (** [add_comp_dest signature cM] constructs the signature derived from
     [signature] with the addition of the computational destructor constant
@@ -1519,53 +1467,46 @@ val add_comp_cotyp :
     In the resultant signature, the declaration having the same name as [cM]
     in [signature] is shadowed if there is any, and frozen if applicable, and
     the target computational cotype constant for [cM] is updated to have [cM]
-    as additional destructor. *)
-val add_comp_dest :
-     t
-  -> CompDest.t
-  -> ( t
-     , [> `Bound_id of Id.t * (t * declaration) * t
-       | `Comp_destructor_name_collision of
-         Name.t * Id.CompDest.t * CompCotyp.t
-       | `Frozen_comp_cotyp_declaration_error of Id.CompDest.t
-       | `Kind_name_collision of Name.t * Id.CompDest.t * CompCotyp.t
-       | `Unbound_comp_cotyp_id of Id.CompCotyp.t
-       ] )
-     Result.t
+    as additional destructor.
+
+    @raise BoundCompDestId
+    @raise FrozenCompCotyp
+    @raise CompCotypNameCollision
+    @raise CompDestNameCollision *)
+val add_comp_dest : t -> CompDest.t -> t
 
 (** [add_query signature query] constructs the signature derived from
     [signature] with the addition of the logic programming query on [query]
     as a top-level declaration.
 
-    In the resultant signature, all declarations are frozen. *)
-val add_query :
-     t
-  -> Query.t
-  -> (t, [> `Bound_id of Id.t * (t * declaration) * t ]) Result.t
+    In the resultant signature, all declarations are frozen.
+
+    @raise BoundQueryId *)
+val add_query : t -> Query.t -> t
 
 (** [add_mquery signature mquery] constructs the signature derived from
     [signature] with the addition of the logic programming query on
     computational types [mquery] as a top-level declaration.
 
-    In the resultant signature, all declarations are frozen. *)
-val add_mquery :
-     t
-  -> MQuery.t
-  -> (t, [> `Bound_id of Id.t * (t * declaration) * t ]) Result.t
+    In the resultant signature, all declarations are frozen.
+
+    @raise BoundMQueryId *)
+val add_mquery : t -> MQuery.t -> t
 
 (** [add_name_pragma signature name_pragma] constructs the signature derived
     from [signature] with the addition of the name pragma [name_pragma] for
     setting new variable naming conventions for witnesses to an LF type
-    family. *)
-val add_name_pragma :
-  t -> NamePragma.t -> (t, [> `Unbound_typ_id of Id.Typ.t ]) Result.t
+    family.
+
+    @raise UnboundTypId *)
+val add_name_pragma : t -> NamePragma.t -> t
 
 (** [add_documentation_comment signature comment] constructs the signature
     derived from [signature] with the addition of the documentation comment
     [comment]. *)
 val add_documentation_comment : t -> DocumentationComment.t -> t
 
-(** {1 Lookups by Qualified Name} *)
+(** {1 Lookups} *)
 
 (** Lookups by qualified name allow for looking up the declaration currently
     in scope at a given path. That is, if a lookup results in some
@@ -1574,345 +1515,240 @@ val add_documentation_comment : t -> DocumentationComment.t -> t
 
     Looked up declarations are associated with the signature up to and
     including that declaration. This allows for subsequent lookups to be made
-    on the signature as of that declaration being made. *)
+    on the signature as of that declaration being made.
 
-(** [lookup signature name] returns [None] if there is no declaration in
-    [signature] having name [name], and otherwise returns
-    [Some (signature', declaration)], where
-
-    - [signature'] is the signature up to and including [declaration], and
-    - [declaration] is the latest declaration in [signature] having name
-      [name]. *)
-val lookup : t -> QualifiedName.t -> (t * declaration) Option.t
-
-val lookup' : t -> QualifiedName.t -> declaration Option.t
-
-(** [lookup_typ signature qualified_name] is the latest LF type family
-    declared at [qualified_name] in [signature] if such a declaration exists. *)
-val lookup_typ : t -> QualifiedName.t -> (t * Typ.t) Option.t
-
-(** [lookup_constructor signature qualified_name] is the latest LF type
-    constructor declared at [qualified_name] in [signature] if such a
-    declaration exists. *)
-val lookup_constructor : t -> QualifiedName.t -> (t * Const.t) Option.t
-
-(** [lookup_comp_typ signature qualified_name] is the latest computational
-    type declared at [qualified_name] in [signature] if such a declaration
-    exists. *)
-val lookup_comp_typ : t -> QualifiedName.t -> (t * CompTyp.t) Option.t
-
-(** [lookup_comp_constructor signature qualified_name] is the latest
-    computational type constructor declared at [qualified_name] in
-    [signature] if such a declaration exists. *)
-val lookup_comp_constructor :
-  t -> QualifiedName.t -> (t * CompConst.t) Option.t
-
-(** [lookup_comp_cotyp signature qualified_name] is the latest computational
-    cotype declared at [qualified_name] in [signature] if such a declaration
-    exists. *)
-val lookup_comp_cotyp : t -> QualifiedName.t -> (t * CompCotyp.t) Option.t
-
-(** [lookup_comp_destructor signature qualified_name] is the latest
-    computational cotype destructor declared at [qualified_name] in
-    [signature] if such a declaration exists. *)
-val lookup_comp_destructor :
-  t -> QualifiedName.t -> (t * CompDest.t) Option.t
-
-(** [lookup_comp signature qualified_name] is the latest computation declared
-    at [qualified_name] in [signature] if such a declaration exists. *)
-val lookup_comp : t -> QualifiedName.t -> (t * Comp.t) Option.t
-
-(** [lookup_schema signature qualified_name] is the latest context schema
-    declared at [qualified_name] in [signature] if such a declaration exists. *)
-val lookup_schema : t -> QualifiedName.t -> (t * Schema.t) Option.t
-
-(** [lookup_module signature qualified_name] is the latest module declared at
-    [qualified_name] in [signature] if such a declaration exists. *)
-val lookup_module :
-  t -> QualifiedName.t -> (t * (t, entry, declaration) Module.t) Option.t
-
-(** [lookup_query signature qualified_name] is the latest logic programming
-    query on LF types declared at [qualified_name] in [signature] if such a
-    declaration exists. *)
-val lookup_query : t -> QualifiedName.t -> (t * Query.t) Option.t
-
-(** [lookup_mquery signature qualified_name] is the latest logic programming
-    meta-query on computational types declared at [qualified_name] in
-    [signature] if such a declaration exists. *)
-val lookup_mquery : t -> QualifiedName.t -> (t * MQuery.t) Option.t
-
-(** {1 Lookups by ID} *)
-
-(** Lookups by ID in a signature allows for bypassing scope checks.
+    Lookups by ID in a signature allow for bypassing scope checks.
     Declaration IDs were allocated during signature reconstruction as
     declarations were added. Since IDs are floating references, then a
     declaration looked up by ID in a signature is its latest version. That
     is, if the declaration associated with a given ID was altered since it
     was first added, then the lookup by ID returns the altered version of the
-    declaration. *)
+    declaration.
 
-(** [lookup_typ_by_id signature id] is the LF type family having ID [id] in
-    [signature] if such a declaration exists. *)
-val lookup_typ_by_id : t -> Id.Typ.t -> (t * Typ.t) Option.t
-
-val lookup_typ_by_id' : t -> Id.Typ.t -> Typ.t Option.t
-
-(** [lookup_constructor_by_id signature id] is the LF type constructor having
-    ID [id] in [signature] if such a declaration exists. *)
-val lookup_constructor_by_id : t -> Id.Const.t -> (t * Const.t) Option.t
-
-val lookup_constructor_by_id' : t -> Id.Const.t -> Const.t Option.t
-
-(** [lookup_comp_typ_by_id signature id] is the computational type having ID
-    [id] in [signature] if such a declaration exists. *)
-val lookup_comp_typ_by_id : t -> Id.CompTyp.t -> (t * CompTyp.t) Option.t
-
-val lookup_comp_typ_by_id' : t -> Id.CompTyp.t -> CompTyp.t Option.t
-
-(** [lookup_comp_constructor_by_id signature id] is the computational type
-    constructor having ID [id] in [signature] if such a declaration exists. *)
-val lookup_comp_constructor_by_id :
-  t -> Id.CompConst.t -> (t * CompConst.t) Option.t
-
-val lookup_comp_constructor_by_id' :
-  t -> Id.CompConst.t -> CompConst.t Option.t
-
-(** [lookup_comp_cotyp_by_id signature id] is the computational cotype having
-    ID [id] in [signature] if such a declaration exists. *)
-val lookup_comp_cotyp_by_id :
-  t -> Id.CompCotyp.t -> (t * CompCotyp.t) Option.t
-
-val lookup_comp_cotyp_by_id' : t -> Id.CompCotyp.t -> CompCotyp.t Option.t
-
-(** [lookup_comp_destructor_by_id signature id] is the computational cotype
-    destructor having ID [id] in [signature] if such a declaration exists. *)
-val lookup_comp_destructor_by_id :
-  t -> Id.CompDest.t -> (t * CompDest.t) Option.t
-
-val lookup_comp_destructor_by_id' : t -> Id.CompDest.t -> CompDest.t Option.t
-
-(** [lookup_comp_by_id signature id] is the computation having ID [id] in
-    [signature] if such a declaration exists. *)
-val lookup_comp_by_id : t -> Id.Comp.t -> (t * Comp.t) Option.t
-
-val lookup_comp_by_id' : t -> Id.Comp.t -> Comp.t Option.t
-
-(** [lookup_schema_by_id signature id] is the schema having ID [id] in
-    [signature] if such a declaration exists. *)
-val lookup_schema_by_id : t -> Id.Schema.t -> (t * Schema.t) Option.t
-
-val lookup_schema_by_id' : t -> Id.Schema.t -> Schema.t Option.t
-
-(** [lookup_module_by_id signature id] is the module having ID [id] in
-    [signature] if such a declaration exists. *)
-val lookup_module_by_id :
-  t -> Id.Module.t -> (t * (t, entry, declaration) Module.t) Option.t
-
-val lookup_module_by_id' :
-  t -> Id.Module.t -> (t, entry, declaration) Module.t Option.t
-
-(** [lookup_query_by_id signature id] is the logic programming query having
-    ID [id] in [signature] if such a declaration exists. *)
-val lookup_query_by_id : t -> Id.Query.t -> (t * Query.t) Option.t
-
-val lookup_query_by_id' : t -> Id.Query.t -> Query.t Option.t
-
-(** [lookup_query_by_id signature id] is the logic programming meta-query
-    having ID [id] in [signature] if such a declaration exists. *)
-val lookup_mquery_by_id : t -> Id.MQuery.t -> (t * MQuery.t) Option.t
-
-val lookup_mquery_by_id' : t -> Id.MQuery.t -> MQuery.t Option.t
-
-(** {1 Unsafe lookups by ID} *)
-
-(** Unsafe lookups by ID are functionally equivalent to safe lookups by ID,
-    except that exceptions are raised when a lookup fails.
-
-    These unsafe signature lookup functions are intended to be used when it
-    is known that the given ID is bound in the signature and has the intended
-    ID kind.
-
-    The exception types they raise are strictly programmer errors, not user
+    Unsafe lookups by ID are functionally equivalent to safe lookups by ID,
+    except that exceptions are raised when a lookup fails. These unsafe
+    signature lookup functions are intended to be used when it is known that
+    the given ID is bound in the signature and has the intended ID kind. The
+    exception types they raise are strictly programmer errors, not user
     errors. *)
 
-(** [UnboundId (id, signature)] is the exception raised when [id] could not
-    be found in [signature]. *)
-exception UnboundId of Id.t * t
+val lookup : t -> QualifiedName.t -> declaration
 
-type id_kind_mismatch =
-  { bound : Id.t
-  ; expected : Id.t
-  ; signature : t
-  }
+val lookup' : t -> QualifiedName.t -> t * declaration
 
-(** [IdKindMismatch { bound; expected; signature }] is the exception raised
-    when IDs [bound] and [expected] differ in the kind of ID looked up in
-    [signature]. *)
-exception IdKindMismatch of id_kind_mismatch
+val lookup_opt : t -> QualifiedName.t -> declaration Option.t
 
-(** [lookup_typ_by_id_exn signature id] is the LF type family having ID [id]
-    in [signature].
+val lookup_opt' : t -> QualifiedName.t -> (t * declaration) Option.t
 
-    @raise UnboundId If the ID [id] is not in [signature].
-    @raise IdKindMismatch
-      If the declaration having the ID [id] in [signature] is not an LF type
-      family. *)
-val lookup_typ_by_id_exn : t -> Id.Typ.t -> t * Typ.t
+(** {2 Typ} *)
 
-val lookup_typ_by_id_exn' : t -> Id.Typ.t -> Typ.t
+val lookup_typ : t -> QualifiedName.t -> Typ.t
 
-(** [lookup_constructor_by_id_exn signature id] is the LF type constructor
-    having ID [id] in [signature].
+val lookup_typ' : t -> QualifiedName.t -> t * Typ.t
 
-    @raise UnboundId If the ID [id] is not in [signature].
-    @raise IdKindMismatch
-      If the declaration having the ID [id] in [signature] is not an LF type
-      constructor. *)
-val lookup_constructor_by_id_exn : t -> Id.Const.t -> t * Const.t
+val lookup_typ_opt : t -> QualifiedName.t -> Typ.t Option.t
 
-val lookup_constructor_by_id_exn' : t -> Id.Const.t -> Const.t
+val lookup_typ_opt' : t -> QualifiedName.t -> (t * Typ.t) Option.t
 
-(** [lookup_comp_typ_by_id_exn signature id] is the computational type having
-    ID [id] in [signature].
+val lookup_typ_by_id : t -> Id.Typ.t -> Typ.t
 
-    @raise UnboundId If the ID [id] is not in [signature].
-    @raise IdKindMismatch
-      If the declaration having the ID [id] in [signature] is not a
-      computational type. *)
-val lookup_comp_typ_by_id_exn : t -> Id.CompTyp.t -> t * CompTyp.t
+val lookup_typ_by_id' : t -> Id.Typ.t -> t * Typ.t
 
-val lookup_comp_typ_by_id_exn' : t -> Id.CompTyp.t -> CompTyp.t
+val lookup_typ_by_id_opt : t -> Id.Typ.t -> Typ.t Option.t
 
-(** [lookup_comp_constructor_by_id_exn signature id] is the computational
-    type constructor having ID [id] in [signature].
+val lookup_typ_by_id_opt' : t -> Id.Typ.t -> (t * Typ.t) Option.t
 
-    @raise UnboundId If the ID [id] is not in [signature].
-    @raise IdKindMismatch
-      If the declaration having the ID [id] in [signature] is not a
-      computational type constructor. *)
-val lookup_comp_constructor_by_id_exn :
-  t -> Id.CompConst.t -> t * CompConst.t
+(** {2 Const} *)
 
-val lookup_comp_constructor_by_id_exn' : t -> Id.CompConst.t -> CompConst.t
+val lookup_const : t -> QualifiedName.t -> Const.t
 
-(** [lookup_comp_cotyp_by_id_exn signature id] is the computational cotype
-    having ID [id] in [signature].
+val lookup_const' : t -> QualifiedName.t -> t * Const.t
 
-    @raise UnboundId If the ID [id] is not in [signature].
-    @raise IdKindMismatch
-      If the declaration having the ID [id] in [signature] is not a
-      computational cotype. *)
-val lookup_comp_cotyp_by_id_exn : t -> Id.CompCotyp.t -> t * CompCotyp.t
+val lookup_const_opt : t -> QualifiedName.t -> Const.t Option.t
 
-val lookup_comp_cotyp_by_id_exn' : t -> Id.CompCotyp.t -> CompCotyp.t
+val lookup_const_opt' : t -> QualifiedName.t -> (t * Const.t) Option.t
 
-(** [lookup_comp_destructor_by_id_exn signature id] is the computational
-    cotype destructor having ID [id] in [signature].
+val lookup_const_by_id : t -> Id.Const.t -> Const.t
 
-    @raise UnboundId If the ID [id] is not in [signature].
-    @raise IdKindMismatch
-      If the declaration having the ID [id] in [signature] is not a
-      computational cotype destructor. *)
-val lookup_comp_destructor_by_id_exn : t -> Id.CompDest.t -> t * CompDest.t
+val lookup_const_by_id' : t -> Id.Const.t -> t * Const.t
 
-val lookup_comp_destructor_by_id_exn' : t -> Id.CompDest.t -> CompDest.t
+val lookup_const_by_id_opt : t -> Id.Const.t -> Const.t Option.t
 
-(** [lookup_comp_by_id_exn signature id] is the computation having ID [id] in
-    [signature].
+val lookup_const_by_id_opt' : t -> Id.Const.t -> (t * Const.t) Option.t
 
-    @raise UnboundId If the ID [id] is not in [signature].
-    @raise IdKindMismatch
-      If the declaration having the ID [id] in [signature] is not a
-      computation. *)
-val lookup_comp_by_id_exn : t -> Id.Comp.t -> t * Comp.t
+(** {2 Comp Typ} *)
 
-val lookup_comp_by_id_exn' : t -> Id.Comp.t -> Comp.t
+val lookup_comp_typ : t -> QualifiedName.t -> CompTyp.t
 
-(** [lookup_schema_by_id_exn signature id] is the schema having ID [id] in
-    [signature].
+val lookup_comp_typ' : t -> QualifiedName.t -> t * CompTyp.t
 
-    @raise UnboundId If the ID [id] is not in [signature].
-    @raise IdKindMismatch
-      If the declaration having the ID [id] in [signature] is not a schema. *)
-val lookup_schema_by_id_exn : t -> Id.Schema.t -> t * Schema.t
+val lookup_comp_typ_opt : t -> QualifiedName.t -> CompTyp.t Option.t
 
-val lookup_schema_by_id_exn' : t -> Id.Schema.t -> Schema.t
+val lookup_comp_typ_opt' : t -> QualifiedName.t -> (t * CompTyp.t) Option.t
 
-(** [lookup_module_by_id_exn signature id] is the module having ID [id] in
-    [signature].
+val lookup_comp_typ_by_id : t -> Id.CompTyp.t -> CompTyp.t
 
-    @raise UnboundId If the ID [id] is not in [signature].
-    @raise IdKindMismatch
-      If the declaration having the ID [id] in [signature] is not a module. *)
-val lookup_module_by_id_exn :
+val lookup_comp_typ_by_id' : t -> Id.CompTyp.t -> t * CompTyp.t
+
+val lookup_comp_typ_by_id_opt : t -> Id.CompTyp.t -> CompTyp.t Option.t
+
+val lookup_comp_typ_by_id_opt' :
+  t -> Id.CompTyp.t -> (t * CompTyp.t) Option.t
+
+(** {2 Comp Const} *)
+
+val lookup_comp_const : t -> QualifiedName.t -> CompConst.t
+
+val lookup_comp_const' : t -> QualifiedName.t -> t * CompConst.t
+
+val lookup_comp_const_opt : t -> QualifiedName.t -> CompConst.t Option.t
+
+val lookup_comp_const_opt' :
+  t -> QualifiedName.t -> (t * CompConst.t) Option.t
+
+val lookup_comp_const_by_id : t -> Id.CompConst.t -> CompConst.t
+
+val lookup_comp_const_by_id' : t -> Id.CompConst.t -> t * CompConst.t
+
+val lookup_comp_const_by_id_opt : t -> Id.CompConst.t -> CompConst.t Option.t
+
+val lookup_comp_const_by_id_opt' :
+  t -> Id.CompConst.t -> (t * CompConst.t) Option.t
+
+(** {2 Comp Cotyp} *)
+
+val lookup_comp_cotyp : t -> QualifiedName.t -> CompCotyp.t
+
+val lookup_comp_cotyp' : t -> QualifiedName.t -> t * CompCotyp.t
+
+val lookup_comp_cotyp_opt : t -> QualifiedName.t -> CompCotyp.t Option.t
+
+val lookup_comp_cotyp_opt' :
+  t -> QualifiedName.t -> (t * CompCotyp.t) Option.t
+
+val lookup_comp_cotyp_by_id : t -> Id.CompCotyp.t -> CompCotyp.t
+
+val lookup_comp_cotyp_by_id' : t -> Id.CompCotyp.t -> t * CompCotyp.t
+
+val lookup_comp_cotyp_by_id_opt : t -> Id.CompCotyp.t -> CompCotyp.t Option.t
+
+val lookup_comp_cotyp_by_id_opt' :
+  t -> Id.CompCotyp.t -> (t * CompCotyp.t) Option.t
+
+(** {2 Comp Dest} *)
+
+val lookup_comp_dest : t -> QualifiedName.t -> CompDest.t
+
+val lookup_comp_dest' : t -> QualifiedName.t -> t * CompDest.t
+
+val lookup_comp_dest_opt : t -> QualifiedName.t -> CompDest.t Option.t
+
+val lookup_comp_dest_opt' : t -> QualifiedName.t -> (t * CompDest.t) Option.t
+
+val lookup_comp_dest_by_id : t -> Id.CompDest.t -> CompDest.t
+
+val lookup_comp_dest_by_id' : t -> Id.CompDest.t -> t * CompDest.t
+
+val lookup_comp_dest_by_id_opt : t -> Id.CompDest.t -> CompDest.t Option.t
+
+val lookup_comp_dest_by_id_opt' :
+  t -> Id.CompDest.t -> (t * CompDest.t) Option.t
+
+(** {2 Comp} *)
+
+val lookup_comp : t -> QualifiedName.t -> Comp.t
+
+val lookup_comp' : t -> QualifiedName.t -> t * Comp.t
+
+val lookup_comp_opt : t -> QualifiedName.t -> Comp.t Option.t
+
+val lookup_comp_opt' : t -> QualifiedName.t -> (t * Comp.t) Option.t
+
+val lookup_comp_by_id : t -> Id.Comp.t -> Comp.t
+
+val lookup_comp_by_id' : t -> Id.Comp.t -> t * Comp.t
+
+val lookup_comp_by_id_opt : t -> Id.Comp.t -> Comp.t Option.t
+
+val lookup_comp_by_id_opt' : t -> Id.Comp.t -> (t * Comp.t) Option.t
+
+(** {2 Schema} *)
+
+val lookup_schema : t -> QualifiedName.t -> Schema.t
+
+val lookup_schema' : t -> QualifiedName.t -> t * Schema.t
+
+val lookup_schema_opt : t -> QualifiedName.t -> Schema.t Option.t
+
+val lookup_schema_opt' : t -> QualifiedName.t -> (t * Schema.t) Option.t
+
+val lookup_schema_by_id : t -> Id.Schema.t -> Schema.t
+
+val lookup_schema_by_id' : t -> Id.Schema.t -> t * Schema.t
+
+val lookup_schema_by_id_opt : t -> Id.Schema.t -> Schema.t Option.t
+
+val lookup_schema_by_id_opt' : t -> Id.Schema.t -> (t * Schema.t) Option.t
+
+(** {2 Module} *)
+
+val lookup_module : t -> QualifiedName.t -> (t, entry, declaration) Module.t
+
+val lookup_module' :
+  t -> QualifiedName.t -> t * (t, entry, declaration) Module.t
+
+val lookup_module_opt :
+  t -> QualifiedName.t -> (t, entry, declaration) Module.t Option.t
+
+val lookup_module_opt' :
+  t -> QualifiedName.t -> (t * (t, entry, declaration) Module.t) Option.t
+
+val lookup_module_by_id : t -> Id.Query.t -> (t, entry, declaration) Module.t
+
+val lookup_module_by_id' :
   t -> Id.Query.t -> t * (t, entry, declaration) Module.t
 
-val lookup_module_by_id_exn' :
-  t -> Id.Query.t -> (t, entry, declaration) Module.t
+val lookup_module_by_id_opt :
+  t -> Id.Module.t -> (t, entry, declaration) Module.t Option.t
 
-(** [lookup_query_by_id_exn signature id] is the logic programming query
-    having ID [id] in [signature].
+val lookup_module_by_id_opt' :
+  t -> Id.Module.t -> (t * (t, entry, declaration) Module.t) Option.t
 
-    @raise UnboundId If the ID [id] is not in [signature].
-    @raise IdKindMismatch
-      If the declaration having the ID [id] in [signature] is not a logic
-      programming query. *)
-val lookup_query_by_id_exn : t -> Id.Query.t -> t * Query.t
+(** {2 Query} *)
 
-val lookup_query_by_id_exn' : t -> Id.Query.t -> Query.t
+val lookup_query : t -> QualifiedName.t -> Query.t
 
-(** [lookup_query_by_id_exn signature id] is the logic programming meta-query
-    having ID [id] in [signature].
+val lookup_query' : t -> QualifiedName.t -> t * Query.t
 
-    @raise UnboundId If the ID [id] is not in [signature].
-    @raise IdKindMismatch
-      If the declaration having the ID [id] in [signature] is not a logic
-      programming meta-query. *)
-val lookup_mquery_by_id_exn : t -> Id.MQuery.t -> t * MQuery.t
+val lookup_query_opt : t -> QualifiedName.t -> Query.t Option.t
 
-val lookup_mquery_by_id_exn' : t -> Id.MQuery.t -> MQuery.t
+val lookup_query_opt' : t -> QualifiedName.t -> (t * Query.t) Option.t
 
-(** {1 Declarations} *)
+val lookup_query_by_id : t -> Id.Query.t -> Query.t
 
-(** [id_of_entry entry] is [Some id] with [id] being the lifted ID of [entry]
-    if one is found, and [None] otherwise. *)
-val id_of_entry : [< entry ] -> Id.t Option.t
+val lookup_query_by_id' : t -> Id.Query.t -> t * Query.t
 
-(** Exception raised when an ID cannot be found for an entry. *)
-exception EntryWithoutId of entry
+val lookup_query_by_id_opt : t -> Id.Query.t -> Query.t Option.t
 
-(** [id_of_entry_exn entry] is the lifted ID of [entry].
+val lookup_query_by_id_opt' : t -> Id.Query.t -> (t * Query.t) Option.t
 
-    @raise EntryWithoutId If there is no ID associated with [entry]. *)
-val id_of_entry_exn : [< entry ] -> Id.t
+(** {2 MQuery} *)
 
-(** {1 Paths} *)
+val lookup_mquery : t -> QualifiedName.t -> MQuery.t
 
-(** Qualified names define paths to declarations in a signature.
+val lookup_mquery' : t -> QualifiedName.t -> t * MQuery.t
 
-    In a signature, a path to a declaration is valid if it is not shadowed by
-    a later and equal path to a different declaration. *)
+val lookup_mquery_opt : t -> QualifiedName.t -> MQuery.t Option.t
 
-(** [is_path_to_declaration signature id path] is
-    [Some (signature', declaration)] if looking up the declaration in
-    [signature] by ID [id] or qualified name [path] result in the same
-    declaration [declaration], with [signature'] being the signature up to
-    and including [declaration]. If the looked up declarations differ or do
-    not exist, then [None] is returned. *)
-val is_path_to_declaration :
-  t -> Id.t -> QualifiedName.t -> (t * declaration) Option.t
+val lookup_mquery_opt' : t -> QualifiedName.t -> (t * MQuery.t) Option.t
 
-(** [all_paths_to_declaration signature id] is the set of all qualified names
-    in scope that may be used to refer to the declaration having ID [id] in
-    [signature]. *)
-val all_paths_to_declaration :
-  t -> Id.t -> (QualifiedName.Set.t, [> `Unbound_id of Id.t * t ]) Result.t
+val lookup_mquery_by_id : t -> Id.MQuery.t -> MQuery.t
 
-(** [all_paths_to_declaration_exn signature id] is
-    [all_paths_to_declaration signature id].
+val lookup_mquery_by_id' : t -> Id.MQuery.t -> t * MQuery.t
 
-    @raise UnboundId If the ID [id] is not in [signature]. *)
-val all_paths_to_declaration_exn : t -> Id.t -> QualifiedName.Set.t
+val lookup_mquery_by_id_opt : t -> Id.MQuery.t -> MQuery.t Option.t
+
+val lookup_mquery_by_id_opt' : t -> Id.MQuery.t -> (t * MQuery.t) Option.t
 
 (** {1 Scanning} *)
 
