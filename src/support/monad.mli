@@ -15,6 +15,10 @@ module type MONAD = sig
 
   (** Operator alias of {!bind}. *)
   val ( >>= ) : 'a t -> ('a -> 'b t) -> 'b t
+
+  val compose : ('b -> 'c t) -> ('a -> 'b t) -> 'a -> 'c t
+
+  val ( >=> ) : ('a -> 'b t) -> ('b -> 'c t) -> 'a -> 'c t
 end
 
 (** Functor building the aliases for a minimal implementation for {!MONAD}. *)
