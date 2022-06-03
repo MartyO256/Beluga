@@ -112,8 +112,7 @@ let newMMVar' n (cD, mtyp) depend =
     match n with
     | None ->
       Id.mk_name (newMTypName mtyp)
-    | Some n ->
-       Id.inc n
+    | Some n -> n
   in
   { name
   ; instantiation = ref None
@@ -2061,7 +2060,7 @@ let rec etaExpandMV cPsi sA n s' dep =
 and etaExpandMV' cPsi sA n s' dep =
   match sA with
   | (Atom (loc, _, _) as tP, s) ->
-     let u = newMVar (Some (Id.inc n)) (cPsi, tclo tP s) dep in
+     let u = newMVar (Some n) (cPsi, tclo tP s) dep in
      Root (loc, MVar (u, s'), Nil, Depend.to_plicity dep)
 
   | (PiTyp ((TypDecl (x, _) as decl, _), tB), s) ->
@@ -2086,7 +2085,7 @@ let rec etaExpandMMV loc cD cPsi sA n s' dep =
 and etaExpandMMV' loc cD cPsi sA n s' dep =
   match sA with
   | (Atom _ as tP, s) ->
-     let u = newMMVar (Some (Id.inc n)) (cD, cPsi, tclo tP s) dep in
+     let u = newMMVar (Some n) (cD, cPsi, tclo tP s) dep in
      Root (loc, MMVar ((u, m_id), s'), Nil, Depend.to_plicity dep)
 
   | (PiTyp ((TypDecl (x, _) as decl, _), tB), s) ->

@@ -20,7 +20,6 @@ val mk_blank : Location.t option -> name
 
 val inc_hint_cnt : int option -> int option
 val gen_fresh_name : name list -> name -> name
-val inc : name -> name
 
 (** Retrieves the location of this identifier.
     For identifiers generated internally, this will be a ghost.
