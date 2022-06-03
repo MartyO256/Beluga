@@ -218,14 +218,14 @@ let freeze ~term_subordinates ~type_subordinated_to =
   if_unfrozen (fun x ->
       Frozen (frozen ~term_subordinates ~type_subordinated_to x))
 
-let fresh_var_name entry ?(default_base_name = "x") =
+let fresh_var_name ?(base_name = "x") entry =
   entry |> var_name_base
-  |> Option.value ~default:default_base_name
+  |> Option.value ~default:base_name
   |> Name.prefixed_fresh_name_supplier
 
-let fresh_mvar_name entry ?(default_base_name = "X") =
+let fresh_mvar_name ?(base_name = "X") entry =
   entry |> mvar_name_base
-  |> Option.value ~default:default_base_name
+  |> Option.value ~default:base_name
   |> Name.prefixed_fresh_name_supplier
 
 let set_var_naming_convention var = function

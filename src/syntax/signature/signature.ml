@@ -455,9 +455,9 @@ let lookup_opt signature qualified_name =
   let open Option in
   lookup_opt' signature qualified_name $> Pair.snd
 
-let guarded_declaration_lookup guard signature qualified_name =
+let guarded_declaration_lookup guard signature =
   let open Option in
-  lookup_opt' signature qualified_name >>= extract_declaration guard
+  lookup_opt' signature >=> extract_declaration guard
 
 let lookup_typ_opt' = guarded_declaration_lookup guard_typ_declaration
 

@@ -25,9 +25,10 @@ module LinkedHamt1 : Support.LinkedHamt.S1 with type key = t
 
 (** {1 Name Generation} *)
 
-(** The type of supplier for a name that does not appear in a given set of
-    used names. *)
-type fresh_name_supplier = Set.t -> t
+exception Fresh_name_generation_error
+
+(** The type of supplier for a name that satisfies a predicate. *)
+type fresh_name_supplier = (t -> bool) -> t
 
 (** [prefixed_fresh_name_supplier base] is the fresh name supplier for names
     prefixed by [base] and optionally having an integer suffix. *)

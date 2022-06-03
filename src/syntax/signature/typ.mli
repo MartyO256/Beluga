@@ -75,11 +75,9 @@ val has_constructor_with_name : Name.t -> t -> bool
 
 (** {1 Naming} *)
 
-val fresh_var_name :
-  t -> ?default_base_name:string -> Name.fresh_name_supplier
+val fresh_var_name : ?base_name:string -> t -> Name.fresh_name_supplier
 
-val fresh_mvar_name :
-  t -> ?default_base_name:string -> Name.fresh_name_supplier
+val fresh_mvar_name : ?base_name:string -> t -> Name.fresh_name_supplier
 
 val set_var_naming_convention : string Option.t -> t -> t
 
