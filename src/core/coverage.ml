@@ -3408,7 +3408,7 @@ let check_coverage_success problem =
      then
        begin
          let s =
-           fprintf str_formatter
+           Chatter.print 2
              "\n##   Case expression covers : ##\n##   %a\n##\n\n"
              Loc.print problem.loc;
            flush_str_formatter ()
@@ -3417,7 +3417,7 @@ let check_coverage_success problem =
        end
      else
        begin
-         fprintf std_formatter
+          Chatter.print 2
            "\n##   Case expression doesn't cover, consistent with \"case ... of %%not\" ##\n##   %a\n##   CASE(S) NOT COVERED :\n%a\n\n"
            Loc.print problem.loc
            Prettycov.fmt_ppr_open_cov_problems !open_cov_problems;

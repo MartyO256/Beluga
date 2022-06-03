@@ -23,7 +23,7 @@ module Options = struct
        3 => + Solutions and proof terms.
        4 => + LF signature & Comp Sig.
   *)
-  let chatter = ref 3
+  let chatter = Chatter.level
 
   (* Ask before giving more solutions (à la Prolog). *)
   let askSolution = ref false
@@ -1733,7 +1733,7 @@ module CSolver = struct
     then
         abort
         begin fun ppf () ->
-        fprintf std_formatter
+        Chatter.print 2
           "No solution found: Maximum depth reached! -- \
           Current Depth %a , Maximum Depth allowed %a \n\n"
           Printer.fmt_ppr_bound currDepth
@@ -2374,12 +2374,12 @@ module Frontend = struct
           (* Check solution bounds. *)
           checkSolutions sgnQuery.expected sgnQuery.tries !solutions
         with
-        | Done -> printf "Done.\n"
-        | AbortQuery s -> printf "%s\n" s
+        | Done -> Chatter.print 2 "Done.\n"
+        | AbortQuery s -> Chatter.print 2 "%s\n" s
         | _ -> ()
       end
-    else if !Options.chatter >= 2
-    then printf "Skipping query -- bound for tries = 0.\n"
+    else
+      Chatter.print 2 "Skipping query -- bound for tries = 0.\n"
 
   (*
      msolve (sgnMQ: {mquery        : mquery;
@@ -2442,13 +2442,13 @@ module Frontend = struct
            (* Check solution bounds. *)
            checkSolutions sgnMQuery.mexpected sgnMQuery.mtries !solutions
            with
-           | Done -> printf "Done.\n"
-           | AbortQuery s -> printf "%s\n" s
+           | Done -> Chatter.print 2 "Done.\n"
+           | AbortQuery s -> Chatter.print 2 "%s\n" s
            (* | DepthReached d -> printf "Query complete -- depth = %a was reached\n" P.fmt_ppr_bound d *)
            | _ -> ()
        end
-     else if !Options.chatter >= 2
-     then printf "Skipping query -- bound for tries = 0.\n";
+     else
+      Chatter.print 2 "Skipping query -- bound for tries = 0.\n";
 
 
 end

@@ -114,6 +114,7 @@ let code_failure_directory =
 let admissible_fail_file = Fun.(file_from >> Fun.apply "./.admissible-fail")
 
 let () =
+  Beluga.Chatter.level := 0;
   let cwd = Sys.getcwd () (* dirname of this file *) in
   let project_root = Filename.concat cwd "../.." in
   let admissible_fail =
