@@ -52,11 +52,15 @@ type declaration
 
 exception UnboundDeclaration of QualifiedName.t * t
 
+(** {2 LF Type Family Exceptions} *)
+
 exception BoundTypId of Id.Typ.t * t
 
 exception UnboundTypId of Id.Typ.t * t
 
 exception UnboundTyp of QualifiedName.t * t
+
+(** {2 LF Type Constructor Exceptions} *)
 
 exception BoundConstId of Id.Const.t * t
 
@@ -64,11 +68,15 @@ exception UnboundConstId of Id.Const.t * t
 
 exception UnboundConst of QualifiedName.t * t
 
+(** {2 Computational-Level Data Type Exceptions} *)
+
 exception BoundCompTypId of Id.CompTyp.t * t
 
 exception UnboundCompTypId of Id.CompTyp.t * t
 
 exception UnboundCompTyp of QualifiedName.t * t
+
+(** {2 Computational-Level Data Type Constructor Exceptions} *)
 
 exception BoundCompConstId of Id.CompConst.t * t
 
@@ -76,11 +84,15 @@ exception UnboundCompConstId of Id.CompConst.t * t
 
 exception UnboundCompConst of QualifiedName.t * t
 
+(** {2 Computational-Level Codata Type Exceptions} *)
+
 exception BoundCompCotypId of Id.CompCotyp.t * t
 
 exception UnboundCompCotypId of Id.CompCotyp.t * t
 
 exception UnboundCompCotyp of QualifiedName.t * t
+
+(** {2 Computational-Level Codata Type Destructor Exceptions} *)
 
 exception BoundCompDestId of Id.CompDest.t * t
 
@@ -88,11 +100,15 @@ exception UnboundCompDestId of Id.CompDest.t * t
 
 exception UnboundCompDest of QualifiedName.t * t
 
+(** {2 Computation Exceptions} *)
+
 exception BoundCompId of Id.Comp.t * t
 
 exception UnboundCompId of Id.Comp.t * t
 
 exception UnboundComp of QualifiedName.t * t
+
+(** {2 LF Schema Exceptions} *)
 
 exception BoundSchemaId of Id.Schema.t * t
 
@@ -100,17 +116,23 @@ exception UnboundSchemaId of Id.Schema.t * t
 
 exception UnboundSchema of QualifiedName.t * t
 
+(** {2 Module Exceptions} *)
+
 exception BoundModuleId of Id.Module.t * t
 
 exception UnboundModuleId of Id.Module.t * t
 
 exception UnboundModule of QualifiedName.t * t
 
+(** {2 Logic Query Exceptions} *)
+
 exception BoundQueryId of Id.Query.t * t
 
 exception UnboundQueryId of Id.Query.t * t
 
 exception UnboundQuery of QualifiedName.t * t
+
+(** {2 Logic Meta-Query Exceptions} *)
 
 exception BoundMQueryId of Id.MQuery.t * t
 
@@ -258,62 +280,76 @@ val add_documentation_comment : t -> DocumentationComment.t -> t
     exception types they raise are strictly programmer errors, not user
     errors. *)
 
+(** @raise UnboundDeclaration *)
 val lookup : t -> QualifiedName.t -> declaration
 
+(** @raise UnboundDeclaration *)
 val lookup' : t -> QualifiedName.t -> t * declaration
 
 val lookup_opt : t -> QualifiedName.t -> declaration Option.t
 
 val lookup_opt' : t -> QualifiedName.t -> (t * declaration) Option.t
 
-(** {2 Typ} *)
+(** {2 Typ Lookups} *)
 
+(** @raise UnboundTyp *)
 val lookup_typ : t -> QualifiedName.t -> Typ.t
 
+(** @raise UnboundTyp *)
 val lookup_typ' : t -> QualifiedName.t -> t * Typ.t
 
 val lookup_typ_opt : t -> QualifiedName.t -> Typ.t Option.t
 
 val lookup_typ_opt' : t -> QualifiedName.t -> (t * Typ.t) Option.t
 
+(** @raise UnboundTypId *)
 val lookup_typ_by_id : t -> Id.Typ.t -> Typ.t
 
+(** @raise UnboundTypId *)
 val lookup_typ_by_id' : t -> Id.Typ.t -> t * Typ.t
 
 val lookup_typ_by_id_opt : t -> Id.Typ.t -> Typ.t Option.t
 
 val lookup_typ_by_id_opt' : t -> Id.Typ.t -> (t * Typ.t) Option.t
 
-(** {2 Const} *)
+(** {2 Const Lookups} *)
 
+(** @raise UnboundConst *)
 val lookup_const : t -> QualifiedName.t -> Const.t
 
+(** @raise UnboundConst *)
 val lookup_const' : t -> QualifiedName.t -> t * Const.t
 
 val lookup_const_opt : t -> QualifiedName.t -> Const.t Option.t
 
 val lookup_const_opt' : t -> QualifiedName.t -> (t * Const.t) Option.t
 
+(** @raise UnboundConstId *)
 val lookup_const_by_id : t -> Id.Const.t -> Const.t
 
+(** @raise UnboundConstId *)
 val lookup_const_by_id' : t -> Id.Const.t -> t * Const.t
 
 val lookup_const_by_id_opt : t -> Id.Const.t -> Const.t Option.t
 
 val lookup_const_by_id_opt' : t -> Id.Const.t -> (t * Const.t) Option.t
 
-(** {2 Comp Typ} *)
+(** {2 Comp Typ Lookups} *)
 
+(** @raise UnboundCompTyp *)
 val lookup_comp_typ : t -> QualifiedName.t -> CompTyp.t
 
+(** @raise UnboundCompTyp *)
 val lookup_comp_typ' : t -> QualifiedName.t -> t * CompTyp.t
 
 val lookup_comp_typ_opt : t -> QualifiedName.t -> CompTyp.t Option.t
 
 val lookup_comp_typ_opt' : t -> QualifiedName.t -> (t * CompTyp.t) Option.t
 
+(** @raise UnboundCompTypId *)
 val lookup_comp_typ_by_id : t -> Id.CompTyp.t -> CompTyp.t
 
+(** @raise UnboundCompTypId *)
 val lookup_comp_typ_by_id' : t -> Id.CompTyp.t -> t * CompTyp.t
 
 val lookup_comp_typ_by_id_opt : t -> Id.CompTyp.t -> CompTyp.t Option.t
@@ -321,10 +357,12 @@ val lookup_comp_typ_by_id_opt : t -> Id.CompTyp.t -> CompTyp.t Option.t
 val lookup_comp_typ_by_id_opt' :
   t -> Id.CompTyp.t -> (t * CompTyp.t) Option.t
 
-(** {2 Comp Const} *)
+(** {2 Comp Const Lookups} *)
 
+(** @raise UnboundCompConst *)
 val lookup_comp_const : t -> QualifiedName.t -> CompConst.t
 
+(** @raise UnboundCompConst *)
 val lookup_comp_const' : t -> QualifiedName.t -> t * CompConst.t
 
 val lookup_comp_const_opt : t -> QualifiedName.t -> CompConst.t Option.t
@@ -332,8 +370,10 @@ val lookup_comp_const_opt : t -> QualifiedName.t -> CompConst.t Option.t
 val lookup_comp_const_opt' :
   t -> QualifiedName.t -> (t * CompConst.t) Option.t
 
+(** @raise UnboundCompConstId *)
 val lookup_comp_const_by_id : t -> Id.CompConst.t -> CompConst.t
 
+(** @raise UnboundCompConstId *)
 val lookup_comp_const_by_id' : t -> Id.CompConst.t -> t * CompConst.t
 
 val lookup_comp_const_by_id_opt : t -> Id.CompConst.t -> CompConst.t Option.t
@@ -341,10 +381,12 @@ val lookup_comp_const_by_id_opt : t -> Id.CompConst.t -> CompConst.t Option.t
 val lookup_comp_const_by_id_opt' :
   t -> Id.CompConst.t -> (t * CompConst.t) Option.t
 
-(** {2 Comp Cotyp} *)
+(** {2 Comp Cotyp Lookups} *)
 
+(** @raise UnboundCompCotyp *)
 val lookup_comp_cotyp : t -> QualifiedName.t -> CompCotyp.t
 
+(** @raise UnboundCompCotyp *)
 val lookup_comp_cotyp' : t -> QualifiedName.t -> t * CompCotyp.t
 
 val lookup_comp_cotyp_opt : t -> QualifiedName.t -> CompCotyp.t Option.t
@@ -352,8 +394,10 @@ val lookup_comp_cotyp_opt : t -> QualifiedName.t -> CompCotyp.t Option.t
 val lookup_comp_cotyp_opt' :
   t -> QualifiedName.t -> (t * CompCotyp.t) Option.t
 
+(** @raise UnboundCompCotypId *)
 val lookup_comp_cotyp_by_id : t -> Id.CompCotyp.t -> CompCotyp.t
 
+(** @raise UnboundCompCotypId *)
 val lookup_comp_cotyp_by_id' : t -> Id.CompCotyp.t -> t * CompCotyp.t
 
 val lookup_comp_cotyp_by_id_opt : t -> Id.CompCotyp.t -> CompCotyp.t Option.t
@@ -361,18 +405,22 @@ val lookup_comp_cotyp_by_id_opt : t -> Id.CompCotyp.t -> CompCotyp.t Option.t
 val lookup_comp_cotyp_by_id_opt' :
   t -> Id.CompCotyp.t -> (t * CompCotyp.t) Option.t
 
-(** {2 Comp Dest} *)
+(** {2 Comp Dest Lookups} *)
 
+(** @raise UnboundCompDest *)
 val lookup_comp_dest : t -> QualifiedName.t -> CompDest.t
 
+(** @raise UnboundCompDest *)
 val lookup_comp_dest' : t -> QualifiedName.t -> t * CompDest.t
 
 val lookup_comp_dest_opt : t -> QualifiedName.t -> CompDest.t Option.t
 
 val lookup_comp_dest_opt' : t -> QualifiedName.t -> (t * CompDest.t) Option.t
 
+(** @raise UnboundCompDestId *)
 val lookup_comp_dest_by_id : t -> Id.CompDest.t -> CompDest.t
 
+(** @raise UnboundCompDestId *)
 val lookup_comp_dest_by_id' : t -> Id.CompDest.t -> t * CompDest.t
 
 val lookup_comp_dest_by_id_opt : t -> Id.CompDest.t -> CompDest.t Option.t
@@ -380,46 +428,56 @@ val lookup_comp_dest_by_id_opt : t -> Id.CompDest.t -> CompDest.t Option.t
 val lookup_comp_dest_by_id_opt' :
   t -> Id.CompDest.t -> (t * CompDest.t) Option.t
 
-(** {2 Comp} *)
+(** {2 Comp Lookups} *)
 
+(** @raise UnboundComp *)
 val lookup_comp : t -> QualifiedName.t -> Comp.t
 
+(** @raise UnboundComp *)
 val lookup_comp' : t -> QualifiedName.t -> t * Comp.t
 
 val lookup_comp_opt : t -> QualifiedName.t -> Comp.t Option.t
 
 val lookup_comp_opt' : t -> QualifiedName.t -> (t * Comp.t) Option.t
 
+(** @raise UnboundCompId *)
 val lookup_comp_by_id : t -> Id.Comp.t -> Comp.t
 
+(** @raise UnboundCompId *)
 val lookup_comp_by_id' : t -> Id.Comp.t -> t * Comp.t
 
 val lookup_comp_by_id_opt : t -> Id.Comp.t -> Comp.t Option.t
 
 val lookup_comp_by_id_opt' : t -> Id.Comp.t -> (t * Comp.t) Option.t
 
-(** {2 Schema} *)
+(** {2 Schema Lookups} *)
 
+(** @raise UnboundSchema *)
 val lookup_schema : t -> QualifiedName.t -> Schema.t
 
+(** @raise UnboundSchema *)
 val lookup_schema' : t -> QualifiedName.t -> t * Schema.t
 
 val lookup_schema_opt : t -> QualifiedName.t -> Schema.t Option.t
 
 val lookup_schema_opt' : t -> QualifiedName.t -> (t * Schema.t) Option.t
 
+(** @raise UnboundSchemaId *)
 val lookup_schema_by_id : t -> Id.Schema.t -> Schema.t
 
+(** @raise UnboundSchemaId *)
 val lookup_schema_by_id' : t -> Id.Schema.t -> t * Schema.t
 
 val lookup_schema_by_id_opt : t -> Id.Schema.t -> Schema.t Option.t
 
 val lookup_schema_by_id_opt' : t -> Id.Schema.t -> (t * Schema.t) Option.t
 
-(** {2 Module} *)
+(** {2 Module Lookups} *)
 
+(** @raise UnboundModule *)
 val lookup_module : t -> QualifiedName.t -> (t, entry, declaration) Module.t
 
+(** @raise UnboundModule *)
 val lookup_module' :
   t -> QualifiedName.t -> t * (t, entry, declaration) Module.t
 
@@ -429,9 +487,11 @@ val lookup_module_opt :
 val lookup_module_opt' :
   t -> QualifiedName.t -> (t * (t, entry, declaration) Module.t) Option.t
 
+(** @raise UnboundModuleId *)
 val lookup_module_by_id :
   t -> Id.Module.t -> (t, entry, declaration) Module.t
 
+(** @raise UnboundModuleId *)
 val lookup_module_by_id' :
   t -> Id.Module.t -> t * (t, entry, declaration) Module.t
 
@@ -441,36 +501,44 @@ val lookup_module_by_id_opt :
 val lookup_module_by_id_opt' :
   t -> Id.Module.t -> (t * (t, entry, declaration) Module.t) Option.t
 
-(** {2 Query} *)
+(** {2 Query Lookups} *)
 
+(** @raise UnboundQuery *)
 val lookup_query : t -> QualifiedName.t -> Query.t
 
+(** @raise UnboundQuery *)
 val lookup_query' : t -> QualifiedName.t -> t * Query.t
 
 val lookup_query_opt : t -> QualifiedName.t -> Query.t Option.t
 
 val lookup_query_opt' : t -> QualifiedName.t -> (t * Query.t) Option.t
 
+(** @raise UnboundQueryId *)
 val lookup_query_by_id : t -> Id.Query.t -> Query.t
 
+(** @raise UnboundQueryId *)
 val lookup_query_by_id' : t -> Id.Query.t -> t * Query.t
 
 val lookup_query_by_id_opt : t -> Id.Query.t -> Query.t Option.t
 
 val lookup_query_by_id_opt' : t -> Id.Query.t -> (t * Query.t) Option.t
 
-(** {2 MQuery} *)
+(** {2 MQuery Lookups} *)
 
+(** @raise UnboundMQuery *)
 val lookup_mquery : t -> QualifiedName.t -> MQuery.t
 
+(** @raise UnboundMQuery *)
 val lookup_mquery' : t -> QualifiedName.t -> t * MQuery.t
 
 val lookup_mquery_opt : t -> QualifiedName.t -> MQuery.t Option.t
 
 val lookup_mquery_opt' : t -> QualifiedName.t -> (t * MQuery.t) Option.t
 
+(** @raise UnboundMQueryId *)
 val lookup_mquery_by_id : t -> Id.MQuery.t -> MQuery.t
 
+(** @raise UnboundMQueryId *)
 val lookup_mquery_by_id' : t -> Id.MQuery.t -> t * MQuery.t
 
 val lookup_mquery_by_id_opt : t -> Id.MQuery.t -> MQuery.t Option.t
